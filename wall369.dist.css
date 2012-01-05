@@ -1,4 +1,4 @@
-*{border:none;font-size:100%;font-style:normal;font-weight:normal;margin:0px;padding:0px;vertical-align:baseline;}
+*{border:none;font-size:12px;font-style:normal;font-weight:normal;margin:0px;padding:0px;vertical-align:baseline;}
 body, html{background-color:#ffffff;}
 body{color:#444444;direction:ltr;font-family:arial,sans-serif;font-size:12px;line-height:15px;margin:10px 10px;text-align:left;}
 a:link, a:visited{color:#006699;text-decoration:underline;}
@@ -9,35 +9,32 @@ em{color:#000000;font-style:italic;}
 strong{font-weight:bold;}
 form{margin:0px;padding:0px;}
 #wall369{margin:auto;position:relative;width:900px;}
-.post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
 .post_thumb{float:left;width:70px;}
 .post_thumb img{width:70px;}
 .post_text{float:right;width:820px;}
-.links{margin-top:10px;}
-.link{overflow:auto;}
 .link_thumb{float:right;width:90px;}
 .link_thumb img{width:90px;}
 .link_text{float:left;width:720px;}
-.post_detail{background-position:top left;background-repeat:no-repeat;clear:both;margin-top:10px;padding-left:20px;}
-.comments{margin-bottom:10px;}
-.comment{background-color:#edeff4;border-bottom:solid 2px #ffffff;clear:both;overflow:auto;}
 .comment_thumb{float:left;margin:5px 0px 5px 10px;width:50px;}
 .comment_thumb img{width:50px;}
 .comment_text{float:right;margin:5px 10px 0px 0px;width:740px;}
+.post_form .textarea, .comment_form .textarea{border:1px solid #999999;height:50px;padding:5px;resize:vertical;width:730px;}
+.post_form .textarea{width:890px;}
+.post_form .inputtext{border:1px solid #999999;padding:5px;width:890px;}
+.posts{border-top:1px solid #dedede;margin-top:10px;}
+.post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
+.links{margin-top:10px;}
+.link{overflow:auto;}
+.post_detail{background-position:left 5px;background-repeat:no-repeat;border-top:1px solid #dedede;clear:both;margin-top:10px;padding:5px 0px 0px 20px;}
+.comments{margin:10px 0px;}
+.comment{background-color:#edeff4;border-bottom:solid 2px #ffffff;clear:both;overflow:auto;}
 .post_like_display p{margin:5px 10px 5px 30px;}
 .post_like{background-image:url("medias/icon_like.png");background-position:10px 5px;background-repeat:no-repeat;}
 .username{color:#006699;}
 .post_text, .link_text, .comment_text{text-align:justify;word-wrap:break-word;}
-.link_text{font-size:11px;}
 .post_detail, .comment_detail{color:#999999;}
-.comment_detail{font-size:11px;}
-.comment_form{display:none;}
-.post_form_inactive{display:none;}
-.post_form .textarea, .comment_form .textarea{border:1px solid #999999;height:50px;padding:5px;resize:vertical;width:730px;}
-.post_form .textarea{width:890px;}
-.post_form .inputtext{border:1px solid #999999;padding:5px;resize:vertical;width:890px;}
-.unlike_inactive, .like_inactive{display:none;}
-.link_more{display:none;}
+.link_text, .comment_detail{font-size:11px;}
+.post_form_inactive, .comment_form, .link_more, .unlike_inactive, .like_inactive{display:none;}
 .inputsubmit{background-color:#5b74a8;color:#ffffff;cursor:pointer;font-size:14px;font-weight:bold;margin:0px;padding:1px 2px 2px;}
 a.share_action:link, a.share_action:visited{background-position:top left;background-repeat:no-repeat;font-weight:bold;margin-right:10px;padding-left:20px;text-decoration:none;}
 a.share_action:hover{color:#000000;}
@@ -45,3 +42,32 @@ a.share_action_active:link, a.share_action_active:visited{color:#000000;}
 #share_action_status, .post_detail_status{background-image:url(medias/icon_status.png);}
 #share_action_photo, .post_detail_photo{background-image:url(medias/icon_photo.png);}
 #share_action_link, .post_detail_link{background-image:url(medias/icon_link.png);}
+@media only screen and (max-width: 900px) {
+#wall369{width:600px;}
+.post_thumb{width:50px;}
+.post_thumb img{width:50px;}
+.post_text{width:540px;}
+.link_thumb{width:70px;}
+.link_thumb img{width:70px;}
+.link_text{width:460px;}
+.comment_thumb{width:30px;}
+.comment_thumb img{width:30px;}
+.comment_text{width:480px;}
+.post_form .textarea, .comment_form .textarea{width:470px;}
+.post_form .textarea{width:590px;}
+.post_form .inputtext{width:590px;}
+}
+@media only screen and (max-width: 600px) {
+#wall369{width:300px;}
+.post_thumb{width:30px;}
+.post_thumb img{width:30px;}
+.post_text{width:260px;}
+.link_thumb{width:50px;}
+.link_thumb img{width:50px;}
+.link_text{width:190px;}
+.comment_thumb{display:none;}
+.comment_text{width:240px;}
+.post_form .textarea, .comment_form .textarea{width:230px;}
+.post_form .textarea{width:290px;}
+.post_form .inputtext{width:290px;}
+}

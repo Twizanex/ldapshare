@@ -91,7 +91,7 @@
 								<div class="comment_thumb"><img alt="" src="http://www.gravatar.com/avatar/3?rating=PG&size=50&default=identicon"></div>
 								<div class="comment_text">
 									<form action="" method="post">
-									<p><textarea name="comment"></textarea></p>
+									<p><textarea class="textarea" name="comment"></textarea></p>
 									<p class="submit_btn"><input class="inputsubmit" type="submit" value=" Comment " data-post="1088"></p>
 									</form>
 								</div>
@@ -117,7 +117,7 @@
 								<div class="comment_thumb"><img alt="" src="http://www.gravatar.com/avatar/5986416526?rating=PG&size=50&default=identicon"></div>
 								<div class="comment_text">
 									<form action="" method="post">
-									<p><textarea name="comment"></textarea></p>
+									<p><textarea class="textarea" name="comment"></textarea></p>
 									<p class="submit_btn"><input class="inputsubmit" type="submit" value=" Comment " data-post="1089"></p>
 									</form>
 								</div>
@@ -161,7 +161,7 @@
 								<div class="comment_thumb"><img alt="" src="http://www.gravatar.com/avatar/5986416526?rating=PG&size=50&default=identicon"></div>
 								<div class="comment_text">
 									<form action="" method="post">
-									<p><textarea name="comment"></textarea></p>
+									<p><textarea class="textarea" name="comment"></textarea></p>
 									<p class="submit_btn"><input class="inputsubmit" type="submit" value=" Comment " data-post="1090"></p>
 									</form>
 								</div>
