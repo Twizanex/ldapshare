@@ -15,7 +15,7 @@
 				<div class="post_thumb"><img alt="" src="storage/test.png"></div>
 				<div class="post_text">
 
-					<p><span class="username">Dave Fisher</span></p>
+					<p><span class="username">Vitae Massa</span></p>
 					<p>Praesent viverra aliquet consectetur. Vivamus et malesuada nisl. Vivamus volutpat tempor auctor. Quisque eros magna, interdum at sagittis sed, porttitor sit amet mauris. Mauris purus risus, venenatis nec feugiat at, dignissim a magna. Aenean dignissim placerat rhoncus. Aliquam tempus, est sit amet consectetur tempus, velit diam pharetra risus, id sollicitudin nisi felis at nisi. Quisque sem sem, ullamcorper ac lobortis id, porta porttitor lacus.</p>
 
 					<div class="links">
@@ -36,14 +36,14 @@
 					<div class="comments" id="comments_1088">
 						<div class="comment post_like" id="post_like_1088">
 							<div class="comment_display post_like_display">
-								<p><span class="username">Camilo Tafurth</span> like this</p>
+								<p><span class="username">Sagittis Sed</span> like this</p>
 							</div>
 						</div>
 						<div class="comment" id="comment_1066">
 							<div class="comment_display">
 								<div class="comment_thumb"><img alt="" src="storage/test.png"></div>
 								<div class="comment_text">
-									<p><span class="username">Camilo Tafurth</span> Pellentesque ullamcorper augue vitae massa auctor dictum. Vestibulum quis eros ante. Maecenas sodales risus in lorem imperdiet pretium eget quis leo. Phasellus ut nunc libero. Nullam pretium nibh quis augue aliquam commodo. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed varius sapien nec felis ultricies rutrum.</p>
+									<p><span class="username">Sagittis Sed</span> Pellentesque ullamcorper augue vitae massa auctor dictum. Vestibulum quis eros ante. Maecenas sodales risus in lorem imperdiet pretium eget quis leo. Phasellus ut nunc libero. Nullam pretium nibh quis augue aliquam commodo. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed varius sapien nec felis ultricies rutrum.</p>
 									<p class="comment_detail"><span id="datecreated2011-12-1215:36:03" class="datecreated">December 12, 17:36</span> | <a class="comment_delete_action" data-comment="1066" href="#comment_1066">Delete</a></p>
 								</div>
 							</div>
@@ -52,7 +52,7 @@
 							<div class="comment_display">
 								<div class="comment_thumb"><img alt="" src="storage/test.png"></div>
 								<div class="comment_text">
-									<p><span class="username">Dave Fisher</span> Selling to Africa is definitely the biggest potential, as the export market is weak in comparison to Asia's.. </p>
+									<p><span class="username">Vitae Massa</span> Pellentesque ullamcorper augue vitae massa auctor dictum. Vestibulum quis eros ante. Maecenas sodales risus in lorem imperdiet pretium eget quis leo. Phasellus ut nunc libero. Nullam pretium nibh quis augue aliquam commodo. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed varius sapien nec felis ultricies rutrum.</p>
 									<p class="comment_detail"><span id="datecreated2011-12-1216:42:32" class="datecreated">December 12, 18:42</span></p>
 								</div>
 							</div>
