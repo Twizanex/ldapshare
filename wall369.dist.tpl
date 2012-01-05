@@ -9,6 +9,35 @@
 <div id="wall369">
 <div id="wall369_display">
 
+	<div id="share_actions">
+	<p><a href="#post_form_status" class="share_action share_action_active" id="share_action_status">Status</a> <a href="#post_form_photo" class="share_action" id="share_action_photo">Photo</a> <a href="#post_form_link" class="share_action" id="share_action_link">Link</a></p>
+	</div>
+
+	<div id="post_form_status" class="post_form">
+	<form action="" method="post">
+	<p><textarea class="textarea" name="status_textarea"></textarea></p>
+	<p class="submit_btn"><input class="inputsubmit" name="status_inputsubmit" type="submit" value=" Share "></p>
+	</form>
+	</div>
+
+	<div id="post_form_photo" class="post_form post_form_inactive">
+	<form target="iframe_upload" action="wall-ajax.html?a=upload_photo" method="post" id="upload_form_photo" enctype="multipart/form-data">
+	<p><textarea class="textarea" name="photo_textarea"></textarea></p>
+	<p><input class="inputfile" type="file" name="photo_inputfile"><br>
+	2M max. / jpeg, gif or png</p>
+	<p class="submit_btn"><input class="inputsubmit" name="photo_inputsubmit" type="submit" value=" Share "></p>
+	<div id="box-formpost_photo_preview"></div>
+	</form>
+	</div>
+
+	<div id="post_form_link" class="post_form post_form_inactive">
+	<form action="" method="post">
+	<p><textarea class="textarea" name="link_textarea"></textarea></p>
+	<p><input class="inputtext" type="text" name="link_inputtext" value="http://"></p>
+	<p class="submit_btn"><input class="inputsubmit" name="link_inputsubmit" type="submit" value=" Share "></p>
+	</form>
+	</div>
+
 	<div class="posts">
 		<div class="post" id="post_1088">
 			<div class="post_display">
@@ -63,7 +92,7 @@
 						<div class="comment_display comment_form_display">
 							<div class="comment_thumb"><img alt="" src="storage/test.png"></div>
 							<div class="comment_text">
-								<form method="post" action="">
+								<form action="" method="post">
 								<p><textarea name="comment"></textarea></p>
 								<p class="submit_btn"><input class="inputsubmit" type="submit" value=" Comment " data-post="1088"></p>
 								</form>

@@ -14,6 +14,18 @@ $(document).ready(function() {
 		type: 'POST',
 		url: 'index.php?a=timezone&t=' + t
 	});
+    $('.share_action').click(function(e) {
+		e.preventDefault();
+        href = $(this).attr('href');
+        $('.share_action').removeClass('share_action_active');
+        $(this).addClass('share_action_active');
+        if($(href).is(':visible')) {
+        } else {
+            $('.post_form').slideUp();
+            $(href).slideDown();
+            $(href).find('.textarea').focus();
+        }
+    });
 	$('.link_more_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
