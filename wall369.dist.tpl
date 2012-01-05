@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>wall369</title>
+<link href="wall369.dist.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div id="wall369">
+<div id="wall369_display">
+
+	<div class="posts">
+		<div class="post" id="post_1088">
+			<div class="post_display">
+				<div class="post_thumb"><img alt="" src="storage/test.png"></div>
+				<div class="post_text">
+
+					<p><span class="username">Dave Fisher</span></p>
+					<p>Praesent viverra aliquet consectetur. Vivamus et malesuada nisl. Vivamus volutpat tempor auctor. Quisque eros magna, interdum at sagittis sed, porttitor sit amet mauris. Mauris purus risus, venenatis nec feugiat at, dignissim a magna. Aenean dignissim placerat rhoncus. Aliquam tempus, est sit amet consectetur tempus, velit diam pharetra risus, id sollicitudin nisi felis at nisi. Quisque sem sem, ullamcorper ac lobortis id, porta porttitor lacus.</p>
+
+					<div class="links">
+						<div class="link" id="link_10881">
+							<div class="link_display">
+								<div class="link_thumb"><a target="_blank" href="http://www.economist.com/node/21541008"><img alt="" src="storage/test.png"></a></div>
+								<div class="link_text">
+									<p><a target="_blank" href="http://www.economist.com/node/21541008">The sun shines bright</a> <span class="share_social"><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Fwww.economist.com%2Fnode%2F21541008"><img title="Facebook" alt="Facebook" src="medias/icon_facebook.png"></a> <a target="_blank" href="http://twitter.com/home?status=http%3A%2F%2Fwww.economist.com%2Fnode%2F21541008"><img title="Twitter" alt="Twitter" src="medias/icon_twitter.png"></a></span><br>
+									<span class="icon"><img alt="" src="medias/favicon.ico"></span> <span class="hostname">www.economist.com</span></p>
+									<p>HER $3 billion fortune makes Oprah Winfrey the wealthiest black person in America, a <a class="link_more_action" data-post="1088" href="#link_more_10881">Read more</a> <span class="link_more" id="link_more_10881">position she has held for years. But she is no longer the richest black person in the world.</span></p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<p class="post_detail"><img alt="" src="medias/icon_link.png"> <span id="datecreated2011-12-1214:36:40" class="datecreated">December 12, 16:36</span> | <span class="like"><a class="like_action" data-post="1088" href="#post_like_1088">Like</a> |</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="1088" href="#post_like_1088">Unlike</a> |</span> <a class="comment_action" data-post="1088" href="#comment_form_1088">Comment</a> | <a class="post_delete_action" data-post="1088" href="#post_1088">Delete</a></p>
+		
+					<div class="comments" id="comments_1088">
+						<div class="comment post_like" id="post_like_1088">
+							<div class="comment_display post_like_display">
+								<p><span class="username">Camilo Tafurth</span> like this</p>
+							</div>
+						</div>
+						<div class="comment" id="comment_1066">
+							<div class="comment_display">
+								<div class="comment_thumb"><img alt="" src="storage/test.png"></div>
+								<div class="comment_text">
+									<p><span class="username">Camilo Tafurth</span> Pellentesque ullamcorper augue vitae massa auctor dictum. Vestibulum quis eros ante. Maecenas sodales risus in lorem imperdiet pretium eget quis leo. Phasellus ut nunc libero. Nullam pretium nibh quis augue aliquam commodo. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed varius sapien nec felis ultricies rutrum.</p>
+									<p class="comment_detail"><span id="datecreated2011-12-1215:36:03" class="datecreated">December 12, 17:36</span> | <a class="comment_delete_action" data-comment="1066" href="#comment_1066">Delete</a></p>
+								</div>
+							</div>
+						</div>
+						<div class="comment" id="comment_1067">
+							<div class="comment_display">
+								<div class="comment_thumb"><img alt="" src="storage/test.png"></div>
+								<div class="comment_text">
+									<p><span class="username">Dave Fisher</span> Selling to Africa is definitely the biggest potential, as the export market is weak in comparison to Asia's.. </p>
+									<p class="comment_detail"><span id="datecreated2011-12-1216:42:32" class="datecreated">December 12, 18:42</span></p>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="comment comment_form" id="comment_form_1088">
+						<div class="comment_display comment_form_display">
+							<div class="comment_thumb"><img alt="" src="storage/test.png"></div>
+							<div class="comment_text">
+								<form method="post" action="">
+								<p><textarea name="comment"></textarea></p>
+								<p class="submit_btn"><input class="inputsubmit" type="submit" value=" Comment " data-post="1088"></p>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+</div>
+<script type="text/javascript" src="thirdparty/jquery.min.js" charset="UTF-8"></script>
+<script type="text/javascript" src="wall369.dist.js" charset="UTF-8"></script>
+</body>
+</html>

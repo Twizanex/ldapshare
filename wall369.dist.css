@@ -1,0 +1,34 @@
+*{border:none;font-size:100%;font-style:normal;font-weight:normal;margin:0px;padding:0px;vertical-align:baseline;}
+body, html{background-color:#FFFFFF;}
+body{color:#444444;direction:ltr;font-family:arial,sans-serif;font-size:12px;line-height:15px;margin:10px 10px;text-align:left;}
+a:link, a:visited{color:#006699;text-decoration:underline;}
+a:hover{color:#000000;}
+img{vertical-align:middle;}
+p{clear:both;margin:0px 0px 5px 0px;}
+em{color:#000000;font-style:italic;}
+strong{font-weight:bold;}
+#box-wall form{margin:0px;padding:0px;}
+#wall369{margin:auto;position:relative;width:900px;}
+.post_thumb{float:left;width:70px;}
+.post_thumb img{width:70px;}
+.post_text{float:right;width:820px;}
+.link_thumb{float:right;width:90px;}
+.link_thumb img{width:90px;}
+.link_text{float:left;width:720px;}
+.post_detail{clear:both;}
+.comment{background-color:#EDEFF4;border-bottom:solid 2px #FFFFFF;clear:both;overflow:auto;}
+.comment_thumb{float:left;margin:5px 0px 5px 10px;width:50px;}
+.comment_thumb img{width:50px;}
+.comment_text{float:right;margin:5px 10px 5px 0px;width:740px;}
+.post_like_display p{margin:5px 10px 5px 30px;}
+.post_like{background-image:url("medias/icon_like.png");background-position:10px 5px;background-repeat:no-repeat;}
+.username{color:#006699;}
+.post_text, .link_text, .comment_text{text-align:justify;word-wrap:break-word;}
+.link_text{font-size:11px;}
+.post_detail, .comment_detail{color:#999999;}
+.comment_detail{font-size:11px;}
+/*.comment_form{display:none;}*/
+.comment_form textarea{height:50px;resize:vertical;width:740px;}
+.unlike_inactive, .like_inactive{display:none;}
+.link_more{display:none;}
+.inputsubmit{background-color:#5B74A8 !important;border:medium none !important;color:#FFFFFF;cursor:pointer;display:inline-block;font-size:14px;font-weight:bold;margin:0px;outline:medium none;padding:1px 2px 2px;white-space:nowrap;}
