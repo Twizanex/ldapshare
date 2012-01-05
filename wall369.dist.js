@@ -54,6 +54,7 @@ $(document).ready(function() {
 			$(href).slideUp();
 		} else {
 			$(href).slideDown();
+			$(href).find('.textarea').focus();
 		}
 	});
 });
