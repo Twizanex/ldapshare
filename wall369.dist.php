@@ -160,7 +160,7 @@ class wall369 {
 				<div class="post_thumb"><img alt="" src="storage/test.png"></div>
 				<div class="post_text">
 					<p><span class="username">'.$post->user_firstname.' '.$post->user_lastname.'</span></p>
-					<p>'.$post->post_content.'</p>
+					<p>'.nl2br($post->post_content, 0).'</p>
 					<p class="post_detail post_detail_photo"><span id="datecreated2011-12-1214:36:40" class="datecreated">'.$post->post_datecreated.'</span> | <span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Like</a> |</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Unlike</a> |</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">Comment</a>';
 					if($post->user_id == $this->user->user_id) {
 						$render .= '| <a class="post_delete_action" data-post="'.$post->post_id.'" href="?a=postdelete&amp;post='.$post->post_id.'">Delete</a>';
