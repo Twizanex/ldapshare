@@ -6,7 +6,7 @@ class wall369 {
 		$this->set_get('a', 'index', 'alphabetic');
 		$this->set_get('post', '', 'numeric');
 		$this->set_get('comment', '', 'numeric');
-		$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''));
+		$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
 
 		$this->get_user(1000);//TODO
 	}
@@ -91,37 +91,62 @@ class wall369 {
 		$render .= '<timezone>'.$this->get['t'].'</timezone>';
 		return $render;
 	}
-	function action_poststatus() {
-		$prepare = $this->pdo->prepare('INSERT INTO wall369_post (user_id, post_content, post_datecreated) VALUES (:user_id, :post_content, :post_datecreated)');
-		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_content'=>$_POST['status_textarea'], ':post_datecreated'=>date('Y-m-d H:i:s')));
-		$post_id = $this->pdo->lastinsertid();
+	function action_post() {
 		$render = '';
+		$this->set_get('type', '', 'alphabetic');
+		$prepare = $this->pdo->prepare('INSERT INTO wall369_post (user_id, post_content, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, :post_httpuseragent, :post_remoteaddr, :post_datecreated)');
+		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_content'=>$_POST['post_content'], ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
+		if($execute) {
+			$post_id = $this->pdo->lastinsertid();
+			if($this->get['type'] == 'link') {
+				$og = $this->analyze_link($_POST['link_inputtext']);
+				$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, :link_image, :link_icon, :link_content, :link_datecreated)');
+				$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$og['url'], ':link_title'=>$og['title'], ':link_image'=>$og['image'], ':link_icon'=>$og['icon'], ':link_content'=>$og['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
+			}
+			$links = preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['post_content'], $matches);
+			$matches = $matches[0];
+			if(count($matches) != 0) {
+				$matches = array_unique($matches);
+				foreach($matches as $match) {
+					$analyze = 1;
+					if($this->get['type'] == 'link') {
+						if($match == $_POST['link_inputtext']) {
+							$analyze = 0;
+						}
+					}
+					if($analyze == 1) {
+						$og = $this->analyze_link($match);
+						$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, :link_image, :link_icon, :link_content, :link_datecreated)');
+						$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$og['url'], ':link_title'=>$og['title'], ':link_image'=>$og['image'], ':link_icon'=>$og['icon'], ':link_content'=>$og['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
+					}
+				}
+			}
+		}
 		$render .= '<result>'.$execute.'</result>';
 		$render .= '<content><![CDATA[';
 		$render .= $this->render_post($this->get_post($post_id));
 		$render .= ']]></content>';
 		return $render;
 	}
-	function action_test() {
+	function action_comment() {
 		$render = '';
-		$render .= '<posts>';
-		$sql = 'SELECT * FROM wall369_post ORDER BY post_id DESC';
-		$stm = $this->pdo->prepare($sql);
-		$result = false;
-		if($stm && $stm->execute()) {
-			$result = $stm->rowCount();
-			if($result > 0) {
-				while($r = $stm->fetch(PDO::FETCH_OBJ)) {
-					$render .= '<post>';
-					$render .= '<post_id>'.$r->post_id.'</post_id>';
-					$render .= '<user_id>'.$r->user_id.'</user_id>';
-					$render .= '<post_content>'.$r->post_content.'</post_content>';
-					$render .= '<post_datecreated>'.$r->post_datecreated.'</post_datecreated>';
-					$render .= '</post>';
-				}
-			}
+		$prepare = $this->pdo->prepare('INSERT INTO wall369_comment (user_id, post_id, comment_content, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, :comment_datecreated)');
+		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post'], ':comment_content'=>$_POST['comment_textarea'], ':comment_datecreated'=>date('Y-m-d H:i:s')));
+		if($execute) {
+			$comment_id = $this->pdo->lastinsertid();
+			$render .= '<result>'.$execute.'</result>';
+			$render .= '<post>'.$this->get['post'].'</post>';
+			$render .= '<content><![CDATA[';
+			$render .= $this->render_comment($this->get_comment($comment_id));
+			$render .= ']]></content>';
 		}
-		$render .= '</posts>';
+		return $render;
+	}
+	function action_posts() {
+		$render = '';
+		$render .= '<content><![CDATA[';
+		$render .= $this->render_post_list();
+		$render .= ']]></content>';
 		return $render;
 	}
 	function action_postdelete() {
@@ -139,7 +164,7 @@ class wall369 {
 		return $render;
 	}
 	function get_user($user_id) {
-		$prepare = $this->pdo->prepare('SELECT user.* FROM wall369_user user WHERE user.user_id = :user_id');
+		$prepare = $this->pdo->prepare('SELECT user.* FROM wall369_user user WHERE user.user_id = :user_id GROUP BY user.user_id');
 		$execute = $prepare->execute(array(':user_id'=>$user_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -147,31 +172,63 @@ class wall369 {
 		}
 	}
 	function get_post($post_id) {
-		$prepare = $this->pdo->prepare('SELECT post.*, user.* FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id WHERE post.post_id = :post_id');
+		$prepare = $this->pdo->prepare('SELECT post.*, user.*, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id WHERE post.post_id = :post_id GROUP BY post.post_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
 			return $prepare->fetch(PDO::FETCH_OBJ);
 		}
 	}
+	function render_post_list() {
+		$render = '';
+		$prepare = $this->pdo->prepare('SELECT post.*, user.*, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id GROUP BY post.post_id ORDER BY post.post_id DESC');
+		$execute = $prepare->execute();
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
+				$render .= $this->render_post($post);
+			}
+		}
+		return $render;
+	}
 	function render_post($post) {
 		$render = '<div class="post" id="post_'.$post->post_id.'">
 			<div class="post_display">
-				<div class="post_thumb"><img alt="" src="storage/test.png"></div>
+				<div class="post_thumb">';
+				if(GRAVATAR == 1) {
+					$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($post->user_email)).'?rating='.GRAVATAR_RATING.'&size=70&default='.GRAVATAR_DEFAULT.'">';
+				} else {
+					$render .= '<img alt="" src="medias/default_mediasmall.gif">';
+				}
+				$render .= '</div>
 				<div class="post_text">
 					<p><span class="username">'.$post->user_firstname.' '.$post->user_lastname.'</span></p>
-					<p>'.nl2br($post->post_content, 0).'</p>
-					<p class="post_detail post_detail_photo"><span id="datecreated2011-12-1214:36:40" class="datecreated">'.$post->post_datecreated.'</span> | <span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Like</a> |</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Unlike</a> |</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">Comment</a>';
+					<p>'.nl2br($post->post_content, 0).'</p>';
+					if($post->count_link > 0) {
+						$render .= $this->render_link_list($post->post_id);
+					}
+					$render .= '<p class="post_detail post_detail_photo"><span id="datecreated2011-12-1214:36:40" class="datecreated">'.$post->post_datecreated.'</span> | <span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Like</a> |</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Unlike</a> |</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">Comment</a>';
 					if($post->user_id == $this->user->user_id) {
-						$render .= '| <a class="post_delete_action" data-post="'.$post->post_id.'" href="?a=postdelete&amp;post='.$post->post_id.'">Delete</a>';
+						$render .= ' | <a class="post_delete_action" data-post="'.$post->post_id.'" href="?a=postdelete&amp;post='.$post->post_id.'">Delete</a>';
 					}
 					$render .= '</p>
 					<div class="comments" id="comments_'.$post->post_id.'">
+						<div class="comments_display">';
+						if($post->count_comment > 0) {
+							$render .= $this->render_comment_list($post->post_id);
+						}
+						$render .= '</div>
 						<div class="comment comment_form" id="comment_form_'.$post->post_id.'">
 							<div class="comment_display comment_form_display">
-								<div class="comment_thumb"><img alt="" src="storage/test.png"></div>
+								<div class="comment_thumb">';
+								if(GRAVATAR == 1) {
+									$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($this->user->user_email)).'?rating='.GRAVATAR_RATING.'&size=50&default='.GRAVATAR_DEFAULT.'">';
+								} else {
+									$render .= '<img alt="" src="medias/default_mediasmall.gif">';
+								}
+								$render .= '</div>
 								<div class="comment_text">
-									<form action="" method="post">
+									<form action="?a=comment&amp;post='.$post->post_id.'" class="comment_form_form" method="post">
 									<p><textarea class="textarea" name="comment"></textarea></p>
 									<p class="submit_btn"><input class="inputsubmit" type="submit" value=" Comment " data-post="'.$post->post_id.'"></p>
 									</form>
@@ -183,6 +240,256 @@ class wall369 {
 			</div>
 		</div>';
 		return $render;
+	}
+	function get_comment($comment_id) {
+		$prepare = $this->pdo->prepare('SELECT comment.*, user.* FROM wall369_comment comment LEFT JOIN wall369_user user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id');
+		$execute = $prepare->execute(array(':comment_id'=>$comment_id));
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			return $prepare->fetch(PDO::FETCH_OBJ);
+		}
+	}
+	function render_comment_list($post_id) {
+		$render = '';
+		$prepare = $this->pdo->prepare('SELECT comment.*, user.* FROM wall369_comment comment LEFT JOIN wall369_user user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id');
+		$execute = $prepare->execute(array(':post_id'=>$post_id));
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
+				$render .= $this->render_comment($comment);
+			}
+		}
+		return $render;
+	}
+	function render_comment($comment) {
+		$render = '<div class="comment" id="comment_'.$comment->comment_id.'">
+			<div class="comment_display">
+				<div class="comment_thumb">';
+				if(GRAVATAR == 1) {
+					$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($comment->user_email)).'?rating='.GRAVATAR_RATING.'&size=50&default='.GRAVATAR_DEFAULT.'">';
+				} else {
+					$render .= '<img alt="" src="medias/default_mediasmall.gif">';
+				}
+				$render .= '</div>
+				<div class="comment_text">
+					<p><span class="username">'.$comment->user_firstname.' '.$comment->user_lastname.'</span> '.nl2br($comment->comment_content, 0).'</p>
+					<p class="comment_detail"><span id="datecreated2011-12-1216:42:32" class="datecreated">'.$comment->comment_datecreated.'</span>';
+					if($comment->user_id == $this->user->user_id) {
+						$render .= ' | <a class="comment_delete_action" data-comment="'.$comment->comment_id.'" href="?a=commentdelete&amp;comment='.$comment->comment_id.'">Delete</a>';
+					}
+					$render .= '</p>
+				</div>
+			</div>
+		</div>';
+		return $render;
+	}
+	function render_link_list($post_id) {
+		$render = '';
+		$prepare = $this->pdo->prepare('SELECT link.* FROM wall369_link link WHERE link.post_id = :post_id GROUP BY link.link_id');
+		$execute = $prepare->execute(array(':post_id'=>$post_id));
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			$render .= '<div class="links">';
+			while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
+				$render .= $this->render_link($link);
+			}
+			$render .= '</div>';
+		}
+		return $render;
+	}
+	function render_link($link) {
+		$url = parse_url($link->link_url);
+		$render = '<div class="link" id="link_'.$link->link_id.'">
+			<div class="link_display">
+				<div class="link_thumb">';
+				if($link->link_image != '') {
+					$render .= '<a target="_blank" href="'.$link->link_url.'"><img alt="" src="'.$link->link_image.'"></a>';
+				}
+				$render .= '</div>
+				<div class="link_text">
+					<p><a target="_blank" href="'.$link->link_url.'">'.$link->link_title.'</a> <span class="share_social"><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u='.urlencode($link->link_url).'"><img title="Facebook" alt="Facebook" src="medias/icon_facebook.png"></a> <a target="_blank" href="http://twitter.com/home?status='.urlencode($link->link_url).'"><img title="Twitter" alt="Twitter" src="medias/icon_twitter.png"></a></span><br>';
+					if($link->link_icon != '') {
+						$render .= '<span class="icon"><img alt="" src="'.$link->link_icon.'"></span> ';
+					}
+					$render .= '<span class="hostname">'.$url['host'].'</span></p>';
+					if($link->link_content != '') {
+						$render .= '<p>'.$link->link_content.'</p>';
+					}
+				$render .= '</div>
+			</div>
+		</div>';
+		return $render;
+	}
+
+	function analyze_link($link) {
+		$og = array();
+		$og['url'] = $link;
+		$og['icon'] = '';
+		$og['image'] = '';
+		$og['title'] = '';
+		$og['description'] = '';
+		$og['charset_server'] = '';
+		$og['charset_client'] = '';
+
+		$headers = get_headers($link, 1);
+
+		if(isset($headers['Location']) == 1) {
+			if(is_array($headers['Location'])) {
+				$link = $headers['Location'][0];
+			} else {
+				$link = $headers['Location'];
+			}
+			$origin_status = $headers[0];
+			$headers = get_headers($link, 1);
+			$headers[0] = $headers[0].' ('.$origin_status.')';
+
+			if(isset($headers['Content-Type']) == 1 && is_array($headers['Content-Type'])) {
+				$headers['Content-Type'] = $headers['Content-Type'][0];
+			}
+		}
+
+		$headers = array_unique($headers);
+
+		$opts = array('http'=>array('header'=>'User-Agent: '.$_SERVER['HTTP_USER_AGENT']."\r\n"));
+
+		$context = stream_context_create($opts);
+
+		$this->content = file_get_contents($link, false, $context);
+		$this->content = str_replace("\t", '', $this->content);
+		$this->content2 = str_replace("\r\n", '', $this->content);
+		$this->content2 = str_replace("\n", '', $this->content2);
+
+		$pattern = "|<[tT][iI][tT][lL][eE](.*)>(.*)<\/[tT][iI][tT][lL][eE]>|U";
+		$matches = array();
+		preg_match_all($pattern, $this->content2, $matches, PREG_SET_ORDER);
+		foreach($matches as $match) {
+			$og['title'] = trim($match[2]);
+		}
+
+		$pattern = "|<[mM][eE][tT][aA](.*)[cC][hH][aA][rR][sS][eE][tT]=[\"'](.*)[\"'](.*)>|U";
+		$matches = array();
+		preg_match_all($pattern, $this->content2, $matches, PREG_SET_ORDER);
+		foreach($matches as $match) {
+			$og['charset_client'] = strtolower($match[2]);
+		}
+
+		$pattern = "|<[lL][iI][nN][kK](.*)[hH][rR][eE][fF]=[\"'](.*)[\"'](.*)>|U";
+		$matches = array();
+		preg_match_all($pattern, $this->content2, $matches, PREG_SET_ORDER);
+		foreach($matches as $match) {
+			$href = $match[2];
+
+			$rel = '';
+			$pattern = "|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U";
+			$matches_sub = array();
+			preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
+			foreach($matches_sub as $match_sub) {
+				$rel = $match_sub[2];
+			}
+			$pattern = "|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U";
+			$matches_sub = array();
+			preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
+			foreach($matches_sub as $match_sub) {
+				$rel = $match_sub[2];
+			}
+			if($rel == 'image_src') {
+				$og['image'] = $href;
+			}
+			if($rel == 'icon' || $rel == 'shortcut icon') {
+				$og['icon'] = $href;
+			}
+
+			$ref = '';
+			$pattern = "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U";
+			$matches_sub = array();
+			preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
+			foreach($matches_sub as $match_sub) {
+				$ref = strtolower($match_sub[2]);
+			}
+			$pattern = "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U";
+			$matches_sub = array();
+			preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
+			foreach($matches_sub as $match_sub) {
+				$ref = strtolower($match_sub[2]);
+			}
+			if($ref == 'icon' || $ref == 'shortcut icon') {
+				$og['icon'] = $href;
+			}
+		}
+
+		$pattern = "|<[mM][eE][tT][aA](.*)[cC][oO][nN][tT][eE][nN][tT]=\"(.*)\"(.*)>|U";
+		$matches = array();
+		preg_match_all($pattern, $this->content2, $matches, PREG_SET_ORDER);
+		foreach($matches as $match) {
+			$value = $match[2];
+
+			$key = '';
+			$pattern = "|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U";
+			$matches_sub = array();
+			preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
+			foreach($matches_sub as $match_sub) {
+				$key = $match_sub[2];
+			}
+			$pattern = "|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U";
+			$matches_sub = array();
+			preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
+			foreach($matches_sub as $match_sub) {
+				$key = $match_sub[2];
+			}
+
+			$pattern = "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U";
+			$matches_sub = array();
+			preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
+			foreach($matches_sub as $match_sub) {
+				$key = $match_sub[2];
+			}
+			$pattern = "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U";
+			$matches_sub = array();
+			preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
+			foreach($matches_sub as $match_sub) {
+				$key = $match_sub[2];
+			}
+
+			$pattern = "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U";
+			$matches_sub = array();
+			preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
+			foreach($matches_sub as $match_sub) {
+				$key = $match_sub[2];
+			}
+			$pattern = "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U";
+			$matches_sub = array();
+			preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
+			foreach($matches_sub as $match_sub) {
+				$key = $match_sub[2];
+			}
+			if(strtolower($key) == 'content-type') {
+				$meta_charset = $match[2];
+			}
+
+			if($key == 'description') {
+				$og[$key] = $value;
+			} elseif(substr($key, 0, 3) == 'og:') {
+				$key = substr($key, 3);
+				$og[$key] = $value;
+			}
+		}
+
+		if(isset($headers['Content-Type']) == 1 && stristr($headers['Content-Type'], 'charset')) {
+			$contentType = $headers['Content-Type'];
+			$charset = strtolower(substr($headers['Content-Type'], strpos($headers['Content-Type'], '=')+1));
+			$og['charset_server'] = strtolower($charset);
+		}
+		if(isset($meta_charset) == 1 && stristr($meta_charset, 'charset')) {
+			$charset = strtolower(substr($meta_charset, strpos($meta_charset, '=')+1));
+			$og['charset_client'] = strtolower($charset);
+		}
+		if($og['charset_server'] != 'utf-8' && $og['charset_client'] != 'utf-8') {
+			$og['title'] = utf8_encode($og['title']);
+			$og['description'] = utf8_encode($og['description']);
+		}
+		//$og['description'] = html_entity_decode($og['description']);
+
+		return $og;
 	}
 	function __destruct() {
 	}

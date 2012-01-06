@@ -153,16 +153,59 @@ $(document).ready(function() {
 	$('#post_status').live('submit', function(e) {
 		e.preventDefault();
 		action = $(this).attr('action');
-		status_textarea = $('#status_textarea').val()
-		if(status_textarea != '') {
+		type = $(this).data('type');
+		post_content = $('#' + type + '_textarea').val();
+		if(post_content != '') {
 			data = {};
-			data['status_textarea'] = $('#status_textarea').val();
-			xml = ajax(action, data);
+			data['post_content'] = post_content;
+			xml = ajax(action + '&type=' + type, data);
 			result = $(xml).find('result').text();
 			if(result == '1') {
 				content = $(xml).find('content').text();
 				$('.posts').prepend(content);
+				$('#status_textarea').attr('value', '');
 			}
 		}
 	});
+	$('#post_link').live('submit', function(e) {
+		e.preventDefault();
+		action = $(this).attr('action');
+		type = $(this).data('type');
+		post_content = $('#' + type + '_textarea').val();
+		link_inputtext = $('#' + type + '_inputtext').val();
+		if(post_content != '' && link_inputtext != '' && link_inputtext != 'http://') {
+			data = {};
+			data['post_content'] = post_content;
+			data['link_inputtext'] = link_inputtext;
+			xml = ajax(action + '&type=' + type, data);
+			result = $(xml).find('result').text();
+			if(result == '1') {
+				content = $(xml).find('content').text();
+				$('.posts').prepend(content);
+				$('#link_textarea').attr('value', '');
+				$('#link_inputtext').attr('value', 'http://');
+			}
+		}
+	});
+	$('.comment_form_form').live('submit', function(e) {
+		e.preventDefault();
+		action = $(this).attr('action');
+		comment_textarea = $(this).find('.textarea').val()
+		if(comment_textarea != '') {
+			data = {};
+			data['comment_textarea'] = comment_textarea;
+			xml = ajax(action, data);
+			result = $(xml).find('result').text();
+			if(result == '1') {
+				post = $(xml).find('post').text();
+				content = $(xml).find('content').text();
+				$('#comments_' + post).find('.comments_display').append(content);
+				$(this).find('.textarea').attr('value', '');
+			}
+		}
+	});
+	data = {};
+	xml = ajax('index.php?a=posts', data);
+	content = $(xml).find('content').text();
+	$('.posts').html(content);
 });

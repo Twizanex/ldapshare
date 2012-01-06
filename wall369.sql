@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `wall369_comment` (
 PRIMARY KEY (`comment_id`),
 KEY `post_id` (`post_id`),
 KEY `user_id` (`user_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
 
 CREATE TABLE IF NOT EXISTS `wall369_like` (
 `like_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS `wall369_link` (
 `link_datecreated` datetime NOT NULL,
 PRIMARY KEY (`link_id`),
 KEY `post_id` (`post_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
 
 CREATE TABLE IF NOT EXISTS `wall369_photo` (
 `photo_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `wall369_photo` (
 `photo_file` varchar(100) NOT NULL,
 PRIMARY KEY (`photo_id`),
 KEY `post_id` (`post_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
 
 CREATE TABLE IF NOT EXISTS `wall369_post` (
 `post_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
@@ -54,6 +54,8 @@ KEY `user_id` (`user_id`)
 CREATE TABLE IF NOT EXISTS `wall369_user` (
 `user_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 `user_email` varchar(255) NOT NULL,
+`user_lastname` varchar(255) NOT NULL,
+`user_firstname` varchar(255) NOT NULL,
 `user_file` varchar(100) NOT NULL,
 `user_datecreated` datetime NOT NULL,
 PRIMARY KEY (`user_id`)
