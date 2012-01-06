@@ -6,7 +6,9 @@ class wall369 {
 		$this->set_get('a', 'index', 'alphabetic');
 		$this->set_get('post', '', 'numeric');
 		$this->set_get('comment', '', 'numeric');
-		$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD);//, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\'')
+		$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'UTF8\''));
+
+		$this->get_user(1000);//TODO
 	}
 	function error_handler($e_type, $e_message, $e_file, $e_line) {
 		$this->render_error($e_type, $e_message, $e_file, $e_line);
@@ -89,6 +91,17 @@ class wall369 {
 		$render .= '<timezone>'.$this->get['t'].'</timezone>';
 		return $render;
 	}
+	function action_poststatus() {
+		$prepare = $this->pdo->prepare('INSERT INTO wall369_post (user_id, post_content, post_datecreated) VALUES (:user_id, :post_content, :post_datecreated)');
+		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_content'=>$_POST['status_textarea'], ':post_datecreated'=>date('Y-m-d H:i:s')));
+		$post_id = $this->pdo->lastinsertid();
+		$render = '';
+		$render .= '<result>'.$execute.'</result>';
+		$render .= '<content><![CDATA[';
+		$render .= $this->render_post($this->get_post($post_id));
+		$render .= ']]></content>';
+		return $render;
+	}
 	function action_test() {
 		$render = '';
 		$render .= '<posts>';
@@ -123,6 +136,52 @@ class wall369 {
 		$render .= '<content><![CDATA[';
 		$render .= '<h2>Comment delete</h2>';
 		$render .= ']]></content>';
+		return $render;
+	}
+	function get_user($user_id) {
+		$prepare = $this->pdo->prepare('SELECT user.* FROM wall369_user user WHERE user.user_id = :user_id');
+		$execute = $prepare->execute(array(':user_id'=>$user_id));
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			$this->user = $prepare->fetch(PDO::FETCH_OBJ);
+		}
+	}
+	function get_post($post_id) {
+		$prepare = $this->pdo->prepare('SELECT post.*, user.* FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id WHERE post.post_id = :post_id');
+		$execute = $prepare->execute(array(':post_id'=>$post_id));
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			return $prepare->fetch(PDO::FETCH_OBJ);
+		}
+	}
+	function render_post($post) {
+		$render = '<div class="post" id="post_'.$post->post_id.'">
+			<div class="post_display">
+				<div class="post_thumb"><img alt="" src="storage/test.png"></div>
+				<div class="post_text">
+					<p><span class="username">'.$post->user_firstname.' '.$post->user_lastname.'</span></p>
+					<p>'.$post->post_content.'</p>
+					<p class="post_detail post_detail_photo"><span id="datecreated2011-12-1214:36:40" class="datecreated">'.$post->post_datecreated.'</span> | <span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Like</a> |</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Unlike</a> |</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">Comment</a>';
+					if($post->user_id == $this->user->user_id) {
+						$render .= '| <a class="post_delete_action" data-post="'.$post->post_id.'" href="?a=postdelete&amp;post='.$post->post_id.'">Delete</a>';
+					}
+					$render .= '</p>
+					<div class="comments" id="comments_'.$post->post_id.'">
+						<div class="comment comment_form" id="comment_form_'.$post->post_id.'">
+							<div class="comment_display comment_form_display">
+								<div class="comment_thumb"><img alt="" src="storage/test.png"></div>
+								<div class="comment_text">
+									<form action="" method="post">
+									<p><textarea class="textarea" name="comment"></textarea></p>
+									<p class="submit_btn"><input class="inputsubmit" type="submit" value=" Comment " data-post="'.$post->post_id.'"></p>
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>';
 		return $render;
 	}
 	function __destruct() {

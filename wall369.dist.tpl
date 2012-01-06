@@ -17,15 +17,15 @@
 	</div>
 
 	<div id="post_form_status" class="post_form">
-	<form action="" method="post">
-	<p><textarea class="textarea" name="status_textarea"></textarea></p>
+	<form action="?a=poststatus" enctype="application/x-www-form-urlencoded" id="post_status" method="post">
+	<p><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>
 	<p class="submit_btn"><input class="inputsubmit" name="status_inputsubmit" type="submit" value=" Share "></p>
 	</form>
 	</div>
 
 	<div id="post_form_photo" class="post_form post_form_inactive">
-	<form target="iframe_upload" action="wall-ajax.html?a=upload_photo" method="post" id="upload_form_photo" enctype="multipart/form-data">
-	<p><textarea class="textarea" name="photo_textarea"></textarea></p>
+	<form action="?a=postphoto" enctype="multipart/form-data" id="post_photo" method="post" target="iframe_upload">
+	<p><textarea class="textarea" id="photo_textarea" name="photo_textarea"></textarea></p>
 	<p><input class="inputfile" type="file" name="photo_inputfile"><br>
 	2M max. / jpeg, gif or png</p>
 	<p class="submit_btn"><input class="inputsubmit" name="photo_inputsubmit" type="submit" value=" Share "></p>
@@ -34,9 +34,9 @@
 	</div>
 
 	<div id="post_form_link" class="post_form post_form_inactive">
-	<form action="" method="post">
-	<p><textarea class="textarea" name="link_textarea"></textarea></p>
-	<p><input class="inputtext" type="text" name="link_inputtext" value="http://"></p>
+	<form action="?a=postlink" enctype="application/x-www-form-urlencoded" id="post_link" method="post">
+	<p><textarea class="textarea" id="link_textarea" name="link_textarea"></textarea></p>
+	<p><input class="inputtext" id="link_inputtext" type="text" value="http://"></p>
 	<p class="submit_btn"><input class="inputsubmit" name="link_inputsubmit" type="submit" value=" Share "></p>
 	</form>
 	</div>

@@ -1,4 +1,5 @@
 function ajax(url, data) {
+	var xml_return;
 	loading_show();
 	$.ajax({
 		async: false,
@@ -7,29 +8,31 @@ function ajax(url, data) {
 		dataType: 'xml',
 		statusCode: {
 			200: function(xml) {
-				return xml;
+				xml_return = xml;
 			}
 		},
 		type: 'POST',
 		url: url
 	});
 	loading_hide();
+	return xml_return;
 }
 function set_positions() {
 	document_top = $(document).scrollTop();
+	document_height = $(document).height();
 	window_width = $(window).width();
 	window_height = $(window).height();
-	$('#mask').css({'height': window_height, 'width': window_width});
+	$('#mask').css({'height': document_height, 'width': window_width});
 	_width = $('#loading').width();
 	_height = $('#loading').height();
-	_margin_top = (window_height - _height) / 2;
+	_top = document_top + (window_height / 2) - (_height / 2);
 	_margin_left = (window_width - _width) / 2;
-	$('#loading').css({'margin-left': _margin_left, 'margin-top': _margin_top});
+	$('#loading').css({'margin-left': _margin_left, 'top': _top});
 	_width = $('#popin').width();
 	_height = $('#popin').height();
-	_margin_top = (window_height - _height) / 2;
+	_top = document_top + (window_height / 2) - (_height / 2);
 	_margin_left = (window_width - _width) / 2;
-	$('#popin').css({'margin-left': _margin_left});
+	$('#popin').css({'margin-left': _margin_left, 'top': _top});
 }
 function loading_hide() {
 	$('#loading').hide();
@@ -57,19 +60,10 @@ function popin_show(href) {
 		mask_show();
 	}
 	loading_show();
-	$.ajax({
-		async: false,
-		cache: true,
-		dataType: 'xml',
-		statusCode: {
-			200: function(xml) {
-				content = $(xml).find('content').text();
-				$('#popin_display').html(content);
-			}
-		},
-		type: 'POST',
-		url: href
-	});
+	data = {};
+	xml = ajax(href, data);
+	content = $(xml).find('content').text();
+	$('#popin_display').html(content);
 	loading_hide();
 	if($('#popin').is(':visible')) {
 	} else {
@@ -103,11 +97,10 @@ $(document).ready(function() {
 		href = $(this).attr('href');
 		popin_show(href);
 	});
-
-	var d = new Date();
-	var t = -d.getTimezoneOffset() / 60;
-	var data = {};
-	ajax('index.php?a=timezone&t=' + t, data);
+	d = new Date();
+	t = -d.getTimezoneOffset() / 60;
+	data = {};
+	xml = ajax('index.php?a=timezone&t=' + t, data);
     $('.share_action').click(function(e) {
 		e.preventDefault();
         href = $(this).attr('href');
@@ -156,5 +149,20 @@ $(document).ready(function() {
 		href = $(this).attr('href');
 		post = $(this).data('post');
 		popin_show(href);
+	});
+	$('#post_status').live('submit', function(e) {
+		e.preventDefault();
+		action = $(this).attr('action');
+		status_textarea = $('#status_textarea').val()
+		if(status_textarea != '') {
+			data = {};
+			data['status_textarea'] = $('#status_textarea').val();
+			xml = ajax(action, data);
+			result = $(xml).find('result').text();
+			if(result == '1') {
+				content = $(xml).find('content').text();
+				$('.posts').prepend(content);
+			}
+		}
 	});
 });
