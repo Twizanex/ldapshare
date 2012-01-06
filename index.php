@@ -21,19 +21,18 @@ if(isset($_SERVER['HTTPS']) == 1 && strtolower($_SERVER['HTTPS']) == 'on') {
 }
 session_set_cookie_params(0, '/', '', $secure, 1);
 session_start();
+if(file_exists('configuration.php')) {
+	include_once('configuration.php');
+} else {
+	include_once('configuration.dist.php');
+}
 if(file_exists('wall369.php')) {
 	include_once('wall369.php');
 } else {
 	include_once('wall369.dist.php');
 }
 $wall369 = new wall369();
-if(GZHANDLER == 1 && isset($_SERVER['HTTP_ACCEPT_ENCODING']) == 1 && substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') && extension_loaded('zlib')) {
-	ob_start('ob_gzhandler');
-	echo $wall369->render();
-	ob_end_flush();
-} else {
-	echo $wall369->render();
-}
+$wall369->render();
 unset($wall369);
 exit(0);
 ?>
