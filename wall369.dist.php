@@ -111,14 +111,14 @@ class wall369 {
 		$render .= '</posts>';
 		return $render;
 	}
-	function action_post_delete() {
+	function action_postdelete() {
 		$render = '';
 		$render .= '<content><![CDATA[';
 		$render .= '<h2>Post delete</h2>';
 		$render .= ']]></content>';
 		return $render;
 	}
-	function action_comment_delete() {
+	function action_commentdelete() {
 		$render = '';
 		$render .= '<content><![CDATA[';
 		$render .= '<h2>Comment delete</h2>';
