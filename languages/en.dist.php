@@ -1,5 +1,11 @@
 <?php
-$this->str['en']['week'] = 'Semaine';
+$this->str['en']['share'] = 'Share';
+$this->str['en']['status'] = 'Status';
+$this->str['en']['photo'] = 'Photo';
+$this->str['en']['link'] = 'Link';
+$this->str['en']['comment'] = 'Comment';
+$this->str['en']['like'] = 'Like';
+$this->str['en']['unlike'] = 'Unlike';
 
 $this->str['en']['days_values'] = array(
 'Monday'=>'Monday',
@@ -85,10 +91,7 @@ $this->str['en']['months_short_values'] = array(
 'December'=>'Déc',
 );
 
-$this->str['en']['default_format'] = 'l jS F Y, H:i:s';
-
 $this->str['en']['today'] = 'Today';
-$this->str['en']['tomorrow'] = 'Tomorrow';
 $this->str['en']['now'] = 'Now';
 $this->str['en']['days-diff'] = '%1$s days ago';
 $this->str['en']['hours-diff'] = '%1$s hours ago';
@@ -97,13 +100,4 @@ $this->str['en']['months-diff'] = '%1$s months ago';
 $this->str['en']['weeks-diff'] = '%1$s weeks ago';
 $this->str['en']['years-diff'] = '%1$s years ago';
 $this->str['en']['yesterday'] = 'Yesterday';
-
-$this->str['en']['seconde'] = 'seconde';
-$this->str['en']['secondes'] = 'secondes';
-$this->str['en']['minute'] = 'minute';
-$this->str['en']['minutes'] = 'minutes';
-$this->str['en']['hour'] = 'hour';
-$this->str['en']['hours'] = 'hours';
-$this->str['en']['day'] = 'day';
-$this->str['en']['days'] = 'days';
 ?>

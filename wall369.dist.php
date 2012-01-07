@@ -272,7 +272,7 @@ class wall369 {
 					if($post->count_link > 0) {
 						$render .= $this->render_linklist($post->post_id);
 					}
-					$render .= '<p class="post_detail post_detail_photo"><span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Like</a> ·</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Unlike</a> ·</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">Comment</a>';
+					$render .= '<p class="post_detail post_detail_photo"><span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
 					$render .= ' · <span class="datecreated">'.$this->render_datecreated($post->post_datecreated).'</span>';
 					$render .= '</p>
 					<div class="comments" id="comments_'.$post->post_id.'">
@@ -298,7 +298,7 @@ class wall369 {
 								<div class="comment_text">
 									<form action="?a=comment&amp;post='.$post->post_id.'" class="comment_form_form" method="post">
 									<p><textarea class="textarea" name="comment"></textarea></p>
-									<p class="submit_btn"><input class="inputsubmit" type="submit" value=" Comment " data-post="'.$post->post_id.'"></p>
+									<p class="submit_btn"><input class="inputsubmit" type="submit" value=" '.$this->str[$this->language]['comment'].' " data-post="'.$post->post_id.'"></p>
 									</form>
 								</div>
 							</div>
@@ -432,11 +432,14 @@ class wall369 {
         $diff = $this->date_diff_days($this->date_day, $datecreated);
         if($diff != 0) {
             $mention = $this->date_diff_days_mention($diff);
+			if($diff == -1) {
+				$mention .= ' at '.substr($timecreated, 0, 5);
+			}
         } else {
             $diff = $this->date_diff_minutes($this->date_time, $timecreated);
             $mention = $this->date_diff_minutes_mention($diff);
         }
-        return '<span title="'.$this->date_transform(array('format'=>'l, F jS, Y, H:i', 'date'=>$date)).'">'.$mention.'</span>';
+        return '<span title="'.$this->date_transform(array('format'=>DATE_FORMAT, 'date'=>$date)).'">'.$mention.'</span>';
     }
 	function date_diff_days($previous, $next) {
 		if($previous == '' || $next == '') {
@@ -511,7 +514,6 @@ class wall369 {
 		$date = '';
 		$days_key = 'days_values';
 		$months_key = 'months_values';
-		$format = $this->str[$this->language]['default_format'];
 		foreach($prm as $_key => $_val) {
 			switch($_key) {
 				case 'date':
