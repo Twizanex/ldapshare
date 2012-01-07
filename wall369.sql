@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS `wall369_photo` (
 `photo_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 `post_id` int(10) unsigned NOT NULL,
 `photo_file` varchar(100) NOT NULL,
+`photo_datecreated` datetime NOT NULL,
 PRIMARY KEY (`photo_id`),
 KEY `post_id` (`post_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;

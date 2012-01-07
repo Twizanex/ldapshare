@@ -113,6 +113,25 @@ $(document).ready(function() {
             $(href).find('.textarea').focus();
         }
     });
+	$('.postlist_action').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		$(this).parent().hide();
+		data = {};
+		xml = ajax(href, data);
+		content = $(xml).find('content').text();
+		$('.posts').append(content);
+	});
+	$('.commentall_action').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		post = $(this).data('post');
+		data = {};
+		xml = ajax(href, data);
+		$('#comment_all_' + post).hide();
+		content = $(xml).find('content').text();
+		$('#post_' + post).find('.comments_display').prepend(content);
+	});
 	$('.link_more_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
@@ -167,6 +186,43 @@ $(document).ready(function() {
 			}
 		}
 	});
+	$('#post_photo').live('submit', function(e) {
+		e.preventDefault();
+		action = $(this).attr('action');
+		type = $(this).data('type');
+		post_content = $('#' + type + '_textarea').val();
+
+		if(window.FormData) {
+			formdata = new FormData();
+
+			var photo = document.getElementById('photo_inputfile');
+			if(photo.files.length != 0 && window.FileReader) {
+				var file = photo.files[0];
+				if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= 2097152) {
+					formdata.append('photo_inputfile', file);
+				}
+			}
+	
+			formdata.append('post_content', post_content);
+			if(formdata) {
+				$.ajax({
+					contentType: false,
+					data: formdata,
+					dataType: 'xml',
+					processData: false,
+					success: function(xml) {
+						content = $(xml).find('content').text();
+						$('.posts').prepend(content);
+						$('#photo_textarea').attr('value', '');
+						$('#photo_inputfile').attr('value', '');
+						$('#post_form_photo_preview').html('');
+					},
+					type: 'POST',
+					url: action + '&type=' + type
+				});
+			}
+		}
+	});
 	$('#post_link').live('submit', function(e) {
 		e.preventDefault();
 		action = $(this).attr('action');
@@ -204,6 +260,23 @@ $(document).ready(function() {
 			}
 		}
 	});
+    $('#photo_inputfile').live('change', function() {
+		$('#loading').show();
+        var photo = document.getElementById('photo_inputfile');
+        if(photo.files.length != 0 && window.FileReader) {
+            var file = photo.files[0];
+            if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= 2097152) {
+                $('#post_form_photo_preview').html('');
+                reader = new FileReader();
+                reader.onload = function(event) {
+					$('#post_form_photo_preview').html('<img alt="" id="photo_inputfile_preview" src="' + event.target.result + '">');
+                    $('#post_form_photo_preview').fadeIn();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+		$('#loading').hide();
+    });
 	data = {};
 	xml = ajax('index.php?a=postlist', data);
 	content = $(xml).find('content').text();

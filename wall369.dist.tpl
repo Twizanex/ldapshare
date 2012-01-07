@@ -25,7 +25,7 @@
 			<div id="post_form_photo" class="post_form post_form_inactive">
 				<form action="?a=post" data-type="photo" enctype="multipart/form-data" id="post_photo" method="post">
 				<p><textarea class="textarea" id="photo_textarea" name="photo_textarea"></textarea></p>
-				<p><input class="inputfile" type="file" name="photo_inputfile"><br>
+				<p><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"><br>
 				2M max. / jpeg, gif or png</p>
 				<p class="submit_btn"><input class="inputsubmit" name="photo_inputsubmit" type="submit" value=" Share "></p>
 				<div id="post_form_photo_preview"></div>

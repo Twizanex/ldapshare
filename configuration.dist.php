@@ -10,4 +10,6 @@ define('GRAVATAR', 0);//0, 1
 define('GRAVATAR_DEFAULT', 'identicon');//identicon, mm, monsterid, retro, wavatar
 define('GRAVATAR_RATING', 'pg');//g, pg, r, x
 define('UPLOAD_SIZE', 4);//mega
+define('LIMIT_POSTS', 10);
+define('LIMIT_COMMENTS', 5);
 ?>
