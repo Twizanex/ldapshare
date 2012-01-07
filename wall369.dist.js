@@ -205,7 +205,7 @@ $(document).ready(function() {
 		}
 	});
 	data = {};
-	xml = ajax('index.php?a=posts', data);
+	xml = ajax('index.php?a=postlist', data);
 	content = $(xml).find('content').text();
 	$('.posts').html(content);
 });
