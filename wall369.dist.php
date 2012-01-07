@@ -217,7 +217,7 @@ class wall369 {
 					if($post->count_link > 0) {
 						$render .= $this->render_linklist($post->post_id);
 					}
-					$render .= '<p class="post_detail post_detail_photo"><span id="datecreated2011-12-1214:36:40" class="datecreated">'.$post->post_datecreated.'</span> | <span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Like</a> |</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Unlike</a> |</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">Comment</a>';
+					$render .= '<p class="post_detail post_detail_photo"><span class="datecreated">'.$post->post_datecreated.'</span> | <span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Like</a> |</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Unlike</a> |</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">Comment</a>';
 					if($post->user_id == $this->user->user_id) {
 						$render .= ' | <a class="post_delete_action" data-post="'.$post->post_id.'" href="?a=postdelete&amp;post='.$post->post_id.'">Delete</a>';
 					}
@@ -280,7 +280,7 @@ class wall369 {
 				$render .= '</div>
 				<div class="comment_text">
 					<p><span class="username">'.$comment->user_firstname.' '.$comment->user_lastname.'</span> '.nl2br($comment->comment_content, 0).'</p>
-					<p class="comment_detail"><span id="datecreated2011-12-1216:42:32" class="datecreated">'.$comment->comment_datecreated.'</span>';
+					<p class="comment_detail"><span class="datecreated">'.$comment->comment_datecreated.'</span>';
 					if($comment->user_id == $this->user->user_id) {
 						$render .= ' | <a class="comment_delete_action" data-comment="'.$comment->comment_id.'" href="?a=commentdelete&amp;comment='.$comment->comment_id.'">Delete</a>';
 					}
@@ -327,7 +327,6 @@ class wall369 {
 		</div>';
 		return $render;
 	}
-
 	function analyze_link($link) {
 		$data = array('url'=>$link, 'icon'=>'', 'image'=>'', 'title'=>'', 'description'=>'', 'charset_server'=>'', 'charset_client'=>'');
 
@@ -470,7 +469,6 @@ class wall369 {
 		}
 
 		if(isset($headers['Content-Type']) == 1 && stristr($headers['Content-Type'], 'charset')) {
-			$contentType = $headers['Content-Type'];
 			$charset = strtolower(substr($headers['Content-Type'], strpos($headers['Content-Type'], '=')+1));
 			$data['charset_server'] = strtolower($charset);
 		}
@@ -482,11 +480,7 @@ class wall369 {
 			$data['title'] = utf8_encode($data['title']);
 			$data['description'] = utf8_encode($data['description']);
 		}
-		//$data['description'] = html_entity_decode($data['description']);
-
 		return $data;
-	}
-	function __destruct() {
 	}
 }
 ?>
