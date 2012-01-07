@@ -6,6 +6,13 @@ class wall369 {
 		if(isset($_SESSION['wall369']) == 0) {
 			$_SESSION['wall369'] = array();
 		}
+		if(isset($_SESSION['wall369']['timezone']) == 0) {
+			$_SESSION['wall369']['timezone'] = 0;
+		}
+		$this->language = 'en';
+		include_once('languages/'.$this->language.'.dist.php');
+		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['wall369']['timezone']);
+		$this->date_time = gmdate('H:i:s', date('U') + 3600 * $_SESSION['wall369']['timezone']);
 		$this->set_get('a', 'index', 'alphabetic');
 		$this->set_get('post', '', 'numeric');
 		$this->set_get('comment', '', 'numeric');
@@ -104,13 +111,12 @@ class wall369 {
 		$render = '';
 		$this->set_get('type', '', 'alphabetic');
 		$prepare = $this->pdo->prepare('INSERT INTO wall369_post (user_id, post_content, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, :post_httpuseragent, :post_remoteaddr, :post_datecreated)');
-		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_content'=>$_POST['post_content'], ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
+		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['post_content']), ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
 		if($execute) {
 			$post_id = $this->pdo->lastinsertid();
 			if($this->get['type'] == 'link') {
 				$data = $this->analyze_link($_POST['link_inputtext']);
-				$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, :link_image, :link_icon, :link_content, :link_datecreated)');
-				$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
+				$this->add_link($post_id, $data);
 			}
 			$links = preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['post_content'], $matches);
 			$matches = $matches[0];
@@ -125,8 +131,7 @@ class wall369 {
 					}
 					if($analyze == 1) {
 						$data = $this->analyze_link($match);
-						$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, :link_image, :link_icon, :link_content, :link_datecreated)');
-						$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
+						$this->add_link($post_id, $data);
 					}
 				}
 			}
@@ -147,7 +152,7 @@ class wall369 {
 	function action_comment() {
 		$render = '';
 		$prepare = $this->pdo->prepare('INSERT INTO wall369_comment (user_id, post_id, comment_content, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, :comment_datecreated)');
-		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post'], ':comment_content'=>$_POST['comment_textarea'], ':comment_datecreated'=>date('Y-m-d H:i:s')));
+		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_datecreated'=>date('Y-m-d H:i:s')));
 		if($execute) {
 			$comment_id = $this->pdo->lastinsertid();
 			$render .= '<result>'.$execute.'</result>';
@@ -174,7 +179,7 @@ class wall369 {
 		}
 	}
 	function get_post($post_id) {
-		$prepare = $this->pdo->prepare('SELECT post.*, user.*, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id WHERE post.post_id = :post_id GROUP BY post.post_id');
+		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id WHERE post.post_id = :post_id GROUP BY post.post_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -182,16 +187,20 @@ class wall369 {
 		}
 	}
 	function get_comment($comment_id) {
-		$prepare = $this->pdo->prepare('SELECT comment.*, user.* FROM wall369_comment comment LEFT JOIN wall369_user user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id');
+		$prepare = $this->pdo->prepare('SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM wall369_comment comment LEFT JOIN wall369_user user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id');
 		$execute = $prepare->execute(array(':comment_id'=>$comment_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
 			return $prepare->fetch(PDO::FETCH_OBJ);
 		}
 	}
+	function add_link($post_id, $data) {
+		$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, :link_image, :link_icon, :link_content, :link_datecreated)');
+		$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
+	}
 	function render_postlist() {
 		$render = '';
-		$prepare = $this->pdo->prepare('SELECT post.*, user.*, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id GROUP BY post.post_id ORDER BY post.post_id DESC');
+		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id GROUP BY post.post_id ORDER BY post.post_id DESC');
 		$execute = $prepare->execute();
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -217,7 +226,7 @@ class wall369 {
 					if($post->count_link > 0) {
 						$render .= $this->render_linklist($post->post_id);
 					}
-					$render .= '<p class="post_detail post_detail_photo"><span class="datecreated">'.$post->post_datecreated.'</span> | <span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Like</a> |</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Unlike</a> |</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">Comment</a>';
+					$render .= '<p class="post_detail post_detail_photo"><span class="datecreated">'.$this->render_datecreated($post->post_datecreated).'</span> | <span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Like</a> |</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">Unlike</a> |</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">Comment</a>';
 					if($post->user_id == $this->user->user_id) {
 						$render .= ' | <a class="post_delete_action" data-post="'.$post->post_id.'" href="?a=postdelete&amp;post='.$post->post_id.'">Delete</a>';
 					}
@@ -258,7 +267,7 @@ class wall369 {
 	}
 	function render_commentlist($post_id) {
 		$render = '';
-		$prepare = $this->pdo->prepare('SELECT comment.*, user.* FROM wall369_comment comment LEFT JOIN wall369_user user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id');
+		$prepare = $this->pdo->prepare('SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM wall369_comment comment LEFT JOIN wall369_user user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -280,7 +289,7 @@ class wall369 {
 				$render .= '</div>
 				<div class="comment_text">
 					<p><span class="username">'.$comment->user_firstname.' '.$comment->user_lastname.'</span> '.nl2br($comment->comment_content, 0).'</p>
-					<p class="comment_detail"><span class="datecreated">'.$comment->comment_datecreated.'</span>';
+					<p class="comment_detail"><span class="datecreated">'.$this->render_datecreated($comment->comment_datecreated).'</span>';
 					if($comment->user_id == $this->user->user_id) {
 						$render .= ' | <a class="comment_delete_action" data-comment="'.$comment->comment_id.'" href="?a=commentdelete&amp;comment='.$comment->comment_id.'">Delete</a>';
 					}
@@ -326,6 +335,125 @@ class wall369 {
 			</div>
 		</div>';
 		return $render;
+	}
+    function render_datecreated($date) {
+        list($datecreated, $timecreated) = explode(' ', $date);
+        $diff = $this->date_diff_days($this->date_day, $datecreated);
+        if($diff != 0) {
+            $mention = $this->date_diff_days_mention($diff);
+        } else {
+            $diff = $this->date_diff_minutes($this->date_time, $timecreated);
+            $mention = $this->date_diff_minutes_mention($diff);
+        }
+        return '<span title="'.$this->date_transform(array('format'=>'l, F jS, Y, H:i', 'date'=>$date)).'">'.$mention.'</span>';
+    }
+	function date_diff_days($previous, $next) {
+		if($previous == '' || $next == '') {
+			return '';
+		} else {
+			/*if(function_exists('date_create') && function_exists('date_diff')) {
+				$datetime1 = date_create($previous);
+				$datetime2 = date_create($next);
+				$interval = date_diff($datetime1, $datetime2);
+				return $interval->format('%R%d');
+			} else {*/
+				$datetime1 = strtotime($previous);
+				$datetime2 = strtotime($next);
+				$interval = ($datetime2 - $datetime1)/3600/24;
+				if($interval == 0) {
+					$interval = '0';
+				}
+				return $interval;
+			//}
+		}
+	}
+	function date_diff_days_mention($diff) {
+		$mention = '';
+		if($diff != '') {
+			if($diff == 0) {
+				$mention = '<strong>'.$this->str[$this->language]['today'].'</strong>';
+			} elseif($diff == 1) {
+				$mention = '<strong>'.$this->str[$this->language]['tomorrow'].'</strong>';
+			} elseif($diff == -1) {
+				$mention = $this->str[$this->language]['yesterday'];
+			} elseif(abs($diff) >= 730) {
+				$mention = sprintf($this->str[$this->language]['years-diff'], ceil(intval($diff)/365));
+			} elseif(abs($diff) > 56) {
+				$mention = sprintf($this->str[$this->language]['months-diff'], ceil(intval($diff)/28));
+			} elseif(abs($diff) >= 14) {
+				$mention = sprintf($this->str[$this->language]['weeks-diff'], ceil(intval($diff)/7));
+			} else {
+				$mention = sprintf($this->str[$this->language]['days-diff'], intval($diff)).')';
+			}
+		}
+		return $mention;
+	}
+	function date_diff_minutes($previous, $next) {
+		if($previous == '' || $next == '') {
+			return '';
+		} else {
+			list($prev_h, $prev_m, $prev_s) = explode(':', $previous);
+			$previous_total = $prev_h*60 + $prev_m;
+			list($next_h, $next_m, $prev_s) = explode(':', $next);
+			$next_total = $next_h*60 + $next_m;
+			$interval = ($next_total - $previous_total);
+			if($interval == 0) {
+				$interval = '0';
+			}
+			return $interval;
+		}
+	}
+	function date_diff_minutes_mention($diff) {
+		$mention = '';
+		if($diff != '') {
+			if(abs($diff) <= 1) {
+				$mention = '<strong>'.$this->str[$this->language]['now'].'</strong>';
+			} elseif(abs($diff) >= 120) {
+				$mention = sprintf($this->str[$this->language]['hours-diff'], ceil(intval($diff)/60));
+			} else {
+				$mention = sprintf($this->str[$this->language]['minutes-diff'], intval($diff));
+			}
+		}
+		return $mention;
+	}
+	function date_transform($prm) {
+		$date = '';
+		$days_key = 'days_values';
+		$months_key = 'months_values';
+		$format = $this->str[$this->language]['default_format'];
+		foreach($prm as $_key => $_val) {
+			switch($_key) {
+				case 'date':
+				case 'days_key':
+				case 'months_key':
+				case 'format':
+					$$_key = (string)$_val;
+					break;
+			}
+		}
+		if($date != '') {
+			if($format != '') {
+				if(function_exists('date_create') && function_exists('date_format')) {
+					$date = date_create($date);
+					$date = date_format($date, $format);
+				} else {
+					$date = date($format, strtotime($date));
+				}
+			}
+			if(isset($this->str[$this->language][$months_key]) == 1 && count($this->str[$this->language][$months_key]) != 0) {
+				$months = $this->str[$this->language][$months_key];
+				$date = str_replace(array_keys($months), array_values($months), $date);
+			}
+			if(isset($this->str[$this->language][$days_key]) == 1 && count($this->str[$this->language][$days_key]) != 0) {
+				$days = $this->str[$this->language][$days_key];
+				$date = str_replace(array_keys($days), array_values($days), $date);
+			}
+			if(isset($this->str[$this->language]['daynumber_suffix_values']) == 1 && count($this->str[$this->language]['daynumber_suffix_values']) != 0) {
+				$days = array_reverse($this->str[$this->language]['daynumber_suffix_values'], 1);
+				$date = str_replace(array_keys($days), array_values($days), $date);
+			}
+		}
+		return $date;
 	}
 	function analyze_link($link) {
 		$data = array('url'=>$link, 'icon'=>'', 'image'=>'', 'title'=>'', 'description'=>'', 'charset_server'=>'', 'charset_client'=>'');
@@ -480,7 +608,11 @@ class wall369 {
 			$data['title'] = utf8_encode($data['title']);
 			$data['description'] = utf8_encode($data['description']);
 		}
-		return $data;
+		$data_sanitize = array();
+		foreach($data as $k => $v) {
+			$data_sanitize[$k] = strip_tags($v);
+		}
+		return $data_sanityze;
 	}
 }
 ?>
