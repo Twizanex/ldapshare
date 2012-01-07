@@ -3,6 +3,12 @@ class wall369 {
 	function __construct() {
 		set_error_handler(array($this, 'error_handler'));
 		register_shutdown_function(array($this, 'shutdown_function'));
+		if(isset($_SESSION['wall369']) == 0) {
+			$_SESSION['wall369'] = array();
+		}
+		if(isset($_SESSION['wall369']['timezone']) == 0) {
+			$_SESSION['wall369']['timezone'] = 0;
+		}
 		$this->language = 'en';
 		include_once('languages/'.$this->language.'.dist.php');
 		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['wall369']['timezone']);
@@ -12,12 +18,6 @@ class wall369 {
 		$this->set_get('comment', '', 'numeric');
 		$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
 		$this->user = $this->get_user(1000);//TODO
-		if(isset($_SESSION['wall369']) == 0) {
-			$_SESSION['wall369'] = array();
-		}
-		if(isset($_SESSION['wall369']['timezone']) == 0) {
-			$_SESSION['wall369']['timezone'] = 0;
-		}
 		if($this->get['a'] == 'index') {
 			$_SESSION['wall369']['post_id_oldest'] = 0;
 		}
