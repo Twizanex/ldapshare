@@ -277,6 +277,18 @@ $(document).ready(function() {
         }
 		$('#loading').hide();
     });
+	u = $.query.get('u');
+	if(u) {
+        $('.share_action').removeClass('share_action_active');
+        $('#share_action_link').addClass('share_action_active');
+        if($('#post_form_link').is(':visible')) {
+        } else {
+            $('.post_form').slideUp();
+            $('#post_form_link').slideDown();
+            $('#post_form_link').find('.textarea').focus();
+			$('#post_form_link').find('.inputtext').attr('value', u);
+        }
+	}
 	data = {};
 	xml = ajax('index.php?a=postlist', data);
 	content = $(xml).find('content').text();

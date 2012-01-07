@@ -44,6 +44,7 @@
 	</div>
 </div>
 <script type="text/javascript" src="thirdparty/jquery.min.js" charset="UTF-8"></script>
+<script type="text/javascript" src="thirdparty/jquery.query.min.js" charset="UTF-8"></script>
 <script type="text/javascript" src="wall369.dist.js" charset="UTF-8"></script>
 </body>
 </html>
