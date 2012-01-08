@@ -297,12 +297,14 @@ $(document).ready(function() {
 			data = {};
 			data['comment_textarea'] = comment_textarea;
 			xml = ajax(action, data);
+			post = $(xml).find('post').text();
+			content = $(xml).find('content').text();
 			result = $(xml).find('result').text();
 			if(result == '1') {
-				post = $(xml).find('post').text();
-				content = $(xml).find('content').text();
 				$('#comments_' + post).find('.comments_display').append(content);
 				$(this).find('.textarea').attr('value', '');
+			} else {
+				$('#post_' + post).html(content);
 			}
 		}
 	});

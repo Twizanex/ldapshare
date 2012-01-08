@@ -168,14 +168,23 @@ class wall369 {
 	}
 	function action_comment() {
 		$render = '';
-		$prepare = $this->pdo->prepare('INSERT INTO wall369_comment (user_id, post_id, comment_content, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, :comment_datecreated)');
-		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_datecreated'=>date('Y-m-d H:i:s')));
-		if($execute) {
-			$comment_id = $this->pdo->lastinsertid();
-			$render .= '<result>'.$execute.'</result>';
+		$post = $this->get_post($this->get['post']);
+		if($post) {
+			$prepare = $this->pdo->prepare('INSERT INTO wall369_comment (user_id, post_id, comment_content, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, :comment_datecreated)');
+			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_datecreated'=>date('Y-m-d H:i:s')));
+			if($execute) {
+				$comment_id = $this->pdo->lastinsertid();
+				$render .= '<result>'.$execute.'</result>';
+				$render .= '<post>'.$this->get['post'].'</post>';
+				$render .= '<content><![CDATA[';
+				$render .= $this->render_comment($this->get_comment($comment_id));
+				$render .= ']]></content>';
+			}
+		} else {
+			$render .= '<result>0</result>';
 			$render .= '<post>'.$this->get['post'].'</post>';
 			$render .= '<content><![CDATA[';
-			$render .= $this->render_comment($this->get_comment($comment_id));
+			$render .= '<p>Post deleted</p>';
 			$render .= ']]></content>';
 		}
 		return $render;
