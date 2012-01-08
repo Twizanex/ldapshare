@@ -70,6 +70,35 @@ function popin_show(href) {
 		$('#popin').fadeIn(1200);
 	}
 }
+function refresh_datecreated() {
+	data = {};
+	xml = ajax('index.php?a=refreshdatecreated', data);
+	$(xml).find('post').each(function(){
+		var post_id = $(this).attr('post_id');
+		var post_datecreated = $(this).text();
+		$('#post_datecreated_' + post_id).fadeOut(function() {
+			$('#post_datecreated_' + post_id).html(post_datecreated);
+			$('#post_datecreated_' + post_id).fadeIn();
+		});
+	});
+	$(xml).find('comment').each(function(){
+		var comment_id = $(this).attr('comment_id');
+		var comment_datecreated = $(this).text();
+		$('#comment_datecreated_' + comment_id).fadeOut(function() {
+			$('#comment_datecreated_' + comment_id).html(comment_datecreated);
+			$('#comment_datecreated_' + comment_id).fadeIn();
+		});
+	});
+}
+function refresh_new() {
+	data = {};
+	xml = ajax('index.php?a=refreshnew', data);
+	$(xml).find('post').each(function(){
+		post_id = $(this).attr('post_id');
+		content = $(this).text();
+		$('.posts').prepend(content);
+	});
+}
 $(document).ready(function() {
 	$(window).bind('resize scroll', function(event) {
 		set_positions();
@@ -119,8 +148,15 @@ $(document).ready(function() {
 		$(this).parent().hide();
 		data = {};
 		xml = ajax(href, data);
-		content = $(xml).find('content').text();
-		$('.posts').append(content);
+		$(xml).find('post').each(function(){
+			post_id = $(this).attr('post_id');
+			content = $(this).text();
+			$('.posts').append(content);
+		});
+		more = $(xml).find('more').text();
+		if(more != '') {
+			$('.posts').append(more);
+		}
 	});
 	$('.commentall_action').live('click', function(e) {
 		e.preventDefault();
@@ -180,8 +216,11 @@ $(document).ready(function() {
 			xml = ajax(action + '&type=' + type, data);
 			result = $(xml).find('result').text();
 			if(result == '1') {
-				content = $(xml).find('content').text();
-				$('.posts').prepend(content);
+				$(xml).find('post').each(function(){
+					post_id = $(this).attr('post_id');
+					content = $(this).text();
+					$('.posts').prepend(content);
+				});
 				$('#status_textarea').attr('value', '');
 			}
 		}
@@ -211,8 +250,11 @@ $(document).ready(function() {
 					dataType: 'xml',
 					processData: false,
 					success: function(xml) {
-						content = $(xml).find('content').text();
-						$('.posts').prepend(content);
+						$(xml).find('post').each(function(){
+							post_id = $(this).attr('post_id');
+							content = $(this).text();
+							$('.posts').prepend(content);
+						});
 						$('#photo_textarea').attr('value', '');
 						$('#photo_inputfile').attr('value', '');
 						$('#post_form_photo_preview').html('');
@@ -237,7 +279,11 @@ $(document).ready(function() {
 			result = $(xml).find('result').text();
 			if(result == '1') {
 				content = $(xml).find('content').text();
-				$('.posts').prepend(content);
+				$(xml).find('post').each(function(){
+					post_id = $(this).attr('post_id');
+					content = $(this).text();
+					$('.posts').prepend(content);
+				});
 				$('#link_textarea').attr('value', '');
 				$('#link_inputtext').attr('value', 'http://');
 			}
@@ -291,6 +337,15 @@ $(document).ready(function() {
 	}
 	data = {};
 	xml = ajax('index.php?a=postlist', data);
-	content = $(xml).find('content').text();
-	$('.posts').html(content);
+	$(xml).find('post').each(function(){
+		post_id = $(this).attr('post_id');
+		content = $(this).text();
+		$('.posts').append(content);
+	});
+	more = $(xml).find('more').text();
+	if(more != '') {
+		$('.posts').append(more);
+	}
+	setInterval('refresh_datecreated()', 60000 * 2);
+	setInterval('refresh_new()', 60000 * 2);
 });

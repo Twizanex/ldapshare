@@ -17,9 +17,15 @@ class wall369 {
 		$this->set_get('post', '', 'numeric');
 		$this->set_get('comment', '', 'numeric');
 		$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
-		$this->user = $this->get_user(1000);//TODO
+		if(DEMO == 1) {
+			if(isset($_SESSION['wall369']['user_id']) == 0) {
+				$_SESSION['wall369']['user_id'] = rand(1001, 1010);
+			}
+			$this->user = $this->get_user($_SESSION['wall369']['user_id']);
+		}
 		if($this->get['a'] == 'index') {
 			$_SESSION['wall369']['post_id_oldest'] = 0;
+			$_SESSION['wall369']['post_id_newest'] = 0;
 		}
 	}
 	function error_handler($e_type, $e_message, $e_file, $e_line) {
@@ -105,9 +111,7 @@ class wall369 {
 	}
 	function action_postlist() {
 		$render = '';
-		$render .= '<content><![CDATA[';
 		$render .= $this->render_postlist();
-		$render .= ']]></content>';
 		return $render;
 	}
 	function action_post() {
@@ -145,9 +149,7 @@ class wall369 {
 			}
 		}
 		$render .= '<result>'.$execute.'</result>';
-		$render .= '<content><![CDATA[';
-		$render .= $this->render_post($this->get_post($post_id));
-		$render .= ']]></content>';
+		$render .= $this->action_refreshnew();
 		return $render;
 	}
 	function action_postdelete() {
@@ -185,6 +187,77 @@ class wall369 {
 		$render .= ']]></content>';
 		return $render;
 	}
+	function action_refreshdatecreated() {
+		$render = '';
+		$flt = array();
+		$parameters = array();
+		$flt[] = '1';
+		$flt[] = 'post.post_datecreated LIKE :today_limit';
+		$parameters[':today_limit'] = $this->date_day.'%';
+		$prepare = $this->pdo->prepare('SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated FROM wall369_post post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id');
+		$execute = $prepare->execute($parameters);
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			$render .= '<posts>';
+			while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
+				$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_datecreated($post->post_datecreated).']]></post>';
+			}
+			$render .= '</posts>';
+		}
+		$flt = array();
+		$parameters = array();
+		$flt[] = '1';
+		$flt[] = 'comment.comment_datecreated LIKE :today_limit';
+		$parameters[':today_limit'] = $this->date_day.'%';
+		$prepare = $this->pdo->prepare('SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM wall369_comment comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id');
+		$execute = $prepare->execute($parameters);
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			$render .= '<comments>';
+			while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
+				$render .= '<comment comment_id="'.$comment->comment_id.'"><![CDATA['.$this->render_datecreated($comment->comment_datecreated).']]></comment>';
+			}
+			$render .= '</comments>';
+		}
+		return $render;
+	}
+	function action_refreshnew() {
+		$render = '';
+		$flt = array();
+		$parameters = array();
+		$flt[] = '1';
+		if(isset($_SESSION['wall369']['post_id_newest']) == 1 && $_SESSION['wall369']['post_id_newest'] != 0) {
+			$flt[] = 'post.post_id > :post_id_newest';
+			$parameters[':post_id_newest'] = $_SESSION['wall369']['post_id_newest'];
+		}
+		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link, COUNT(photo.photo_id) AS count_photo FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id ASC');
+		$execute = $prepare->execute($parameters);
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			$render .= '<posts>';
+			while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
+				$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
+				$_SESSION['wall369']['post_id_newest'] = $post->post_id;
+			}
+			$render .= '</posts>';
+		}
+		/*$flt = array();
+		$parameters = array();
+		$flt[] = '1';
+		$flt[] = 'comment.comment_datecreated LIKE :today_limit';
+		$parameters[':today_limit'] = $this->date_day.'%';
+		$prepare = $this->pdo->prepare('SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM wall369_comment comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id');
+		$execute = $prepare->execute($parameters);
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			$render .= '<comments>';
+			while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
+				$render .= '<comment comment_id="'.$comment->comment_id.'"><![CDATA['.$this->render_datecreated($comment->comment_datecreated).']]></comment>';
+			}
+			$render .= '</comments>';
+		}*/
+		return $render;
+	}
 	function get_user($user_id) {
 		$prepare = $this->pdo->prepare('SELECT user.* FROM wall369_user user WHERE user.user_id = :user_id GROUP BY user.user_id');
 		$execute = $prepare->execute(array(':user_id'=>$user_id));
@@ -219,8 +292,8 @@ class wall369 {
 	}
 	function render_postlist() {
 		$render = '';
-		$parameters = array();
 		$flt = array();
+		$parameters = array();
 		$flt[] = '1';
 		if(isset($_SESSION['wall369']['post_id_oldest']) == 1 && $_SESSION['wall369']['post_id_oldest'] != 0) {
 			$flt[] = 'post.post_id < :post_id_oldest';
@@ -230,9 +303,14 @@ class wall369 {
 		$execute = $prepare->execute($parameters);
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
+			$u = 0;
 			while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-				$render .= $this->render_post($post);
+				if($u == 0) {
+					$_SESSION['wall369']['post_id_newest'] = $post->post_id;
+				}
+				$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
 				$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
+				$u++;
 			}
 			$flt = array();
 			$flt[] = '1';
@@ -244,7 +322,7 @@ class wall369 {
 			if($rowCount > 0) {
 				$fetch = $prepare->fetch(PDO::FETCH_OBJ);
 				if($fetch->count_post > 0) {
-					$render .= '<p><a class="postlist_action" href="?a=postlist">More posts</a></p>';
+					$render .= '<more><![CDATA[<p><a class="postlist_action" href="?a=postlist">More posts</a></p>]]></more>';
 				}
 			}
 		}
@@ -273,7 +351,7 @@ class wall369 {
 						$render .= $this->render_linklist($post->post_id);
 					}
 					$render .= '<p class="post_detail post_detail_photo"><span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
-					$render .= ' · <span class="datecreated">'.$this->render_datecreated($post->post_datecreated).'</span>';
+					$render .= ' · <span class="datecreated" id="post_datecreated_'.$post->post_id.'">'.$this->render_datecreated($post->post_datecreated).'</span>';
 					$render .= '</p>
 					<div class="comments" id="comments_'.$post->post_id.'">
 						<div class="comment post_like" id="post_like_'.$post->post_id.'">
@@ -361,7 +439,7 @@ class wall369 {
 					}
 					$render .= '<p><span class="username">'.$comment->user_firstname.' '.$comment->user_lastname.'</span> '.nl2br($comment->comment_content, 0).'</p>
 					<p class="comment_detail">';
-					$render .= '<span class="datecreated">'.$this->render_datecreated($comment->comment_datecreated).'</span>';
+					$render .= '<span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'">'.$this->render_datecreated($comment->comment_datecreated).'</span>';
 					$render .= '</p>
 				</div>
 			</div>
