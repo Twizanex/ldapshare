@@ -72,4 +72,4 @@ INSERT INTO `wall369_user` (`user_id`, `user_email`, `user_lastname`, `user_firs
 (1007, 'email7', 'Lastname7', 'Firstname7', NULL, NOW()),
 (1008, 'email8', 'Lastname8', 'Firstname8', NULL, NOW()),
 (1009, 'email9', 'Lastname9', 'Firstname9', NULL, NOW()),
-(1010, 'email10', 'Lastname10', 'Firstname10', NULL, NOW())
+(1010, 'email10', 'Lastname10', 'Firstname10', NULL, NOW());
