@@ -8,27 +8,27 @@ p{clear:both;margin:0px 0px 5px 0px;}
 em{color:#000000;font-style:italic;}
 strong{font-weight:bold;}
 form{margin:0px;padding:0px;}
-#wall369{margin:auto;position:relative;width:900px;}
-#popin{display:none;position:absolute;width:900px;z-index:200;}
+#wall369{margin:auto;position:relative;width:600px;}
+#popin{display:none;position:absolute;width:600px;z-index:200;}
 #popin_display{background-color:#FFFFFF;border:1px solid #555555;padding-bottom:10px;}
 #popin_display h2{background-color:#6D84B4;color:#FFFFFF;font-size:14px;font-weight:bold;margin:0px;padding:5px 10px;position:relative;}
 #popin_display h3{border-bottom:1px solid #d9d9d9;color:#000000;font-size:11px;font-weight:bold;margin:5px 10px;padding-bottom:5px;position:relative;}
 #popin_display p{margin:5px 10px;text-align:left;}
 #loading{display:none;position:absolute;z-index:300;}
 #mask{background-color:#000000;display:none;height:3540px;left:0px;position:absolute;top:0px;width:5630px;z-index:100;}
-.post_thumb{float:left;width:70px;}
-.post_thumb img{width:70px;}
-.post_text{float:right;width:820px;}
+.post_thumb{float:left;width:50px;}
+.post_thumb img{width:50px;}
+.post_text{float:right;width:540px;}
 .link_thumb{float:right;width:90px;}
 .link_thumb img{width:90px;}
-.link_text{color:#808080;float:left;width:720px;}
-.comment_thumb{float:left;margin:5px 0px 5px 10px;width:50px;}
-.comment_thumb img{width:50px;}
-.comment_text{float:right;margin:5px 10px 0px 0px;width:740px;}
-.post_form .textarea, .comment_form .textarea{border:1px solid #999999;height:50px;padding:5px;resize:vertical;width:730px;}
-.post_form .textarea{width:890px;}
-.post_form .inputtext{border:1px solid #999999;padding:5px;width:890px;}
-#post_form_photo_preview img{max-width:900px;}
+.link_text{color:#808080;float:left;width:440px;}
+.comment_thumb{float:left;margin:5px 0px 5px 10px;width:30px;}
+.comment_thumb img{width:30px;}
+.comment_text{float:right;margin:5px 10px 0px 0px;width:480px;}
+.post_form .textarea, .comment_form .textarea{border:1px solid #999999;height:50px;min-height:50px;padding:5px;resize:vertical;width:470px;}
+.post_form .textarea{width:590px;}
+.post_form .inputtext{border:1px solid #999999;padding:5px;width:590px;}
+#post_form_photo_preview img{max-width:600px;}
 .posts{border-top:1px solid #dedede;margin-top:10px;}
 .post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
 .photolist{margin-top:10px;overflow:auto;}
@@ -52,6 +52,7 @@ form{margin:0px;padding:0px;}
 .delete_action:active{background-position:left -48px}
 .post_detail a:link, .post_detail a:visited, .comment_detail a:link, .comment_detail a:visited{color:#6B84B4;}
 .link_text, .comment_detail{font-size:11px;}
+.icon img{height:16px;width:16px;}
 .post_form_inactive, .comment_form, .link_more, .unlike_inactive, .like_inactive{display:none;}
 .inputsubmit{background-color:#5b74a8;color:#ffffff;cursor:pointer;font-size:14px;font-weight:bold;margin:0px;padding:1px 2px 2px;}
 a.share_action:link, a.share_action:visited{background-position:top left;background-repeat:no-repeat;font-weight:bold;margin-right:10px;padding-left:20px;}
@@ -60,23 +61,6 @@ a.share_action_active:link, a.share_action_active:visited{color:#333333;}
 #share_action_status, .post_detail_status{background-image:url(medias/icon_status.png);}
 #share_action_photo, .post_detail_photo{background-image:url(medias/icon_photo.png);}
 #share_action_link, .post_detail_link{background-image:url(medias/icon_link.png);}
-@media only screen and (max-width:900px) {
-#wall369{width:600px;}
-#popin{width:600px;}
-.post_thumb{width:50px;}
-.post_thumb img{width:50px;}
-.post_text{width:540px;}
-.link_thumb{width:70px;}
-.link_thumb img{width:70px;}
-.link_text{width:460px;}
-.comment_thumb{width:30px;}
-.comment_thumb img{width:30px;}
-.comment_text{width:480px;}
-.post_form .textarea, .comment_form .textarea{width:470px;}
-.post_form .textarea{width:590px;}
-.post_form .inputtext{width:590px;}
-#post_form_photo_preview img{max-width:600px;}
-}
 @media only screen and (max-width:600px) {
 #wall369{width:300px;}
 #popin{width:300px;}
