@@ -142,6 +142,7 @@ $(document).ready(function() {
             $(href).find('.textarea').focus();
         }
     });
+	$('#post_form_status').find('.textarea').focus();
 	$('.postlist_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
@@ -348,6 +349,6 @@ $(document).ready(function() {
 	if(more != '') {
 		$('.posts').append(more);
 	}
-	setInterval('refresh_datecreated()', 60000 * 2);
-	setInterval('refresh_new()', 60000 * 2);
+	setInterval('refresh_datecreated()', 60000 * 1);
+	setInterval('refresh_new()', 60000 * 1);
 });

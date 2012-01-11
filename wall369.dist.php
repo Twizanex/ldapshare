@@ -353,13 +353,16 @@ class wall369 {
 					}
 					$render .= '<p><span class="username">'.$post->user_firstname.' '.$post->user_lastname.'</span></p>
 					<p>'.nl2br($post->post_content, 0).'</p>';
-					if($post->count_photo > 0) {
-						$render .= $this->render_photolist($post->post_id);
-					}
+					$share_type = 'status';
 					if($post->count_link > 0) {
+						$share_type = 'link';
 						$render .= $this->render_linklist($post->post_id);
 					}
-					$render .= '<p class="post_detail post_detail_photo"><span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
+					if($post->count_photo > 0) {
+						$share_type = 'photo';
+						$render .= $this->render_photolist($post->post_id);
+					}
+					$render .= '<p class="post_detail post_detail_'.$share_type.'"><span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
 					$render .= ' · <span class="datecreated" id="post_datecreated_'.$post->post_id.'">'.$this->render_datecreated($post->post_datecreated).'</span>';
 					$render .= '</p>
 					<div class="comments" id="comments_'.$post->post_id.'">
@@ -494,13 +497,16 @@ class wall369 {
 	function render_link($link) {
 		$url = parse_url($link->link_url);
 		$render = '<div class="link" id="link_'.$link->link_id.'">
-			<div class="link_display">
-				<div class="link_thumb">';
+			<div class="link_display">';
 				if($link->link_image != '') {
+				$render .= '<div class="link_thumb">';
+					$full = '';
 					$render .= '<a target="_blank" href="'.$link->link_url.'"><img alt="" src="'.$link->link_image.'"></a>';
+				$render .= '</div>';
+				} else {
+					$full = ' link_text_full';
 				}
-				$render .= '</div>
-				<div class="link_text">
+				$render .= '<div class="link_text'.$full.'">
 					<p><a target="_blank" href="'.$link->link_url.'">'.$link->link_title.'</a> <span class="share_social"><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u='.urlencode($link->link_url).'"><img title="Facebook" alt="Facebook" src="medias/icon_facebook.png"></a> <a target="_blank" href="https://twitter.com/home?status='.urlencode($link->link_url).'"><img title="Twitter" alt="Twitter" src="medias/icon_twitter.png"></a> <a target="_blank" href="https://plusone.google.com/_/+1/confirm?url='.urlencode($link->link_url).'"><img title="Google+" alt="Google+" src="medias/icon_googleplus.png"></a></span><br>';
 					if($link->link_icon != '') {
 						$render .= '<span class="icon"><img alt="" src="'.$link->link_icon.'"></span> ';

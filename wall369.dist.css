@@ -22,6 +22,7 @@ form{margin:0px;padding:0px;}
 .link_thumb{float:right;width:90px;}
 .link_thumb img{width:90px;}
 .link_text{color:#808080;float:left;width:440px;}
+.link_text_full{width:540px;}
 .comment_thumb{float:left;margin:5px 0px 5px 10px;width:30px;}
 .comment_thumb img{width:30px;}
 .comment_text{float:right;margin:5px 10px 0px 0px;width:480px;}
@@ -46,6 +47,7 @@ form{margin:0px;padding:0px;}
 .username{color:#3B5998;font-weight:bold;}
 .post_like_display .username{font-weight:normal;}
 .post_text, .link_text, .comment_text{position:relative;text-align:justify;word-wrap:break-word;}
+.link_text{text-align:left;}
 .post_detail, .comment_detail{color:#999999;}
 .delete_action{background-image:url("medias/icon_delete.png");background-repeat:no-repeat;height:15px;position:absolute;right:0px;top:0px;width:15px;}
 .delete_action:focus, .delete_action:hover{background-position:left -32px;}
@@ -70,6 +72,7 @@ a.share_action_active:link, a.share_action_active:visited{color:#333333;}
 .link_thumb{width:50px;}
 .link_thumb img{width:50px;}
 .link_text{width:190px;}
+.link_text_full{width:260px;}
 .comment_thumb{display:none;}
 .comment_text{width:240px;}
 .post_form .textarea, .comment_form .textarea{width:230px;}
