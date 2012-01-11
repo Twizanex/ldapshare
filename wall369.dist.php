@@ -501,7 +501,7 @@ class wall369 {
 				}
 				$render .= '</div>
 				<div class="link_text">
-					<p><a target="_blank" href="'.$link->link_url.'">'.$link->link_title.'</a> <span class="share_social"><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u='.urlencode($link->link_url).'"><img title="Facebook" alt="Facebook" src="medias/icon_facebook.png"></a> <a target="_blank" href="http://twitter.com/home?status='.urlencode($link->link_url).'"><img title="Twitter" alt="Twitter" src="medias/icon_twitter.png"></a></span><br>';
+					<p><a target="_blank" href="'.$link->link_url.'">'.$link->link_title.'</a> <span class="share_social"><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u='.urlencode($link->link_url).'"><img title="Facebook" alt="Facebook" src="medias/icon_facebook.png"></a> <a target="_blank" href="https://twitter.com/home?status='.urlencode($link->link_url).'"><img title="Twitter" alt="Twitter" src="medias/icon_twitter.png"></a> <a target="_blank" href="https://plusone.google.com/_/+1/confirm?url='.urlencode($link->link_url).'"><img title="Google+" alt="Google+" src="medias/icon_googleplus.png"></a></span><br>';
 					if($link->link_icon != '') {
 						$render .= '<span class="icon"><img alt="" src="'.$link->link_icon.'"></span> ';
 					}
