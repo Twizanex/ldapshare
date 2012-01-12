@@ -32,12 +32,12 @@ form{margin:0px;padding:0px;}
 #post_form_photo_preview img{max-width:600px;}
 .posts{border-top:1px solid #dedede;margin-top:10px;}
 .post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
-.photolist{margin-top:10px;overflow:auto;}
+.photolist{border-top:1px solid #dedede;margin-top:10px;overflow:auto;padding-top:10px;}
 .photo{float:left;}
 .photo img{margin-right: 10px;max-width: 90px;}
 .linklist{margin-top:10px;}
-.link{overflow:auto;}
-.post_detail{background-position:left 5px;background-repeat:no-repeat;border-top:1px solid #dedede;clear:both;margin-top:10px;padding:5px 0px 0px 22px;}
+.link{border-top:1px solid #dedede;overflow:auto;padding-top:10px;}
+.post_detail{border-top:1px solid #dedede;clear:both;margin-top:10px;padding:5px 0px 0px 0px;}
 .comments{margin:10px 0px;}
 .comment{background-color:#EDEFF4;border-bottom:1px solid #D2D9E7;clear:both;margin-top:1px;overflow:auto;}
 .comment_all_display p, .post_like_display p{margin:5px 10px 5px 30px;}
@@ -57,12 +57,9 @@ form{margin:0px;padding:0px;}
 .icon img{height:16px;width:16px;}
 .post_form_inactive, .comment_form, .link_more, .unlike_inactive, .like_inactive{display:none;}
 .inputsubmit{background-color:#5b74a8;color:#ffffff;cursor:pointer;font-size:14px;font-weight:bold;margin:0px;padding:1px 2px 2px;}
-a.share_action:link, a.share_action:visited{background-position:top left;background-repeat:no-repeat;font-weight:bold;margin-right:10px;padding-left:20px;}
+a.share_action:link, a.share_action:visited{font-weight:bold;margin-right:10px;}
 a.share_action:hover{color:#000000;text-decoration:underline;}
 a.share_action_active:link, a.share_action_active:visited{color:#333333;}
-#share_action_status, .post_detail_status{background-image:url(medias/icon_status.png);}
-#share_action_photo, .post_detail_photo{background-image:url(medias/icon_photo.png);}
-#share_action_link, .post_detail_link{background-image:url(medias/icon_link.png);}
 @media only screen and (max-width:600px) {
 #wall369{width:300px;}
 #popin{width:300px;}
