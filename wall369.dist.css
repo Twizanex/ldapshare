@@ -26,11 +26,16 @@ form{margin:0px;padding:0px;}
 .comment_thumb{float:left;margin:5px 0px 5px 10px;width:30px;}
 .comment_thumb img{width:30px;}
 .comment_text{float:right;margin:5px 10px 0px 0px;width:480px;}
-.post_form .textarea, .comment_form .textarea{border:1px solid #999999;height:50px;min-height:50px;padding:5px;resize:vertical;width:470px;}
-.post_form .textarea{width:590px;}
-.post_form .inputtext{border:1px solid #999999;padding:5px;width:590px;}
+#post_form .textarea, .comment_form .textarea{border:1px solid #999999;height:50px;min-height:50px;padding:2px 5px;resize:vertical;width:470px;}
+#post_form .textarea{width:570px;}
+#post_form .inputtext{border:1px solid #999999;padding:3px 5px;width:570px;}
+#post_form p{background-position:left 2px;background-repeat:no-repeat;padding-left:20px;}
+#post_form .form_status{background-image:url(medias/icon_status.png);}
+#post_form .form_link{background-image:url(medias/icon_link.png);}
+#post_form .form_address{background-image:url(medias/icon_address.png);}
+#post_form .form_photo{background-image:url(medias/icon_photo.png);}
 #post_form_photo_preview img{max-width:600px;}
-.posts{border-top:1px solid #dedede;margin-top:10px;}
+.postlist{border-top:1px solid #dedede;margin-top:10px;}
 .post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
 .photolist{border-top:1px solid #dedede;margin-top:10px;overflow:auto;padding-top:10px;}
 .photo{float:left;}
@@ -55,11 +60,8 @@ form{margin:0px;padding:0px;}
 .post_detail a:link, .post_detail a:visited, .comment_detail a:link, .comment_detail a:visited{color:#6B84B4;}
 .link_text, .comment_detail{font-size:11px;}
 .icon img{height:16px;width:16px;}
-.post_form_inactive, .comment_form, .link_more, .unlike_inactive, .like_inactive{display:none;}
+.comment_form, .link_more, .unlike_inactive, .like_inactive{display:none;}
 .inputsubmit{background-color:#5b74a8;color:#ffffff;cursor:pointer;font-size:14px;font-weight:bold;margin:0px;padding:1px 2px 2px;}
-a.share_action:link, a.share_action:visited{font-weight:bold;margin-right:10px;}
-a.share_action:hover{color:#000000;text-decoration:underline;}
-a.share_action_active:link, a.share_action_active:visited{color:#333333;}
 @media only screen and (max-width:600px) {
 #wall369{width:300px;}
 #popin{width:300px;}
@@ -72,8 +74,8 @@ a.share_action_active:link, a.share_action_active:visited{color:#333333;}
 .link_text_full{width:260px;}
 .comment_thumb{display:none;}
 .comment_text{width:240px;}
-.post_form .textarea, .comment_form .textarea{width:230px;}
-.post_form .textarea{width:290px;}
-.post_form .inputtext{width:290px;}
+#post_form .textarea, .comment_form .textarea{width:230px;}
+#post_form .textarea{width:270px;}
+#post_form .inputtext{width:270px;}
 #post_form_photo_preview img{max-width:300px;}
 }

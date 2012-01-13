@@ -9,6 +9,12 @@ class wall369 {
 		if(isset($_SESSION['wall369']['timezone']) == 0) {
 			$_SESSION['wall369']['timezone'] = 0;
 		}
+		if(isset($_SESSION['wall369']['latitude']) == 0) {
+			$_SESSION['wall369']['latitude'] = '';
+		}
+		if(isset($_SESSION['wall369']['longitude']) == 0) {
+			$_SESSION['wall369']['longitude'] = '';
+		}
 		$this->language = 'en';
 		include_once('languages/'.$this->language.'.dist.php');
 		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['wall369']['timezone']);
@@ -109,6 +115,16 @@ class wall369 {
 		$render .= '<timezone>'.$this->get['t'].'</timezone>';
 		return $render;
 	}
+	function action_geolocation() {
+		$render = '';
+		$this->set_get('latitude', '', 'numeric');
+		$this->set_get('longitude', '', 'numeric');
+		$_SESSION['wall369']['latitude'] = $this->get['latitude'];
+		$_SESSION['wall369']['longitude'] = $this->get['longitude'];
+		$render .= '<latitude>'.$this->get['latitude'].'</latitude>';
+		$render .= '<longitude>'.$this->get['longitude'].'</longitude>';
+		return $render;
+	}
 	function action_postlist() {
 		$render = '';
 		$render .= $this->render_postlist();
@@ -116,27 +132,26 @@ class wall369 {
 	}
 	function action_post() {
 		$render = '';
-		$this->set_get('type', '', 'alphabetic');
-		$prepare = $this->pdo->prepare('INSERT INTO wall369_post (user_id, post_content, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, :post_httpuseragent, :post_remoteaddr, :post_datecreated)');
-		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['post_content']), ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
+		$prepare = $this->pdo->prepare('INSERT INTO wall369_post (user_id, post_content, post_latitude, post_longitude, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, :post_latitude, :post_longitude, :post_httpuseragent, :post_remoteaddr, :post_datecreated)');
+		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_latitude'=>$_SESSION['wall369']['latitude'], ':post_longitude'=>$_SESSION['wall369']['longitude'], ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
 		if($execute) {
 			$post_id = $this->pdo->lastinsertid();
-			if($this->get['type'] == 'photo') {
+			if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0) {
 				$photo_inputfile = $this->file_add('storage', 'photo_inputfile', 1, 1);
 				$data = array('photo_inputfile'=>$photo_inputfile);
 				$this->insert_photo($post_id, $data);
 			}
-			if($this->get['type'] == 'link') {
+			if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
 				$data = $this->analyze_link($_POST['link_inputtext']);
 				$this->insert_link($post_id, $data);
 			}
-			$links = preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['post_content'], $matches);
+			$links = preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['status_textarea'], $matches);
 			$matches = $matches[0];
 			if(count($matches) != 0) {
 				$matches = array_unique($matches);
 				foreach($matches as $match) {
 					$analyze = 1;
-					if($this->get['type'] == 'link') {
+					if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
 						if($match == $_POST['link_inputtext']) {
 							$analyze = 0;
 						}

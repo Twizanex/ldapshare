@@ -45,6 +45,8 @@ CREATE TABLE IF NOT EXISTS `wall369_post` (
 `post_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 `user_id` int(10) unsigned NOT NULL,
 `post_content` text NOT NULL,
+`post_latitude` double DEFAULT NULL,
+`post_longitude` double DEFAULT NULL,
 `post_httpuseragent` varchar(255) DEFAULT NULL,
 `post_remoteaddr` varchar(255) DEFAULT NULL,
 `post_datecreated` datetime NOT NULL,
