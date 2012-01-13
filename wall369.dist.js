@@ -136,12 +136,10 @@ $(document).ready(function() {
 	t = -d.getTimezoneOffset() / 60;
 	data = {};
 	xml = ajax('index.php?a=timezone&t=' + t, data);
-
 	if(navigator.geolocation) {
 		navigator.geolocation.getCurrentPosition(geolocation_success, geolocation_error);
 	}
-
-	$('#post_form_status').find('.textarea').focus();
+	$('#status_textarea').focus();
 	$('.postlist_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
@@ -242,7 +240,7 @@ $(document).ready(function() {
 							$('.postlist').prepend(content);
 						});
 						$('#status_textarea').attr('value', '');
-						$('#link_inputtext').attr('value', '');
+						$('#link_inputtext').attr('value', 'http://');
 						$('#photo_inputfile').attr('value', '');
 						$('#post_form_photo_preview').html('');
 						$('#post_form_address_preview').html('');
@@ -288,6 +286,18 @@ $(document).ready(function() {
             }
         }
 		$('#loading').hide();
+    });
+    $('#link_inputtext').live('focus', function() {
+		link_inputtext = $(this).val();
+		if(link_inputtext == 'http://') {
+			$(this).attr('value', '');
+        }
+    });
+    $('#link_inputtext').live('blur', function() {
+		link_inputtext = $(this).val();
+		if(link_inputtext == '') {
+			$(this).attr('value', 'http://');
+        }
     });
     $('#address_inputtext').live('blur', function() {
 		address_inputtext = $(this).val();
