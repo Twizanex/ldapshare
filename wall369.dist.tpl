@@ -30,8 +30,9 @@
 		</div>
 	</div>
 </div>
+<!--<script type="text/javascript" src="http://maps.googleapis.com/maps/api/js?sensor=false" charset="UTF-8"></script>-->
 <script type="text/javascript" src="thirdparty/jquery.min.js" charset="UTF-8"></script>
-<script type="text/javascript" src="thirdparty/jquery.query.min.js" charset="UTF-8"></script>
+<!--<script type="text/javascript" src="thirdparty/jquery.gmap3.min.js" charset="UTF-8"></script>-->
 <script type="text/javascript" src="wall369.dist.js" charset="UTF-8"></script>
 </body>
 </html>

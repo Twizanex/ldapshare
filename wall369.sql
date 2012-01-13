@@ -1,3 +1,14 @@
+CREATE TABLE IF NOT EXISTS `wall369_address` (
+`address_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+`post_id` int(10) unsigned NOT NULL,
+`address_title` varchar(255) NOT NULL,
+`address_latitude` double DEFAULT NULL,
+`address_longitude` double DEFAULT NULL,
+`address_datecreated` datetime NOT NULL,
+PRIMARY KEY (`address_id`),
+KEY `post_id` (`post_id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
+
 CREATE TABLE IF NOT EXISTS `wall369_comment` (
 `comment_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 `post_id` int(10) unsigned NOT NULL,

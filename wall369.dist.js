@@ -211,20 +211,25 @@ $(document).ready(function() {
 		type = $(this).data('type');
 		status_textarea = $('#status_textarea').val();
 		link_inputtext = $('#link_inputtext').val();
+		address_inputtext = $('#address_inputtext').val();
 		if(window.FormData) {
 			formdata = new FormData();
-
+			enable_submit = 0;
+			if(status_textarea != '') {
+				enable_submit = 1;
+			}
 			var photo = document.getElementById('photo_inputfile');
 			if(photo.files.length != 0 && window.FileReader) {
 				var file = photo.files[0];
 				if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= 2097152) {
 					formdata.append('photo_inputfile', file);
+					enable_submit = 1;
 				}
 			}
-	
 			formdata.append('status_textarea', status_textarea);
 			formdata.append('link_inputtext', link_inputtext);
-			if(formdata) {
+			formdata.append('address_inputtext', address_inputtext);
+			if(formdata && enable_submit == 1) {
 				$.ajax({
 					contentType: false,
 					data: formdata,
@@ -240,6 +245,7 @@ $(document).ready(function() {
 						$('#link_inputtext').attr('value', '');
 						$('#photo_inputfile').attr('value', '');
 						$('#post_form_photo_preview').html('');
+						$('#post_form_address_preview').html('');
 					},
 					type: 'POST',
 					url: action
@@ -283,11 +289,14 @@ $(document).ready(function() {
         }
 		$('#loading').hide();
     });
-	u = $.query.get('u');
-	if(u) {
-		$('#status_textarea').focus();
-		$('#link_inputtext').attr('value', u);
-	}
+    $('#address_inputtext').live('blur', function() {
+		address_inputtext = $(this).val();
+		if(address_inputtext != '') {
+			address_inputtext = encodeURIComponent(address_inputtext);
+			$('#post_form_address_preview').html('<img src="http://maps.googleapis.com/maps/api/staticmap?center=' + address_inputtext + '&markers=color:red|' + address_inputtext + '&zoom=15&size=540x300&sensor=false" alt="">');
+        }
+		$('#loading').hide();
+    });
 	data = {};
 	xml = ajax('index.php?a=postlist', data);
 	$(xml).find('post').each(function(){

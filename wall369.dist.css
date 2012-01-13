@@ -35,13 +35,14 @@ form{margin:0px;padding:0px;}
 #post_form .form_address{background-image:url(medias/icon_address.png);}
 #post_form .form_photo{background-image:url(medias/icon_photo.png);}
 #post_form_photo_preview img{max-width:600px;}
+#post_form_address_preview{margin-top:10px;text-align:right;}
 .postlist{border-top:1px solid #dedede;margin-top:10px;}
 .post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
 .photolist{border-top:1px solid #dedede;margin-top:10px;overflow:auto;padding-top:10px;}
 .photo{float:left;}
 .photo img{margin-right: 10px;max-width: 90px;}
 .linklist{margin-top:10px;}
-.link{border-top:1px solid #dedede;overflow:auto;padding-top:10px;}
+.address, .link{border-top:1px solid #dedede;overflow:auto;padding-top:10px;}
 .post_detail{border-top:1px solid #dedede;clear:both;margin-top:10px;padding:5px 0px 0px 0px;}
 .comments{margin:10px 0px;}
 .comment{background-color:#EDEFF4;border-bottom:1px solid #D2D9E7;clear:both;margin-top:1px;overflow:auto;}

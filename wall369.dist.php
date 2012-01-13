@@ -145,6 +145,9 @@ class wall369 {
 				$data = $this->analyze_link($_POST['link_inputtext']);
 				$this->insert_link($post_id, $data);
 			}
+			if(isset($_POST['address_inputtext']) == 1 && $_POST['address_inputtext'] != '') {
+				$this->insert_address($post_id, $_POST['address_inputtext']);
+			}
 			$links = preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['status_textarea'], $matches);
 			$matches = $matches[0];
 			if(count($matches) != 0) {
@@ -254,7 +257,7 @@ class wall369 {
 			$flt[] = 'post.post_id > :post_id_newest';
 			$parameters[':post_id_newest'] = $_SESSION['wall369']['post_id_newest'];
 		}
-		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link, COUNT(photo.photo_id) AS count_photo FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id ASC');
+		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link, COUNT(photo.photo_id) AS count_photo, COUNT(address.address_id) AS count_address FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id LEFT JOIN wall369_address address ON address.post_id = post.post_id WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id ASC');
 		$execute = $prepare->execute($parameters);
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -291,7 +294,7 @@ class wall369 {
 		}
 	}
 	function get_post($post_id) {
-		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link, COUNT(photo.photo_id) AS count_photo FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id WHERE post.post_id = :post_id GROUP BY post.post_id');
+		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link, COUNT(photo.photo_id) AS count_photo, COUNT(address.address_id) AS count_address FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id LEFT JOIN wall369_address address ON address.post_id = post.post_id WHERE post.post_id = :post_id GROUP BY post.post_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -314,6 +317,10 @@ class wall369 {
 		$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, :link_image, :link_icon, :link_content, :link_datecreated)');
 		$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
 	}
+	function insert_address($post_id, $address_title) {
+		$prepare = $this->pdo->prepare('INSERT INTO wall369_address (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)');
+		$execute = $prepare->execute(array(':post_id'=>$post_id, ':address_title'=>$address_title, ':address_datecreated'=>date('Y-m-d H:i:s')));
+	}
 	function render_postlist() {
 		$render = '';
 		$flt = array();
@@ -323,7 +330,7 @@ class wall369 {
 			$flt[] = 'post.post_id < :post_id_oldest';
 			$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
 		}
-		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link, COUNT(photo.photo_id) AS count_photo FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id DESC LIMIT 0,'.LIMIT_POSTS);
+		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link, COUNT(photo.photo_id) AS count_photo, COUNT(address.address_id) AS count_address FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id LEFT JOIN wall369_address address ON address.post_id = post.post_id WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id DESC LIMIT 0,'.LIMIT_POSTS);
 		$execute = $prepare->execute($parameters);
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -372,6 +379,10 @@ class wall369 {
 					if($post->count_link > 0) {
 						$share_type = 'link';
 						$render .= $this->render_linklist($post->post_id);
+					}
+					if($post->count_address > 0) {
+						$share_type = 'address';
+						$render .= $this->render_addresslist($post->post_id);
 					}
 					if($post->count_photo > 0) {
 						$share_type = 'photo';
@@ -532,6 +543,29 @@ class wall369 {
 					}
 				$render .= '</div>
 			</div>
+		</div>';
+		return $render;
+	}
+	function render_addresslist($post_id) {
+		$render = '';
+		$prepare = $this->pdo->prepare('SELECT address.* FROM wall369_address address WHERE address.post_id = :post_id GROUP BY address.address_id');
+		$execute = $prepare->execute(array(':post_id'=>$post_id));
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			$render .= '<div class="addresslist">';
+			while($address = $prepare->fetch(PDO::FETCH_OBJ)) {
+				$render .= $this->render_address($address);
+			}
+			$render .= '</div>';
+		}
+		return $render;
+	}
+	function render_address($address) {
+		$render = '<div class="address" id="address_'.$address->address_id.'">
+			<div class="address_display">';
+				$render .= '<p>'.$address->address_title.'</p>';
+				$render .= '<p><img src="http://maps.googleapis.com/maps/api/staticmap?center='.urlencode($address->address_title).'&markers=color:red|'.urlencode($address->address_title).'&zoom=15&size=540x300&sensor=false" alt=""></p>';
+			$render .=' </div>
 		</div>';
 		return $render;
 	}
