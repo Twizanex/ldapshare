@@ -159,37 +159,17 @@ $(document).ready(function() {
 	$('.commentall_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		post = $(this).data('post');
+		post_id = $(this).data('post_id');
 		data = {};
 		xml = ajax(href, data);
-		$('#comment_all_' + post).hide();
+		$('#comment_all_' + post_id).hide();
 		content = $(xml).find('content').text();
-		$('#post_' + post).find('.comments_display').prepend(content);
-	});
-	$('.link_more_action').live('click', function(e) {
-		e.preventDefault();
-		href = $(this).attr('href');
-		$(this).hide();
-		$(href).slideDown();
-	});
-	$('.like_action').live('click', function(e) {
-		e.preventDefault();
-		href = $(this).attr('href');
-		post = $(this).data('post');
-		$('#post_' + post).find('.post_detail .like').hide();
-		$('#post_' + post).find('.post_detail .unlike').show();
-	});
-	$('.unlike_action').live('click', function(e) {
-		e.preventDefault();
-		href = $(this).attr('href');
-		post = $(this).data('post');
-		$('#post_' + post).find('.post_detail .unlike').hide();
-		$('#post_' + post).find('.post_detail .like').show();
+		$('#post_' + post_id).find('.comments_display').prepend(content);
 	});
 	$('.comment_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		post = $(this).data('post');
+		post_id = $(this).data('post_id');
 		if($(href).is(':visible')) {
 			$(href).slideUp();
 		} else {
@@ -197,34 +177,77 @@ $(document).ready(function() {
 			$(href).find('.textarea').focus();
 		}
 	});
-	$('.post_delete_action, .comment_delete_action').live('click', function(e) {
+	$('.post_delete_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		post = $(this).data('post');
+		post_id = $(this).data('post_id');
 		popin_show(href);
+	});
+	$('.post_delete_confirm_action').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		post_id = $(this).data('post_id');
+		data = {};
+		xml = ajax(href, data);
+		status = $(xml).find('status').text();
+		if(status == 1) {
+			popin_hide();
+			$('#post_' + post_id).fadeOut();
+		}
+	});
+	$('.comment_delete_action').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		comment_id = $(this).data('comment_id');
+		popin_show(href);
+	});
+	$('.comment_delete_confirm_action').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		comment_id = $(this).data('comment_id');
+		data = {};
+		xml = ajax(href, data);
+		status = $(xml).find('status').text();
+		if(status == 1) {
+			popin_hide();
+			$('#comment_' + comment_id).fadeOut();
+		}
 	});
 	$('.post_like_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		post = $(this).data('post');
+		post_id = $(this).data('post_id');
 		data = {};
 		xml = ajax(href, data);
 		content = $(xml).find('content').text();
-		$('#post_' + post).find('.post_like_display').html(content);
+		status = $(xml).find('status').text();
+		if(status == 'like_insert') {
+			$('#post_' + post_id).find('.post_detail .like').hide();
+			$('#post_' + post_id).find('.post_detail .unlike').show();
+			$('#post_like_render_' + post_id).html(content);
+		} else if(status == 'post_deleted') {
+			$('#post_' + post_id).html(content);
+		}
 	});
 	$('.post_unlike_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		post = $(this).data('post');
+		post_id = $(this).data('post_id');
 		data = {};
 		xml = ajax(href, data);
 		content = $(xml).find('content').text();
-		$('#post_' + post).find('.post_like_display').html(content);
+		status = $(xml).find('status').text();
+		if(status == 'like_delete') {
+			$('#post_' + post_id).find('.post_detail .unlike').hide();
+			$('#post_' + post_id).find('.post_detail .like').show();
+			$('#post_like_render_' + post_id).html(content);
+		} else if(status == 'post_deleted') {
+			$('#post_' + post_id).html(content);
+		}
 	});
 	$('#post_form form').live('submit', function(e) {
 		e.preventDefault();
 		action = $(this).attr('action');
-		type = $(this).data('type');
 		status_textarea = $('#status_textarea').val();
 		link_inputtext = $('#link_inputtext').val();
 		address_inputtext = $('#address_inputtext').val();
@@ -278,14 +301,14 @@ $(document).ready(function() {
 			data = {};
 			data['comment_textarea'] = comment_textarea;
 			xml = ajax(action, data);
-			post = $(xml).find('post').text();
+			post_id = $(xml).find('post_id').text();
 			content = $(xml).find('content').text();
-			result = $(xml).find('result').text();
-			if(result == '1') {
-				$('#comments_' + post).find('.comments_display').append(content);
+			status = $(xml).find('status').text();
+			if(status == 'comment_insert') {
+				$('#comments_' + post_id).find('.comments_display').append(content);
 				$(this).find('.textarea').attr('value', '');
-			} else {
-				$('#post_' + post).html(content);
+			} else if(status == 'post_deleted') {
+				$('#post_' + post_id).html(content);
 			}
 		}
 	});

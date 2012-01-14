@@ -13,7 +13,7 @@ form{margin:0px;padding:0px;}
 #popin_display{background-color:#FFFFFF;border:1px solid #555555;padding-bottom:10px;}
 #popin_display h2{background-color:#6D84B4;color:#FFFFFF;font-size:14px;font-weight:bold;margin:0px;padding:5px 10px;position:relative;}
 #popin_display h3{border-bottom:1px solid #d9d9d9;color:#000000;font-size:11px;font-weight:bold;margin:5px 10px;padding-bottom:5px;position:relative;}
-#popin_display p{margin:5px 10px;text-align:left;}
+#popin_display p{margin:5px 10px;text-align:center;}
 #loading{display:none;position:absolute;z-index:300;}
 #mask{background-color:#000000;display:none;height:3540px;left:0px;position:absolute;top:0px;width:5630px;z-index:100;}
 .post_thumb{float:left;width:50px;}
@@ -60,7 +60,7 @@ form{margin:0px;padding:0px;}
 .delete_action{background-image:url("medias/icon_delete.png");background-repeat:no-repeat;height:15px;position:absolute;right:0px;top:0px;width:15px;}
 .delete_action:focus, .delete_action:hover{background-position:left -32px;}
 .delete_action:active{background-position:left -48px}
-.post_detail a:link, .post_detail a:visited, .comment_detail a:link, .comment_detail a:visited{color:#6B84B4;}
+#popin_display a:link, #popin_display a:visited, .post_detail a:link, .post_detail a:visited, .comment_detail a:link, .comment_detail a:visited{color:#6B84B4;}
 .link_text, .comment_detail{font-size:11px;}
 .icon img{height:16px;width:16px;}
 .comment_form, .link_more, .unlike_inactive, .like_inactive{display:none;}

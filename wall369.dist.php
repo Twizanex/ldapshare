@@ -20,12 +20,12 @@ class wall369 {
 		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['wall369']['timezone']);
 		$this->date_time = gmdate('H:i:s', date('U') + 3600 * $_SESSION['wall369']['timezone']);
 		$this->set_get('a', 'index', 'alphabetic');
-		$this->set_get('post', '', 'numeric');
-		$this->set_get('comment', '', 'numeric');
+		$this->set_get('post_id', '', 'numeric');
+		$this->set_get('comment_id', '', 'numeric');
 		$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
 		if(DEMO == 1) {
 			if(isset($_SESSION['wall369']['user_id']) == 0) {
-				$_SESSION['wall369']['user_id'] = rand(1001, 1010);
+				$_SESSION['wall369']['user_id'] = rand(1, 100);
 			}
 			$this->user = $this->get_user($_SESSION['wall369']['user_id']);
 		}
@@ -183,33 +183,58 @@ class wall369 {
 		$render = '';
 		$render .= '<content><![CDATA[';
 		$render .= '<h2>Post delete</h2>';
+		$render .= '<p><a class="post_delete_confirm_action" data-post_id="'.$this->get['post_id'].'" href="?a=postdeleteconfirm&amp;post_id='.$this->get['post_id'].'">Confirm</a> · <a class="popin_hide" href="#">Cancel</a></p>';
 		$render .= ']]></content>';
+		return $render;
+	}
+	function action_postdeleteconfirm() {
+		$render = '';
+		$status = 0;
+		$post = $this->get_post($this->get['post_id']);
+		if($post) {
+			if($post->user_id == $this->user->user_id) {
+				$sql = 'DELETE FROM wall369_post WHERE user_id = '.$this->user->user_id.' AND post_id = '.$this->get['post_id'];
+				$execute = $this->pdo->exec($sql);
+				$sql = 'DELETE FROM wall369_address WHERE post_id = '.$this->get['post_id'];
+				$execute = $this->pdo->exec($sql);
+				$sql = 'DELETE FROM wall369_comment WHERE post_id = '.$this->get['post_id'];
+				$execute = $this->pdo->exec($sql);
+				$sql = 'DELETE FROM wall369_like WHERE post_id = '.$this->get['post_id'];
+				$execute = $this->pdo->exec($sql);
+				$sql = 'DELETE FROM wall369_link WHERE post_id = '.$this->get['post_id'];
+				$execute = $this->pdo->exec($sql);
+				$sql = 'DELETE FROM wall369_photo WHERE post_id = '.$this->get['post_id'];
+				$execute = $this->pdo->exec($sql);
+				$status = 1;
+			}
+		}
+		$render .= '<status>'.$status.'</status>';
 		return $render;
 	}
 	function action_commentlist() {
 		$render = '';
 		$render .= '<content><![CDATA[';
-		$render .= $this->render_commentlist($this->get['post'], 1);
+		$render .= $this->render_commentlist($this->get['post_id'], 1);
 		$render .= ']]></content>';
 		return $render;
 	}
 	function action_comment() {
 		$render = '';
-		$post = $this->get_post($this->get['post']);
+		$post = $this->get_post($this->get['post_id']);
 		if($post) {
 			$prepare = $this->pdo->prepare('INSERT INTO wall369_comment (user_id, post_id, comment_content, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, :comment_datecreated)');
-			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_datecreated'=>date('Y-m-d H:i:s')));
+			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_datecreated'=>date('Y-m-d H:i:s')));
 			if($execute) {
 				$comment_id = $this->pdo->lastinsertid();
-				$render .= '<result>'.$execute.'</result>';
-				$render .= '<post>'.$this->get['post'].'</post>';
+				$render .= '<status>comment_insert</status>';
+				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 				$render .= '<content><![CDATA[';
 				$render .= $this->render_comment($this->get_comment($comment_id));
 				$render .= ']]></content>';
 			}
 		} else {
-			$render .= '<result>0</result>';
-			$render .= '<post>'.$this->get['post'].'</post>';
+			$render .= '<status>post_deleted</status>';
+			$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 			$render .= '<content><![CDATA[';
 			$render .= '<p>Post deleted</p>';
 			$render .= ']]></content>';
@@ -220,26 +245,41 @@ class wall369 {
 		$render = '';
 		$render .= '<content><![CDATA[';
 		$render .= '<h2>Comment delete</h2>';
+		$render .= '<p><a class="comment_delete_confirm_action" data-comment_id="'.$this->get['comment_id'].'" href="?a=commentdeleteconfirm&amp;comment_id='.$this->get['comment_id'].'">Confirm</a> · <a class="popin_hide" href="#">Cancel</a></p>';
 		$render .= ']]></content>';
+		return $render;
+	}
+	function action_commentdeleteconfirm() {
+		$render = '';
+		$status = 0;
+		$comment = $this->get_comment($this->get['comment_id']);
+		if($comment) {
+			if($comment->user_id == $this->user->user_id) {
+				$sql = 'DELETE FROM wall369_comment WHERE user_id = '.$this->user->user_id.' AND comment_id = '.$this->get['comment_id'];
+				$execute = $this->pdo->exec($sql);
+				$status = 1;
+			}
+		}
+		$render .= '<status>'.$status.'</status>';
 		return $render;
 	}
 	function action_postlike() {
 		$render = '';
-		$post = $this->get_post($this->get['post']);
+		$post = $this->get_post($this->get['post_id']);
 		if($post) {
 			$prepare = $this->pdo->prepare('INSERT INTO wall369_like (user_id, post_id, like_datecreated) VALUES (:user_id, :post_id, :like_datecreated)');
-			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post'], ':like_datecreated'=>date('Y-m-d H:i:s')));
+			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':like_datecreated'=>date('Y-m-d H:i:s')));
 			if($execute) {
-				$render .= '<result>'.$execute.'</result>';
-				$render .= '<post>'.$this->get['post'].'</post>';
+				$render .= '<status>like_insert</status>';
+				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 				$render .= '<content><![CDATA[';
-				$post = $this->get_post($this->get['post']);
+				$post = $this->get_post($this->get['post_id']);
 				$render .= $this->render_like($post);
 				$render .= ']]></content>';
 			}
 		} else {
-			$render .= '<result>0</result>';
-			$render .= '<post>'.$this->get['post'].'</post>';
+			$render .= '<status>post_deleted</status>';
+			$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 			$render .= '<content><![CDATA[';
 			$render .= '<p>Post deleted</p>';
 			$render .= ']]></content>';
@@ -248,76 +288,26 @@ class wall369 {
 	}
 	function action_postunlike() {
 		$render = '';
-		$post = $this->get_post($this->get['post']);
+		$post = $this->get_post($this->get['post_id']);
 		if($post) {
 			//$prepare = $this->pdo->prepare('DELETE FROM wall369_like WHERE user_id = :user_id AND post_id = :post_id)');
-			//$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post']));
-			$sql = 'DELETE FROM wall369_like WHERE user_id = '.$this->user->user_id.' AND post_id = '.$this->get['post'];
+			//$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id']));
+			$sql = 'DELETE FROM wall369_like WHERE user_id = '.$this->user->user_id.' AND post_id = '.$this->get['post_id'];
 			$execute = $this->pdo->exec($sql);
 			//if($execute) {
-				$render .= '<result>'.$execute.'</result>';
-				$render .= '<post>'.$this->get['post'].'</post>';
+				$render .= '<status>like_delete</status>';
+				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 				$render .= '<content><![CDATA[';
-				$post = $this->get_post($this->get['post']);
+				$post = $this->get_post($this->get['post_id']);
 				$render .= $this->render_like($post);
 				$render .= ']]></content>';
 			//}
 		} else {
-			$render .= '<result>0</result>';
-			$render .= '<post>'.$this->get['post'].'</post>';
+			$render .= '<status>post_deleted</status>';
+			$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 			$render .= '<content><![CDATA[';
 			$render .= '<p>Post deleted</p>';
 			$render .= ']]></content>';
-		}
-		return $render;
-	}
-	function render_like($post) {
-		$render = '';
-		if($post->count_like != 0) {
-			if($post->count_like == 4) {
-				$display_limit = 2;
-			} else {
-				$display_limit = 3;
-			}
-			if($post->count_like > $display_limit) {
-				$min = $post->count_like - $display_limit;
-				$limit = ' LIMIT '.$min.', '.$display_limit;
-			} else {
-				$limit = '';
-			}
-			$prepare = $this->pdo->prepare('SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = \''.$this->user->user_id.'\', 1, 0) AS ordering FROM wall369_like wl LEFT JOIN wall369_user usr ON usr.user_id = wl.user_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit);
-			$execute = $prepare->execute(array(':post_id'=>$post->post_id));
-			$rowCount = $prepare->rowCount();
-		
-			if($rowCount > 0) {
-				$values = array();
-				//$render .= '<div id="box-like'.$wm_id.'" class="box-like">';
-				//$render .= '<div class="display-like">';
-				$render .= '<p>';
-				$u = 1;
-				while($like = $prepare->fetch(PDO::FETCH_OBJ)) {
-					if($this->user->user_id == $like->userid) {
-						$render .= '<span class="username">You</span>';
-					} else {
-						$render .= '<span class="username">'.$like->username.'</span>';
-					}
-					if($post->count_like != 1) {
-						if($u == $rowCount && $rowCount < $post->count_like) {
-							$diff = $post->count_like - $rowCount;
-							$render .=  ' and <a id="'.$post->post_id.'" class="others_like" href="#">'.$diff.' others</a> ';
-						} elseif($u == $rowCount - 1 && $rowCount == $post->count_like) {
-							$render .=  ' and ';
-						} elseif($u < $rowCount) {
-							$render .= ', ';
-						}
-					}
-					$u++;
-				}
-				$render .= ' like this';
-				$render .= '</p>';
-				//$render .= '</div>';
-				//$render .= '</div>';
-			}
 		}
 		return $render;
 	}
@@ -478,46 +468,40 @@ class wall369 {
 				$render .= '</div>
 				<div class="post_text">';
 					if($post->user_id == $this->user->user_id) {
-						$render .= '<a class="delete_action post_delete_action" data-post="'.$post->post_id.'" href="?a=postdelete&amp;post='.$post->post_id.'"></a>';
+						$render .= '<a class="delete_action post_delete_action" data-post_id="'.$post->post_id.'" href="?a=postdelete&amp;post_id='.$post->post_id.'"></a>';
 					}
 					$render .= '<p><span class="username">'.$post->user_firstname.' '.$post->user_lastname.'</span></p>
 					<p>'.nl2br($post->post_content, 0).'</p>';
-					$share_type = 'status';
 					if($post->count_link > 0) {
-						$share_type = 'link';
 						$render .= $this->render_linklist($post->post_id);
 					}
 					if($post->count_address > 0) {
-						$share_type = 'address';
 						$render .= $this->render_addresslist($post->post_id);
 					}
 					if($post->count_photo > 0) {
-						$share_type = 'photo';
 						$render .= $this->render_photolist($post->post_id);
 					}
-					$render .= '<p class="post_detail post_detail_'.$share_type.'">';
+					$render .= '<p class="post_detail">';
 					if($post->you_like == 1) {
 						$render .= '<span class="like like_inactive">';
 					} else {
 						$render .= '<span class="like">';
 					}
-					$render .= '<a class="like_action post_like_action" data-post="'.$post->post_id.'" href="?a=postlike&amp;post='.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> ';
+					$render .= '<a class="post_like_action" data-post_id="'.$post->post_id.'" href="?a=postlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> ';
 					if($post->you_like == 1) {
 						$render .= '<span class="unlike">';
 					} else {
 						$render .= '<span class="unlike unlike_inactive">';
 					}
-					$render .= '<a class="unlike_action post_unlike_action" data-post="'.$post->post_id.'" href="?a=postunlike&amp;post='.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> ';
-					$render .= '<a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
+					$render .= '<a class="post_unlike_action" data-post_id="'.$post->post_id.'" href="?a=postunlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> ';
+					$render .= '<a class="comment_action" data-post_id="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
 					$render .= ' · <span class="datecreated" id="post_datecreated_'.$post->post_id.'">'.$this->render_datecreated($post->post_datecreated).'</span>';
 					$render .= '</p>
-					<div class="comments" id="comments_'.$post->post_id.'">
-						<div class="comment post_like" id="post_like_'.$post->post_id.'">
-							<div class="comment_display post_like_display">';
-								$render .= $this->render_like($post);
-							$render .= '</div>
-						</div>
-						<div class="comments_display">';
+					<div class="comments" id="comments_'.$post->post_id.'">';
+						$render .= '<div id="post_like_render_'.$post->post_id.'">';
+							$render .= $this->render_like($post);
+						$render .= '</div>';
+						$render .= '<div class="comments_display">';
 						if($post->count_comment > 0) {
 							$render .= $this->render_commentlist($post->post_id, 0);
 						}
@@ -532,9 +516,9 @@ class wall369 {
 								}
 								$render .= '</div>
 								<div class="comment_text">
-									<form action="?a=comment&amp;post='.$post->post_id.'" class="comment_form_form" method="post">
+									<form action="?a=comment&amp;post_id='.$post->post_id.'" class="comment_form_form" method="post">
 									<p><textarea class="textarea" name="comment"></textarea></p>
-									<p class="submit_btn"><input class="inputsubmit" type="submit" value=" '.$this->str[$this->language]['comment'].' " data-post="'.$post->post_id.'"></p>
+									<p class="submit_btn"><input class="inputsubmit" type="submit" value=" '.$this->str[$this->language]['comment'].' " data-post_id="'.$post->post_id.'"></p>
 									</form>
 								</div>
 							</div>
@@ -562,7 +546,7 @@ class wall369 {
 					if($comment_all->count_comment > LIMIT_COMMENTS) {
 						$render .= '<div class="comment comment_all" id="comment_all_'.$post_id.'">
 							<div class="comment_display comment_all_display">
-								<p><a class="commentall_action" data-post="'.$post_id.'" href="?a=commentlist&amp;post='.$post_id.'">View all '.$comment_all->count_comment.' comments</a></p>
+								<p><a class="commentall_action" data-post_id="'.$post_id.'" href="?a=commentlist&amp;post_id='.$post_id.'">View all '.$comment_all->count_comment.' comments</a></p>
 							</div>
 						</div>';
 						$min = $comment_all->count_comment - LIMIT_COMMENTS;
@@ -593,7 +577,7 @@ class wall369 {
 				$render .= '</div>
 				<div class="comment_text">';
 					if($comment->user_id == $this->user->user_id) {
-						$render .= '<a class="delete_action comment_delete_action" data-comment="'.$comment->comment_id.'" href="?a=commentdelete&amp;comment='.$comment->comment_id.'"></a>';
+						$render .= '<a class="delete_action comment_delete_action" data-comment_id="'.$comment->comment_id.'" href="?a=commentdelete&amp;comment_id='.$comment->comment_id.'"></a>';
 					}
 					$render .= '<p><span class="username">'.$comment->user_firstname.' '.$comment->user_lastname.'</span> '.nl2br($comment->comment_content, 0).'</p>
 					<p class="comment_detail">';
@@ -602,6 +586,56 @@ class wall369 {
 				</div>
 			</div>
 		</div>';
+		return $render;
+	}
+	function render_like($post) {
+		$render = '';
+		if($post->count_like != 0) {
+			if($post->count_like == 4) {
+				$display_limit = 2;
+			} else {
+				$display_limit = 3;
+			}
+			if($post->count_like > $display_limit) {
+				$min = $post->count_like - $display_limit;
+				$limit = ' LIMIT '.$min.', '.$display_limit;
+			} else {
+				$limit = '';
+			}
+			$prepare = $this->pdo->prepare('SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = \''.$this->user->user_id.'\', 1, 0) AS ordering FROM wall369_like wl LEFT JOIN wall369_user usr ON usr.user_id = wl.user_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit);
+			$execute = $prepare->execute(array(':post_id'=>$post->post_id));
+			$rowCount = $prepare->rowCount();
+		
+			if($rowCount > 0) {
+				$values = array();
+				$render .= '<div class="comment post_like" id="post_like_'.$post->post_id.'">
+					<div class="comment_display post_like_display">';
+				$render .= '<p>';
+				$u = 1;
+				while($like = $prepare->fetch(PDO::FETCH_OBJ)) {
+					if($this->user->user_id == $like->userid) {
+						$render .= '<span class="username">You</span>';
+					} else {
+						$render .= '<span class="username">'.$like->username.'</span>';
+					}
+					if($post->count_like != 1) {
+						if($u == $rowCount && $rowCount < $post->count_like) {
+							$diff = $post->count_like - $rowCount;
+							$render .=  ' and <a id="'.$post->post_id.'" class="others_like" href="#">'.$diff.' others</a> ';
+						} elseif($u == $rowCount - 1 && $rowCount == $post->count_like) {
+							$render .=  ' and ';
+						} elseif($u < $rowCount) {
+							$render .= ', ';
+						}
+					}
+					$u++;
+				}
+				$render .= ' like this';
+				$render .= '</p>';
+				$render .= '</div>';
+				$render .= '</div>';
+			}
+		}
 		return $render;
 	}
 	function render_photolist($post_id) {
