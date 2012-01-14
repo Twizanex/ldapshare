@@ -314,8 +314,8 @@ class wall369 {
 		$execute = $prepare->execute(array(':post_id'=>$post_id, ':photo_file'=>$data['photo_inputfile'], ':photo_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function insert_link($post_id, $data) {
-		$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, :link_image, :link_icon, :link_content, :link_datecreated)');
-		$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
+		$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, :link_image, :link_video, :link_videotype, :link_videowidth, :link_videoheight, :link_icon, :link_content, :link_datecreated)');
+		$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_video'=>$data['video'], ':link_videotype'=>$data['videotype'], ':link_videowidth'=>$data['videowidth'], ':link_videoheight'=>$data['videoheight'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function insert_address($post_id, $address_title) {
 		$prepare = $this->pdo->prepare('INSERT INTO wall369_address (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)');
@@ -533,7 +533,7 @@ class wall369 {
 					$full = ' link_text_full';
 				}
 				$render .= '<div class="link_text'.$full.'">
-					<p><a target="_blank" href="'.$link->link_url.'">'.$link->link_title.'</a> <span class="share_social"><a target="_blank" href="https://www.facebook.com/sharer/sharer.php?u='.urlencode($link->link_url).'"><img title="Facebook" alt="Facebook" src="medias/icon_facebook.png"></a> <a target="_blank" href="https://plusone.google.com/_/+1/confirm?url='.urlencode($link->link_url).'"><img title="Google+" alt="Google+" src="medias/icon_googleplus.png"></a> <a target="_blank" href="https://twitter.com/home?status='.urlencode($link->link_url).'"><img title="Twitter" alt="Twitter" src="medias/icon_twitter.png"></a></span><br>';
+					<p><a target="_blank" href="'.$link->link_url.'">'.$link->link_title.'</a><br>';
 					if($link->link_icon != '') {
 						$render .= '<span class="icon"><img alt="" src="'.$link->link_icon.'"></span> ';
 					}
@@ -541,8 +541,27 @@ class wall369 {
 					if($link->link_content != '') {
 						$render .= '<p>'.$link->link_content.'</p>';
 					}
-				$render .= '</div>
-			</div>
+				$render .= '</div>';
+				if(strstr($link->link_url, 'youtube.com')) {
+					parse_str($url['query']);
+					if(isset($v) == 1) {
+						/*$content .= '<object width="367" height="300">
+						<param value="http://www.youtube.com/v/'.$v.'?version=3" name="movie">
+						<param value="true" name="allowFullScreen">
+						<param value="always" name="allowscriptaccess">
+						<embed width="367" height="300" allowfullscreen="true" allowscriptaccess="always" type="application/x-shockwave-flash" src="http://www.youtube.com/v/'.$v.'?version=3">
+						</object>';*/
+						$render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt="" /></a></p>';
+						$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="540" height="324" src="http://www.youtube.com/embed/'.$v.'" frameborder="0"></iframe>';
+					}
+				}
+                if(strstr($link->link_url, 'vimeo.com')) {
+                    $v = substr($link->link_url, strrpos($link->link_url, '/') + 1);
+                    $render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt="" /></a></p>';
+					$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="540" height="304" src="http://player.vimeo.com/video/'.$v.'?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" frameborder="0"></iframe>';
+				}
+
+			$render .= '</div>
 		</div>';
 		return $render;
 	}
@@ -801,7 +820,7 @@ class wall369 {
 		return $string;
 	}
 	function analyze_link($link) {
-		$data = array('url'=>$link, 'icon'=>'', 'image'=>'', 'title'=>'', 'description'=>'', 'charset_server'=>'', 'charset_client'=>'');
+		$data = array('url'=>$link, 'icon'=>'', 'image'=>'', 'video'=>'', 'videotype'=>'', 'videowidth'=>'', 'videoheight'=>'', 'title'=>'', 'description'=>'', 'charset_server'=>'', 'charset_client'=>'');
 
 		$headers = get_headers($link, 1);
 		if(isset($headers['Location']) == 1) {
@@ -937,6 +956,7 @@ class wall369 {
 				$data[$key] = $value;
 			} elseif(substr($key, 0, 3) == 'og:') {
 				$key = substr($key, 3);
+				$key = str_replace(':', '', $key);
 				$data[$key] = $value;
 			}
 		}

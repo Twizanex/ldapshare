@@ -23,6 +23,8 @@ form{margin:0px;padding:0px;}
 .link_thumb img{width:90px;}
 .link_text{color:#808080;float:left;width:440px;}
 .link_text_full{width:540px;}
+.playvideo_link{clear:both;}
+.playvideo{display:none;}
 .comment_thumb{float:left;margin:5px 0px 5px 10px;width:30px;}
 .comment_thumb img{width:30px;}
 .comment_text{float:right;margin:5px 10px 0px 0px;width:480px;}

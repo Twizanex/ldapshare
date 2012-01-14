@@ -307,6 +307,12 @@ $(document).ready(function() {
         }
 		$('#loading').hide();
     });
+	$('.playvideo_link a').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		$(this).parent().hide();
+		$(href).show();
+	});
 	data = {};
 	xml = ajax('index.php?a=postlist', data);
 	$(xml).find('post').each(function(){
