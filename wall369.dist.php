@@ -132,7 +132,7 @@ class wall369 {
 	}
 	function action_post() {
 		$render = '';
-		$prepare = $this->pdo->prepare('INSERT INTO wall369_post (user_id, post_content, post_latitude, post_longitude, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, :post_latitude, :post_longitude, :post_httpuseragent, :post_remoteaddr, :post_datecreated)');
+		$prepare = $this->pdo->prepare('INSERT INTO wall369_post (user_id, post_content, post_latitude, post_longitude, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, NULLIF(:post_latitude, \'\'), NULLIF(:post_longitude, \'\'), NULLIF(:post_httpuseragent, \'\'), NULLIF(:post_remoteaddr, \'\'), :post_datecreated)');
 		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_latitude'=>$_SESSION['wall369']['latitude'], ':post_longitude'=>$_SESSION['wall369']['longitude'], ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
 		if($execute) {
 			$post_id = $this->pdo->lastinsertid();
@@ -314,7 +314,7 @@ class wall369 {
 		$execute = $prepare->execute(array(':post_id'=>$post_id, ':photo_file'=>$data['photo_inputfile'], ':photo_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function insert_link($post_id, $data) {
-		$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, :link_image, :link_video, :link_videotype, :link_videowidth, :link_videoheight, :link_icon, :link_content, :link_datecreated)');
+		$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_content, \'\'), :link_datecreated)');
 		$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_video'=>$data['video'], ':link_videotype'=>$data['videotype'], ':link_videowidth'=>$data['videowidth'], ':link_videoheight'=>$data['videoheight'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function insert_address($post_id, $address_title) {
@@ -542,27 +542,11 @@ class wall369 {
 						$render .= '<p>'.$link->link_content.'</p>';
 					}
 				$render .= '</div>';
-				if($link->link_videowidth != '' && $link->link_videoheight != '') {
+				if($link->link_video != '' && $link->link_videowidth != '' && $link->link_videoheight != '') {
 					$link->link_videoheight = round(($link->link_videoheight * 540) / $link->link_videowidth);
 					$link->link_videowidth = 540;
-					if(strstr($link->link_url, 'youtube.com')) {
-						parse_str($url['query']);
-						if(isset($v) == 1) {
-							/*$content .= '<object width="367" height="300">
-							<param value="http://www.youtube.com/v/'.$v.'?version=3" name="movie">
-							<param value="true" name="allowFullScreen">
-							<param value="always" name="allowscriptaccess">
-							<embed width="367" height="300" allowfullscreen="true" allowscriptaccess="always" type="application/x-shockwave-flash" src="http://www.youtube.com/v/'.$v.'?version=3">
-							</object>';*/
-							$render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt="" /></a></p>';
-							$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="'.$link->link_videowidth.'" height="'.$link->link_videoheight.'" src="http://www.youtube.com/embed/'.$v.'" frameborder="0"></iframe>';
-						}
-					}
-					if(strstr($link->link_url, 'vimeo.com')) {
-						$v = substr($link->link_url, strrpos($link->link_url, '/') + 1);
-						$render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt="" /></a></p>';
-						$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="'.$link->link_videowidth.'" height="'.$link->link_videoheight.'" src="http://player.vimeo.com/video/'.$v.'?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" frameborder="0"></iframe>';
-					}
+					$render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt=""></a></p>';
+					$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="'.$link->link_videowidth.'" height="'.$link->link_videoheight.'" src="'.$link->link_video.'" frameborder="0"></iframe>';
 				}
 			$render .= '</div>
 		</div>';

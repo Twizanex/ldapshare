@@ -38,7 +38,7 @@ form{margin:0px;padding:0px;}
 #post_form .form_photo{background-image:url(medias/icon_photo.png);}
 #post_form_photo_preview img{max-width:600px;}
 #post_form_address_preview{margin-top:10px;text-align:right;}
-.postlist{border-top:1px solid #dedede;margin-top:10px;}
+.postlist{border-top:1px solid #dedede;margin-bottom:110px;margin-top:10px;}
 .post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
 .photolist{border-top:1px solid #dedede;margin-top:10px;overflow:auto;padding-top:10px;}
 .photo{float:left;}
