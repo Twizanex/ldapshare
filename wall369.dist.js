@@ -189,10 +189,13 @@ $(document).ready(function() {
 		post_id = $(this).data('post_id');
 		data = {};
 		xml = ajax(href, data);
+		content = $(xml).find('content').text();
 		status = $(xml).find('status').text();
-		if(status == 1) {
+		if(status == 'delete_post') {
 			popin_hide();
 			$('#post_' + post_id).fadeOut();
+		} else if(status == 'not_your_post') {
+			$('#popin_display').html(content);
 		}
 	});
 	$('.comment_delete_action').live('click', function(e) {
@@ -207,10 +210,13 @@ $(document).ready(function() {
 		comment_id = $(this).data('comment_id');
 		data = {};
 		xml = ajax(href, data);
+		content = $(xml).find('content').text();
 		status = $(xml).find('status').text();
-		if(status == 1) {
+		if(status == 'delete_comment') {
 			popin_hide();
 			$('#comment_' + comment_id).fadeOut();
+		} else if(status == 'not_your_comment') {
+			$('#popin_display').html(content);
 		}
 	});
 	$('.post_like_action').live('click', function(e) {

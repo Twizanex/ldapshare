@@ -189,7 +189,6 @@ class wall369 {
 	}
 	function action_postdeleteconfirm() {
 		$render = '';
-		$status = 0;
 		$post = $this->get_post($this->get['post_id']);
 		if($post) {
 			if($post->user_id == $this->user->user_id) {
@@ -205,10 +204,17 @@ class wall369 {
 				$execute = $this->pdo->exec($sql);
 				$sql = 'DELETE FROM wall369_photo WHERE post_id = '.$this->get['post_id'];
 				$execute = $this->pdo->exec($sql);
-				$status = 1;
+				$render .= '<status>delete_post</status>';
+			} else {
+				$render .= '<status>not_your_post</status>';
+				$render .= '<content><![CDATA[';
+				$render .= '<h2>Post delete</h2>';
+				$render .= '<p>Not your post · <a class="popin_hide" href="#">Cancel</a></p>';
+				$render .= ']]></content>';
 			}
+		} else {
+			$render .= '<status>delete_post</status>';
 		}
-		$render .= '<status>'.$status.'</status>';
 		return $render;
 	}
 	function action_commentlist() {
@@ -251,16 +257,22 @@ class wall369 {
 	}
 	function action_commentdeleteconfirm() {
 		$render = '';
-		$status = 0;
 		$comment = $this->get_comment($this->get['comment_id']);
 		if($comment) {
 			if($comment->user_id == $this->user->user_id) {
 				$sql = 'DELETE FROM wall369_comment WHERE user_id = '.$this->user->user_id.' AND comment_id = '.$this->get['comment_id'];
 				$execute = $this->pdo->exec($sql);
-				$status = 1;
+				$render .= '<status>delete_comment</status>';
+			} else {
+				$render .= '<status>not_your_comment</status>';
+				$render .= '<content><![CDATA[';
+				$render .= '<h2>Comment delete</h2>';
+				$render .= '<p>Not your comment · <a class="popin_hide" href="#">Cancel</a></p>';
+				$render .= ']]></content>';
 			}
+		} else {
+			$render .= '<status>delete_comment</status>';
 		}
-		$render .= '<status>'.$status.'</status>';
 		return $render;
 	}
 	function action_postlike() {
