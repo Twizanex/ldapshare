@@ -233,6 +233,7 @@ class wall369 {
 				$render .= '<result>'.$execute.'</result>';
 				$render .= '<post>'.$this->get['post'].'</post>';
 				$render .= '<content><![CDATA[';
+				$post = $this->get_post($this->get['post']);
 				$render .= $this->render_like($post);
 				$render .= ']]></content>';
 			}
@@ -249,15 +250,18 @@ class wall369 {
 		$render = '';
 		$post = $this->get_post($this->get['post']);
 		if($post) {
-			$prepare = $this->pdo->prepare('DELETE FROM wall369_like WHERE user_id = :user_id AND post_id = :post_id)');
-			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post']));
-			if($execute) {
+			//$prepare = $this->pdo->prepare('DELETE FROM wall369_like WHERE user_id = :user_id AND post_id = :post_id)');
+			//$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post']));
+			$sql = 'DELETE FROM wall369_like WHERE user_id = '.$this->user->user_id.' AND post_id = '.$this->get['post'];
+			$execute = $this->pdo->exec($sql);
+			//if($execute) {
 				$render .= '<result>'.$execute.'</result>';
 				$render .= '<post>'.$this->get['post'].'</post>';
 				$render .= '<content><![CDATA[';
+				$post = $this->get_post($this->get['post']);
 				$render .= $this->render_like($post);
 				$render .= ']]></content>';
-			}
+			//}
 		} else {
 			$render .= '<result>0</result>';
 			$render .= '<post>'.$this->get['post'].'</post>';
@@ -300,7 +304,7 @@ class wall369 {
 					if($post->count_like != 1) {
 						if($u == $rowCount && $rowCount < $post->count_like) {
 							$diff = $post->count_like - $rowCount;
-							$render .=  ' and <a id="'.$wm_id.'" class="others_like" href="#">'.$diff.' others</a> ';
+							$render .=  ' and <a id="'.$post->post_id.'" class="others_like" href="#">'.$diff.' others</a> ';
 						} elseif($u == $rowCount - 1 && $rowCount == $post->count_like) {
 							$render .=  ' and ';
 						} elseif($u < $rowCount) {
