@@ -33,6 +33,15 @@ class wall369 {
 			$_SESSION['wall369']['post_id_oldest'] = 0;
 			$_SESSION['wall369']['post_id_newest'] = 0;
 		}
+		$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS count_link, COUNT(DISTINCT(photo.photo_id)) AS count_photo, COUNT(DISTINCT(address.address_id)) AS count_address, COUNT(DISTINCT(l.like_id)) AS count_like, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
+		FROM wall369_post post
+		LEFT JOIN wall369_user user ON user.user_id = post.user_id
+		LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id
+		LEFT JOIN wall369_link link ON link.post_id = post.post_id
+		LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id
+		LEFT JOIN wall369_address address ON address.post_id = post.post_id
+		LEFT JOIN wall369_like l ON l.post_id = post.post_id
+		LEFT JOIN wall369_like l_you ON l_you.post_id = post.post_id AND l_you.user_id = \''.$this->user->user_id.'\'';
 	}
 	function error_handler($e_type, $e_message, $e_file, $e_line) {
 		$this->render_error($e_type, $e_message, $e_file, $e_line);
@@ -214,6 +223,100 @@ class wall369 {
 		$render .= ']]></content>';
 		return $render;
 	}
+	function action_postlike() {
+		$render = '';
+		$post = $this->get_post($this->get['post']);
+		if($post) {
+			$prepare = $this->pdo->prepare('INSERT INTO wall369_like (user_id, post_id, like_datecreated) VALUES (:user_id, :post_id, :like_datecreated)');
+			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post'], ':like_datecreated'=>date('Y-m-d H:i:s')));
+			if($execute) {
+				$render .= '<result>'.$execute.'</result>';
+				$render .= '<post>'.$this->get['post'].'</post>';
+				$render .= '<content><![CDATA[';
+				$render .= $this->render_like($post);
+				$render .= ']]></content>';
+			}
+		} else {
+			$render .= '<result>0</result>';
+			$render .= '<post>'.$this->get['post'].'</post>';
+			$render .= '<content><![CDATA[';
+			$render .= '<p>Post deleted</p>';
+			$render .= ']]></content>';
+		}
+		return $render;
+	}
+	function action_postunlike() {
+		$render = '';
+		$post = $this->get_post($this->get['post']);
+		if($post) {
+			$prepare = $this->pdo->prepare('DELETE FROM wall369_like WHERE user_id = :user_id AND post_id = :post_id)');
+			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post']));
+			if($execute) {
+				$render .= '<result>'.$execute.'</result>';
+				$render .= '<post>'.$this->get['post'].'</post>';
+				$render .= '<content><![CDATA[';
+				$render .= $this->render_like($post);
+				$render .= ']]></content>';
+			}
+		} else {
+			$render .= '<result>0</result>';
+			$render .= '<post>'.$this->get['post'].'</post>';
+			$render .= '<content><![CDATA[';
+			$render .= '<p>Post deleted</p>';
+			$render .= ']]></content>';
+		}
+		return $render;
+	}
+	function render_like($post) {
+		$render = '';
+		if($post->count_like != 0) {
+			if($post->count_like == 4) {
+				$display_limit = 2;
+			} else {
+				$display_limit = 3;
+			}
+			if($post->count_like > $display_limit) {
+				$min = $post->count_like - $display_limit;
+				$limit = ' LIMIT '.$min.', '.$display_limit;
+			} else {
+				$limit = '';
+			}
+			$prepare = $this->pdo->prepare('SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = \''.$this->user->user_id.'\', 1, 0) AS ordering FROM wall369_like wl LEFT JOIN wall369_user usr ON usr.user_id = wl.user_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit);
+			$execute = $prepare->execute(array(':post_id'=>$post->post_id));
+			$rowCount = $prepare->rowCount();
+		
+			if($rowCount > 0) {
+				$values = array();
+				//$render .= '<div id="box-like'.$wm_id.'" class="box-like">';
+				//$render .= '<div class="display-like">';
+				$render .= '<p>';
+				$u = 1;
+				while($like = $prepare->fetch(PDO::FETCH_OBJ)) {
+					if($this->user->user_id == $like->userid) {
+						$render .= '<span class="username">You</span>';
+					} else {
+						$render .= '<span class="username">'.$like->username.'</span>';
+					}
+					if($post->count_like != 1) {
+						if($u == $rowCount && $rowCount < $post->count_like) {
+							$diff = $post->count_like - $rowCount;
+							$render .=  ' and <a id="'.$wm_id.'" class="others_like" href="#">'.$diff.' others</a> ';
+						} elseif($u == $rowCount - 1 && $rowCount == $post->count_like) {
+							$render .=  ' and ';
+						} elseif($u < $rowCount) {
+							$render .= ', ';
+						}
+					}
+					$u++;
+				}
+				$render .= ' like this';
+				$render .= '</p>';
+				//$render .= '</div>';
+				//$render .= '</div>';
+			}
+		}
+		return $render;
+	}
 	function action_refreshdatecreated() {
 		$render = '';
 		$flt = array();
@@ -257,7 +360,7 @@ class wall369 {
 			$flt[] = 'post.post_id > :post_id_newest';
 			$parameters[':post_id_newest'] = $_SESSION['wall369']['post_id_newest'];
 		}
-		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link, COUNT(photo.photo_id) AS count_photo, COUNT(address.address_id) AS count_address FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id LEFT JOIN wall369_address address ON address.post_id = post.post_id WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id ASC');
+		$prepare = $this->pdo->prepare($this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id ASC');
 		$execute = $prepare->execute($parameters);
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -294,7 +397,7 @@ class wall369 {
 		}
 	}
 	function get_post($post_id) {
-		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link, COUNT(photo.photo_id) AS count_photo, COUNT(address.address_id) AS count_address FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id LEFT JOIN wall369_address address ON address.post_id = post.post_id WHERE post.post_id = :post_id GROUP BY post.post_id');
+		$prepare = $this->pdo->prepare($this->post_query.' WHERE post.post_id = :post_id GROUP BY post.post_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -330,7 +433,7 @@ class wall369 {
 			$flt[] = 'post.post_id < :post_id_oldest';
 			$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
 		}
-		$prepare = $this->pdo->prepare('SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(comment.comment_id) AS count_comment, COUNT(link.link_id) AS count_link, COUNT(photo.photo_id) AS count_photo, COUNT(address.address_id) AS count_address FROM wall369_post post LEFT JOIN wall369_user user ON user.user_id = post.user_id LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id LEFT JOIN wall369_link link ON link.post_id = post.post_id LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id LEFT JOIN wall369_address address ON address.post_id = post.post_id WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id DESC LIMIT 0,'.LIMIT_POSTS);
+		$prepare = $this->pdo->prepare($this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id DESC LIMIT 0,'.LIMIT_POSTS);
 		$execute = $prepare->execute($parameters);
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -388,14 +491,27 @@ class wall369 {
 						$share_type = 'photo';
 						$render .= $this->render_photolist($post->post_id);
 					}
-					$render .= '<p class="post_detail post_detail_'.$share_type.'"><span class="like"><a class="like_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> <span class="unlike unlike_inactive"><a class="unlike_action" data-post="'.$post->post_id.'" href="#post_like_'.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> <a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
+					$render .= '<p class="post_detail post_detail_'.$share_type.'">';
+					if($post->you_like == 1) {
+						$render .= '<span class="like like_inactive">';
+					} else {
+						$render .= '<span class="like">';
+					}
+					$render .= '<a class="like_action post_like_action" data-post="'.$post->post_id.'" href="?a=postlike&amp;post='.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> ';
+					if($post->you_like == 1) {
+						$render .= '<span class="unlike">';
+					} else {
+						$render .= '<span class="unlike unlike_inactive">';
+					}
+					$render .= '<a class="unlike_action post_unlike_action" data-post="'.$post->post_id.'" href="?a=postunlike&amp;post='.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> ';
+					$render .= '<a class="comment_action" data-post="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
 					$render .= ' · <span class="datecreated" id="post_datecreated_'.$post->post_id.'">'.$this->render_datecreated($post->post_datecreated).'</span>';
 					$render .= '</p>
 					<div class="comments" id="comments_'.$post->post_id.'">
 						<div class="comment post_like" id="post_like_'.$post->post_id.'">
-							<div class="comment_display post_like_display">
-								<p><span class="username">Sagittis Sed</span> like this</p>
-							</div>
+							<div class="comment_display post_like_display">';
+								$render .= $this->render_like($post);
+							$render .= '</div>
 						</div>
 						<div class="comments_display">';
 						if($post->count_comment > 0) {
@@ -575,20 +691,20 @@ class wall369 {
 		</div>';
 		return $render;
 	}
-    function render_datecreated($date) {
-        list($datecreated, $timecreated) = explode(' ', $date);
-        $diff = $this->date_diff_days($this->date_day, $datecreated);
-        if($diff != 0) {
-            $mention = $this->date_diff_days_mention($diff);
+	function render_datecreated($date) {
+		list($datecreated, $timecreated) = explode(' ', $date);
+		$diff = $this->date_diff_days($this->date_day, $datecreated);
+		if($diff != 0) {
+			$mention = $this->date_diff_days_mention($diff);
 			if($diff == -1) {
 				$mention .= ' at '.substr($timecreated, 0, 5);
 			}
-        } else {
-            $diff = $this->date_diff_minutes($this->date_time, $timecreated);
-            $mention = $this->date_diff_minutes_mention($diff);
-        }
-        return '<span title="'.$this->date_transform(array('format'=>DATE_FORMAT, 'date'=>$date)).'">'.$mention.'</span>';
-    }
+		} else {
+			$diff = $this->date_diff_minutes($this->date_time, $timecreated);
+			$mention = $this->date_diff_minutes_mention($diff);
+		}
+		return '<span title="'.$this->date_transform(array('format'=>DATE_FORMAT, 'date'=>$date)).'">'.$mention.'</span>';
+	}
 	function date_diff_days($previous, $next) {
 		if($previous == '' || $next == '') {
 			return '';

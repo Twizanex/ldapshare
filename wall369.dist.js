@@ -203,6 +203,24 @@ $(document).ready(function() {
 		post = $(this).data('post');
 		popin_show(href);
 	});
+	$('.post_like_action').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		post = $(this).data('post');
+		data = {};
+		xml = ajax(href, data);
+		content = $(xml).find('content').text();
+		$('#post_' + post).find('.post_like_display').html(content);
+	});
+	$('.post_unlike_action').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		post = $(this).data('post');
+		data = {};
+		xml = ajax(href, data);
+		content = $(xml).find('content').text();
+		$('#post_' + post).find('.post_like_display').html(content);
+	});
 	$('#post_form form').live('submit', function(e) {
 		e.preventDefault();
 		action = $(this).attr('action');
@@ -241,6 +259,7 @@ $(document).ready(function() {
 						});
 						$('#status_textarea').attr('value', '');
 						$('#link_inputtext').attr('value', 'http://');
+						$('#address_inputtext').attr('value', '');
 						$('#photo_inputfile').attr('value', '');
 						$('#post_form_photo_preview').html('');
 						$('#post_form_address_preview').html('');
