@@ -542,25 +542,28 @@ class wall369 {
 						$render .= '<p>'.$link->link_content.'</p>';
 					}
 				$render .= '</div>';
-				if(strstr($link->link_url, 'youtube.com')) {
-					parse_str($url['query']);
-					if(isset($v) == 1) {
-						/*$content .= '<object width="367" height="300">
-						<param value="http://www.youtube.com/v/'.$v.'?version=3" name="movie">
-						<param value="true" name="allowFullScreen">
-						<param value="always" name="allowscriptaccess">
-						<embed width="367" height="300" allowfullscreen="true" allowscriptaccess="always" type="application/x-shockwave-flash" src="http://www.youtube.com/v/'.$v.'?version=3">
-						</object>';*/
+				if($link->link_videowidth != '' && $link->link_videoheight != '') {
+					$link->link_videoheight = round(($link->link_videoheight * 540) / $link->link_videowidth);
+					$link->link_videowidth = 540;
+					if(strstr($link->link_url, 'youtube.com')) {
+						parse_str($url['query']);
+						if(isset($v) == 1) {
+							/*$content .= '<object width="367" height="300">
+							<param value="http://www.youtube.com/v/'.$v.'?version=3" name="movie">
+							<param value="true" name="allowFullScreen">
+							<param value="always" name="allowscriptaccess">
+							<embed width="367" height="300" allowfullscreen="true" allowscriptaccess="always" type="application/x-shockwave-flash" src="http://www.youtube.com/v/'.$v.'?version=3">
+							</object>';*/
+							$render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt="" /></a></p>';
+							$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="'.$link->link_videowidth.'" height="'.$link->link_videoheight.'" src="http://www.youtube.com/embed/'.$v.'" frameborder="0"></iframe>';
+						}
+					}
+					if(strstr($link->link_url, 'vimeo.com')) {
+						$v = substr($link->link_url, strrpos($link->link_url, '/') + 1);
 						$render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt="" /></a></p>';
-						$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="540" height="324" src="http://www.youtube.com/embed/'.$v.'" frameborder="0"></iframe>';
+						$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="'.$link->link_videowidth.'" height="'.$link->link_videoheight.'" src="http://player.vimeo.com/video/'.$v.'?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" frameborder="0"></iframe>';
 					}
 				}
-                if(strstr($link->link_url, 'vimeo.com')) {
-                    $v = substr($link->link_url, strrpos($link->link_url, '/') + 1);
-                    $render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt="" /></a></p>';
-					$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="540" height="304" src="http://player.vimeo.com/video/'.$v.'?title=0&amp;byline=0&amp;portrait=0&amp;color=ffffff" frameborder="0"></iframe>';
-				}
-
 			$render .= '</div>
 		</div>';
 		return $render;
