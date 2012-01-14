@@ -46,7 +46,7 @@ form{margin:0px;padding:0px;}
 .linklist{margin-top:10px;}
 .address, .link{border-top:1px solid #dedede;overflow:auto;padding-top:10px;}
 .post_detail{border-top:1px solid #dedede;clear:both;margin-top:10px;padding:5px 0px 0px 0px;}
-.comments{margin:10px 0px;}
+.commentlist{margin:10px 0px;}
 .comment{background-color:#EDEFF4;border-bottom:1px solid #D2D9E7;clear:both;margin-top:1px;overflow:auto;}
 .comment_all_display p, .post_like_display p{margin:5px 10px 5px 30px;}
 .comment_all, .post_like{background-position:10px 5px;background-repeat:no-repeat;}

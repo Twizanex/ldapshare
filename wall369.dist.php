@@ -483,7 +483,7 @@ class wall369 {
 						$render .= '<a class="delete_action post_delete_action" data-post_id="'.$post->post_id.'" href="?a=postdelete&amp;post_id='.$post->post_id.'"></a>';
 					}
 					$render .= '<p><span class="username">'.$post->user_firstname.' '.$post->user_lastname.'</span></p>
-					<p>'.nl2br($post->post_content, 0).'</p>';
+					<p>'.$this->render_content($post->post_content).'</p>';
 					if($post->count_link > 0) {
 						$render .= $this->render_linklist($post->post_id);
 					}
@@ -509,11 +509,11 @@ class wall369 {
 					$render .= '<a class="comment_action" data-post_id="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
 					$render .= ' · <span class="datecreated" id="post_datecreated_'.$post->post_id.'">'.$this->render_datecreated($post->post_datecreated).'</span>';
 					$render .= '</p>
-					<div class="comments" id="comments_'.$post->post_id.'">';
+					<div class="commentlist" id="commentlist_'.$post->post_id.'">';
 						$render .= '<div id="post_like_render_'.$post->post_id.'">';
 							$render .= $this->render_like($post);
 						$render .= '</div>';
-						$render .= '<div class="comments_display">';
+						$render .= '<div class="commentlist_display">';
 						if($post->count_comment > 0) {
 							$render .= $this->render_commentlist($post->post_id, 0);
 						}
@@ -591,7 +591,7 @@ class wall369 {
 					if($comment->user_id == $this->user->user_id) {
 						$render .= '<a class="delete_action comment_delete_action" data-comment_id="'.$comment->comment_id.'" href="?a=commentdelete&amp;comment_id='.$comment->comment_id.'"></a>';
 					}
-					$render .= '<p><span class="username">'.$comment->user_firstname.' '.$comment->user_lastname.'</span> '.nl2br($comment->comment_content, 0).'</p>
+					$render .= '<p><span class="username">'.$comment->user_firstname.' '.$comment->user_lastname.'</span> '.$this->render_content($comment->comment_content).'</p>
 					<p class="comment_detail">';
 					$render .= '<span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'">'.$this->render_datecreated($comment->comment_datecreated).'</span>';
 					$render .= '</p>
@@ -705,7 +705,7 @@ class wall369 {
 					}
 					$render .= '<span class="hostname">'.$url['host'].'</span></p>';
 					if($link->link_content != '') {
-						$render .= '<p>'.$link->link_content.'</p>';
+						$render .= '<p>'.$this->render_content($link->link_content).'</p>';
 					}
 				$render .= '</div>';
 				if($link->link_video != '' && $link->link_videowidth != '' && $link->link_videoheight != '') {
@@ -740,6 +740,21 @@ class wall369 {
 			$render .=' </div>
 		</div>';
 		return $render;
+	}
+	function render_content($text) {
+		$links = preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $text, $matches);
+		$matches = $matches[0];
+		if(count($matches) != 0) {
+			$matches = array_unique($matches);
+			foreach($matches as $match) {
+				$text = str_replace($match, '<a href="'.$match.'" target="_blank">'.$match.'</a>', $text);
+			}
+		}
+
+		//$text = eregi_replace('(((f|ht){1}tp://)[-a-zA-Z0-9@:%_\+.~#?&//=]+)', '<a href="\\1" target="_blank"">\\1</a>', $text);
+		//$text = eregi_replace('([[:space:]()[{}])(www.[-a-zA-Z0-9@:%_\+.~#?&//=]+)', '\\1<a href="http://\\2" target="_blank">\\2</a>', $text);
+		//$text = eregi_replace('([_\.0-9a-z-]+@([0-9a-z][0-9a-z-]+\.)+[a-z]{2,3})', '<a href="mailto:\\1">\\1</a>', $text);
+		return nl2br($text, 0);
 	}
 	function render_datecreated($date) {
 		list($datecreated, $timecreated) = explode(' ', $date);

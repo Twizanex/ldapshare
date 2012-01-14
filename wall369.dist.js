@@ -31,7 +31,7 @@ function set_positions() {
 	_width = $('#popin').width();
 	_height = $('#popin').height();
 	_top = document_top + (window_height / 2) - (_height / 2);
-	_margin_left = (window_width - _width) / 2;
+	_margin_left = (window_width - _width) / 2 - 10;// ?
 	$('#popin').css({'margin-left': _margin_left, 'top': _top});
 }
 function loading_hide() {
@@ -164,7 +164,7 @@ $(document).ready(function() {
 		xml = ajax(href, data);
 		$('#comment_all_' + post_id).hide();
 		content = $(xml).find('content').text();
-		$('#post_' + post_id).find('.comments_display').prepend(content);
+		$('#post_' + post_id).find('.commentlist_display').prepend(content);
 	});
 	$('.comment_action').live('click', function(e) {
 		e.preventDefault();
@@ -311,7 +311,7 @@ $(document).ready(function() {
 			content = $(xml).find('content').text();
 			status = $(xml).find('status').text();
 			if(status == 'comment_insert') {
-				$('#comments_' + post_id).find('.comments_display').append(content);
+				$('#commentlist_' + post_id).find('.commentlist_display').append(content);
 				$(this).find('.textarea').attr('value', '');
 			} else if(status == 'post_deleted') {
 				$('#post_' + post_id).html(content);
