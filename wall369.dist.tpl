@@ -21,9 +21,9 @@
 			<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""></p>
 			<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>
 			<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value=" Share "></p>
-			<div id="post_form_link_preview"></div>
-			<div id="post_form_address_preview"></div>
-			<div id="post_form_photo_preview"></div>
+			<div class="post_form_preview" id="post_form_link_preview"></div>
+			<div class="post_form_preview" id="post_form_address_preview"></div>
+			<div class="post_form_preview" id="post_form_photo_preview"></div>
 			</form>
 		</div>
 		<div class="postlist">

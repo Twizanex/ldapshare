@@ -30,7 +30,7 @@ function set_positions() {
 	$('#loading').css({'margin-left': _margin_left, 'top': _top});
 	_width = $('#popin').width();
 	_height = $('#popin').height();
-	_top = document_top + (window_height / 2) - (_height / 2);
+	_top = document_top + 10;
 	_margin_left = (window_width - _width) / 2 - 10;// ?
 	$('#popin').css({'margin-left': _margin_left, 'top': _top});
 }
@@ -351,7 +351,7 @@ $(document).ready(function() {
 		address_inputtext = $(this).val();
 		if(address_inputtext != '') {
 			address_inputtext = encodeURIComponent(address_inputtext);
-			$('#post_form_address_preview').html('<img src="http://maps.googleapis.com/maps/api/staticmap?center=' + address_inputtext + '&markers=color:red|' + address_inputtext + '&zoom=15&size=540x300&sensor=false" alt="">');
+			$('#post_form_address_preview').html('<img src="http://maps.googleapis.com/maps/api/staticmap?center=' + address_inputtext + '&markers=color:red|' + address_inputtext + '&zoom=15&size=540x200&sensor=false" alt="">');
         }
 		$('#loading').hide();
     });
@@ -361,6 +361,12 @@ $(document).ready(function() {
 		$(this).parent().hide();
 		$(href).show();
 	});
+    $('.photo_display a').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		photo_id = $(this).data('photo_id');
+		popin_show(href);
+    });
 	data = {};
 	xml = ajax('index.php?a=postlist', data);
 	$(xml).find('post').each(function(){

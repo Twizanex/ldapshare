@@ -22,6 +22,7 @@ class wall369 {
 		$this->set_get('a', 'index', 'alphabetic');
 		$this->set_get('post_id', '', 'numeric');
 		$this->set_get('comment_id', '', 'numeric');
+		$this->set_get('photo_id', '', 'numeric');
 		$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
 		if(DEMO == 1) {
 			if(isset($_SESSION['wall369']['user_id']) == 0) {
@@ -34,14 +35,14 @@ class wall369 {
 			$_SESSION['wall369']['post_id_newest'] = 0;
 		}
 		$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS count_link, COUNT(DISTINCT(photo.photo_id)) AS count_photo, COUNT(DISTINCT(address.address_id)) AS count_address, COUNT(DISTINCT(l.like_id)) AS count_like, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
-		FROM wall369_post post
-		LEFT JOIN wall369_user user ON user.user_id = post.user_id
-		LEFT JOIN wall369_comment comment ON comment.post_id = post.post_id
-		LEFT JOIN wall369_link link ON link.post_id = post.post_id
-		LEFT JOIN wall369_photo photo ON photo.post_id = post.post_id
-		LEFT JOIN wall369_address address ON address.post_id = post.post_id
-		LEFT JOIN wall369_like l ON l.post_id = post.post_id
-		LEFT JOIN wall369_like l_you ON l_you.post_id = post.post_id AND l_you.user_id = \''.$this->user->user_id.'\'';
+		FROM '.TABLE_POST.' post
+		LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id
+		LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id
+		LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id
+		LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id
+		LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id
+		LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id
+		LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = \''.$this->user->user_id.'\'';
 	}
 	function error_handler($e_type, $e_message, $e_file, $e_line) {
 		$this->render_error($e_type, $e_message, $e_file, $e_line);
@@ -141,7 +142,7 @@ class wall369 {
 	}
 	function action_post() {
 		$render = '';
-		$prepare = $this->pdo->prepare('INSERT INTO wall369_post (user_id, post_content, post_latitude, post_longitude, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, NULLIF(:post_latitude, \'\'), NULLIF(:post_longitude, \'\'), NULLIF(:post_httpuseragent, \'\'), NULLIF(:post_remoteaddr, \'\'), :post_datecreated)');
+		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_POST.' (user_id, post_content, post_latitude, post_longitude, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, NULLIF(:post_latitude, \'\'), NULLIF(:post_longitude, \'\'), NULLIF(:post_httpuseragent, \'\'), NULLIF(:post_remoteaddr, \'\'), :post_datecreated)');
 		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_latitude'=>$_SESSION['wall369']['latitude'], ':post_longitude'=>$_SESSION['wall369']['longitude'], ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
 		if($execute) {
 			$post_id = $this->pdo->lastinsertid();
@@ -192,17 +193,17 @@ class wall369 {
 		$post = $this->get_post($this->get['post_id']);
 		if($post) {
 			if($post->user_id == $this->user->user_id) {
-				$sql = 'DELETE FROM wall369_post WHERE user_id = '.$this->user->user_id.' AND post_id = '.$this->get['post_id'];
+				$sql = 'DELETE FROM '.TABLE_POST.' WHERE user_id = '.$this->user->user_id.' AND post_id = '.$this->get['post_id'];
 				$execute = $this->pdo->exec($sql);
-				$sql = 'DELETE FROM wall369_address WHERE post_id = '.$this->get['post_id'];
+				$sql = 'DELETE FROM '.TABLE_ADDRESS.' WHERE post_id = '.$this->get['post_id'];
 				$execute = $this->pdo->exec($sql);
-				$sql = 'DELETE FROM wall369_comment WHERE post_id = '.$this->get['post_id'];
+				$sql = 'DELETE FROM '.TABLE_COMMENT.' WHERE post_id = '.$this->get['post_id'];
 				$execute = $this->pdo->exec($sql);
-				$sql = 'DELETE FROM wall369_like WHERE post_id = '.$this->get['post_id'];
+				$sql = 'DELETE FROM '.TABLE_LIKE.' WHERE post_id = '.$this->get['post_id'];
 				$execute = $this->pdo->exec($sql);
-				$sql = 'DELETE FROM wall369_link WHERE post_id = '.$this->get['post_id'];
+				$sql = 'DELETE FROM '.TABLE_LINK.' WHERE post_id = '.$this->get['post_id'];
 				$execute = $this->pdo->exec($sql);
-				$sql = 'DELETE FROM wall369_photo WHERE post_id = '.$this->get['post_id'];
+				$sql = 'DELETE FROM '.TABLE_PHOTO.' WHERE post_id = '.$this->get['post_id'];
 				$execute = $this->pdo->exec($sql);
 				$render .= '<status>delete_post</status>';
 			} else {
@@ -228,7 +229,7 @@ class wall369 {
 		$render = '';
 		$post = $this->get_post($this->get['post_id']);
 		if($post) {
-			$prepare = $this->pdo->prepare('INSERT INTO wall369_comment (user_id, post_id, comment_content, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, :comment_datecreated)');
+			$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_COMMENT.' (user_id, post_id, comment_content, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, :comment_datecreated)');
 			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_datecreated'=>date('Y-m-d H:i:s')));
 			if($execute) {
 				$comment_id = $this->pdo->lastinsertid();
@@ -260,7 +261,7 @@ class wall369 {
 		$comment = $this->get_comment($this->get['comment_id']);
 		if($comment) {
 			if($comment->user_id == $this->user->user_id) {
-				$sql = 'DELETE FROM wall369_comment WHERE user_id = '.$this->user->user_id.' AND comment_id = '.$this->get['comment_id'];
+				$sql = 'DELETE FROM '.TABLE_COMMENT.' WHERE user_id = '.$this->user->user_id.' AND comment_id = '.$this->get['comment_id'];
 				$execute = $this->pdo->exec($sql);
 				$render .= '<status>delete_comment</status>';
 			} else {
@@ -279,7 +280,7 @@ class wall369 {
 		$render = '';
 		$post = $this->get_post($this->get['post_id']);
 		if($post) {
-			$prepare = $this->pdo->prepare('INSERT INTO wall369_like (user_id, post_id, like_datecreated) VALUES (:user_id, :post_id, :like_datecreated)');
+			$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_LIKE.' (user_id, post_id, like_datecreated) VALUES (:user_id, :post_id, :like_datecreated)');
 			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':like_datecreated'=>date('Y-m-d H:i:s')));
 			if($execute) {
 				$render .= '<status>like_insert</status>';
@@ -302,9 +303,9 @@ class wall369 {
 		$render = '';
 		$post = $this->get_post($this->get['post_id']);
 		if($post) {
-			//$prepare = $this->pdo->prepare('DELETE FROM wall369_like WHERE user_id = :user_id AND post_id = :post_id)');
+			//$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_LIKE.' WHERE user_id = :user_id AND post_id = :post_id)');
 			//$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id']));
-			$sql = 'DELETE FROM wall369_like WHERE user_id = '.$this->user->user_id.' AND post_id = '.$this->get['post_id'];
+			$sql = 'DELETE FROM '.TABLE_LIKE.' WHERE user_id = '.$this->user->user_id.' AND post_id = '.$this->get['post_id'];
 			$execute = $this->pdo->exec($sql);
 			//if($execute) {
 				$render .= '<status>like_delete</status>';
@@ -323,6 +324,17 @@ class wall369 {
 		}
 		return $render;
 	}
+	function action_photozoom() {
+		$render = '';
+		$render = '';
+		$photo = $this->get_photo($this->get['photo_id']);
+		if($photo) {
+			$render .= '<content><![CDATA[';
+			$render .= '<a class="popin_hide" href="#"><img src="storage/'.$photo->photo_file.'"></a>';
+			$render .= ']]></content>';
+		}
+		return $render;
+	}
 	function action_refreshdatecreated() {
 		$render = '';
 		$flt = array();
@@ -330,7 +342,7 @@ class wall369 {
 		$flt[] = '1';
 		$flt[] = 'post.post_datecreated LIKE :today_limit';
 		$parameters[':today_limit'] = $this->date_day.'%';
-		$prepare = $this->pdo->prepare('SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated FROM wall369_post post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id');
+		$prepare = $this->pdo->prepare('SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id');
 		$execute = $prepare->execute($parameters);
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -345,7 +357,7 @@ class wall369 {
 		$flt[] = '1';
 		$flt[] = 'comment.comment_datecreated LIKE :today_limit';
 		$parameters[':today_limit'] = $this->date_day.'%';
-		$prepare = $this->pdo->prepare('SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM wall369_comment comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id');
+		$prepare = $this->pdo->prepare('SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id');
 		$execute = $prepare->execute($parameters);
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -382,7 +394,7 @@ class wall369 {
 		$flt[] = '1';
 		$flt[] = 'comment.comment_datecreated LIKE :today_limit';
 		$parameters[':today_limit'] = $this->date_day.'%';
-		$prepare = $this->pdo->prepare('SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM wall369_comment comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id');
+		$prepare = $this->pdo->prepare('SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id');
 		$execute = $prepare->execute($parameters);
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -395,7 +407,7 @@ class wall369 {
 		return $render;
 	}
 	function get_user($user_id) {
-		$prepare = $this->pdo->prepare('SELECT user.* FROM wall369_user user WHERE user.user_id = :user_id GROUP BY user.user_id');
+		$prepare = $this->pdo->prepare('SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_id = :user_id GROUP BY user.user_id');
 		$execute = $prepare->execute(array(':user_id'=>$user_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -411,23 +423,31 @@ class wall369 {
 		}
 	}
 	function get_comment($comment_id) {
-		$prepare = $this->pdo->prepare('SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM wall369_comment comment LEFT JOIN wall369_user user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id');
+		$prepare = $this->pdo->prepare('SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id');
 		$execute = $prepare->execute(array(':comment_id'=>$comment_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
 			return $prepare->fetch(PDO::FETCH_OBJ);
 		}
 	}
+	function get_photo($photo_id) {
+		$prepare = $this->pdo->prepare('SELECT photo.*, DATE_ADD(photo.photo_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS photo_datecreated FROM '.TABLE_PHOTO.' photo WHERE photo.photo_id = :photo_id GROUP BY photo.photo_id');
+		$execute = $prepare->execute(array(':photo_id'=>$photo_id));
+		$rowCount = $prepare->rowCount();
+		if($rowCount > 0) {
+			return $prepare->fetch(PDO::FETCH_OBJ);
+		}
+	}
 	function insert_photo($post_id, $data) {
-		$prepare = $this->pdo->prepare('INSERT INTO wall369_photo (post_id, photo_file, photo_datecreated) VALUES (:post_id, :photo_file, :photo_datecreated)');
+		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_PHOTO.' (post_id, photo_file, photo_datecreated) VALUES (:post_id, :photo_file, :photo_datecreated)');
 		$execute = $prepare->execute(array(':post_id'=>$post_id, ':photo_file'=>$data['photo_inputfile'], ':photo_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function insert_link($post_id, $data) {
-		$prepare = $this->pdo->prepare('INSERT INTO wall369_link (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_content, \'\'), :link_datecreated)');
+		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_LINK.' (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_content, \'\'), :link_datecreated)');
 		$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_video'=>$data['video'], ':link_videotype'=>$data['videotype'], ':link_videowidth'=>$data['videowidth'], ':link_videoheight'=>$data['videoheight'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function insert_address($post_id, $address_title) {
-		$prepare = $this->pdo->prepare('INSERT INTO wall369_address (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)');
+		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)');
 		$execute = $prepare->execute(array(':post_id'=>$post_id, ':address_title'=>$address_title, ':address_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function render_postlist() {
@@ -456,7 +476,7 @@ class wall369 {
 			$flt[] = '1';
 			$flt[] = 'post.post_id < :post_id_oldest';
 			$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
-			$prepare = $this->pdo->prepare('SELECT COUNT(post.post_id) AS count_post FROM wall369_post post WHERE '.implode(' AND ', $flt));
+			$prepare = $this->pdo->prepare('SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt));
 			$execute = $prepare->execute($parameters);
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
@@ -543,7 +563,7 @@ class wall369 {
 	}
 	function render_commentlist($post_id, $all) {
 		$render = '';
-		$prepare = $this->pdo->prepare('SELECT COUNT(comment.comment_id) AS count_comment FROM wall369_comment comment WHERE comment.post_id = :post_id');
+		$prepare = $this->pdo->prepare('SELECT COUNT(comment.comment_id) AS count_comment FROM '.TABLE_COMMENT.' comment WHERE comment.post_id = :post_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -565,7 +585,7 @@ class wall369 {
 						$limit = ' LIMIT '.$min.', '.LIMIT_COMMENTS;
 					}
 				}
-				$prepare = $this->pdo->prepare('SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM wall369_comment comment LEFT JOIN wall369_user user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id'.$limit);
+				$prepare = $this->pdo->prepare('SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id'.$limit);
 				$execute = $prepare->execute(array(':post_id'=>$post_id));
 				$rowCount = $prepare->rowCount();
 				if($rowCount > 0) {
@@ -614,7 +634,7 @@ class wall369 {
 			} else {
 				$limit = '';
 			}
-			$prepare = $this->pdo->prepare('SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = \''.$this->user->user_id.'\', 1, 0) AS ordering FROM wall369_like wl LEFT JOIN wall369_user usr ON usr.user_id = wl.user_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit);
+			$prepare = $this->pdo->prepare('SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = \''.$this->user->user_id.'\', 1, 0) AS ordering FROM '.TABLE_LIKE.' wl LEFT JOIN '.TABLE_USER.' usr ON usr.user_id = wl.user_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit);
 			$execute = $prepare->execute(array(':post_id'=>$post->post_id));
 			$rowCount = $prepare->rowCount();
 		
@@ -652,7 +672,7 @@ class wall369 {
 	}
 	function render_photolist($post_id) {
 		$render = '';
-		$prepare = $this->pdo->prepare('SELECT photo.* FROM wall369_photo photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id');
+		$prepare = $this->pdo->prepare('SELECT photo.* FROM '.TABLE_PHOTO.' photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -667,14 +687,14 @@ class wall369 {
 	function render_photo($photo) {
 		$render = '<div class="photo" id="photo_'.$photo->photo_id.'">
 			<div class="photo_display">
-				<img alt="" src="storage/'.$photo->photo_file.'">
+				<a data-photo_id="'.$photo->photo_id.'" href="?a=photozoom&amp;photo_id='.$photo->photo_id.'"><img alt="" src="storage/'.$photo->photo_file.'"></a>
 			</div>
 		</div>';
 		return $render;
 	}
 	function render_linklist($post_id) {
 		$render = '';
-		$prepare = $this->pdo->prepare('SELECT link.* FROM wall369_link link WHERE link.post_id = :post_id GROUP BY link.link_id');
+		$prepare = $this->pdo->prepare('SELECT link.* FROM '.TABLE_LINK.' link WHERE link.post_id = :post_id GROUP BY link.link_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -720,7 +740,7 @@ class wall369 {
 	}
 	function render_addresslist($post_id) {
 		$render = '';
-		$prepare = $this->pdo->prepare('SELECT address.* FROM wall369_address address WHERE address.post_id = :post_id GROUP BY address.address_id');
+		$prepare = $this->pdo->prepare('SELECT address.* FROM '.TABLE_ADDRESS.' address WHERE address.post_id = :post_id GROUP BY address.address_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
 		$rowCount = $prepare->rowCount();
 		if($rowCount > 0) {
@@ -736,7 +756,7 @@ class wall369 {
 		$render = '<div class="address" id="address_'.$address->address_id.'">
 			<div class="address_display">';
 				$render .= '<p>'.$address->address_title.'</p>';
-				$render .= '<p><img src="http://maps.googleapis.com/maps/api/staticmap?center='.urlencode($address->address_title).'&markers=color:red|'.urlencode($address->address_title).'&zoom=15&size=540x300&sensor=false" alt=""></p>';
+				$render .= '<p><a href="http://maps.google.com/maps?q='.urlencode($address->address_title).'&oe=UTF-8&ie=UTF-8" target="_blank"><img src="http://maps.googleapis.com/maps/api/staticmap?center='.urlencode($address->address_title).'&markers=color:red|'.urlencode($address->address_title).'&zoom=15&size=540x200&sensor=false" alt=""></a></p>';
 			$render .=' </div>
 		</div>';
 		return $render;
