@@ -870,32 +870,30 @@ class wall369 {
 					break;
 			}
 		}
-		if($date != '') {
-			if($format != '') {
-				if(function_exists('date_create') && function_exists('date_format')) {
-					$date = date_create($date);
-					$date = date_format($date, $format);
-				} else {
-					$date = date($format, strtotime($date));
-				}
+		if($date != '' && $format != '') {
+			if(function_exists('date_create') && function_exists('date_format')) {
+				$date = date_create($date);
+				$date = date_format($date, $format);
+			} else {
+				$date = date($format, strtotime($date));
 			}
-			if(strstr($format, 'l') && isset($this->str[$this->language]['date_l']) == 1 && count($this->str[$this->language]['date_l']) != 0) {
+			if(strstr($format, 'l') && isset($this->str[$this->language]['date_l']) == 1) {
 				$ref = $this->str[$this->language]['date_l'];
 				$date = str_replace(array_keys($ref), array_values($ref), $date);
 			}
-			if(strstr($format, 'D') && isset($this->str[$this->language]['date_D']) == 1 && count($this->str[$this->language]['date_D']) != 0) {
+			if(strstr($format, 'D') && isset($this->str[$this->language]['date_D']) == 1) {
 				$ref = $this->str[$this->language]['date_D'];
 				$date = str_replace(array_keys($ref), array_values($ref), $date);
 			}
-			if(strstr($format, 'jS') && isset($this->str[$this->language]['date_jS']) == 1 && count($this->str[$this->language]['date_jS']) != 0) {
+			if(strstr($format, 'jS') && isset($this->str[$this->language]['date_jS']) == 1) {
 				$ref = $this->str[$this->language]['date_jS'];
 				$date = str_replace(array_keys($ref), array_values($ref), $date);
 			}
-			if(strstr($format, 'F') && isset($this->str[$this->language]['date_F']) == 1 && count($this->str[$this->language]['date_F']) != 0) {
+			if(strstr($format, 'F') && isset($this->str[$this->language]['date_F']) == 1) {
 				$ref = $this->str[$this->language]['date_F'];
 				$date = str_replace(array_keys($ref), array_values($ref), $date);
 			}
-			if(strstr($format, 'M') && isset($this->str[$this->language]['date_M']) == 1 && count($this->str[$this->language]['date_M']) != 0) {
+			if(strstr($format, 'M') && isset($this->str[$this->language]['date_M']) == 1) {
 				$ref = $this->str[$this->language]['date_M'];
 				$date = str_replace(array_keys($ref), array_values($ref), $date);
 			}
