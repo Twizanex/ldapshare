@@ -183,8 +183,8 @@ class wall369 {
 	function action_postdelete() {
 		$render = '';
 		$render .= '<content><![CDATA[';
-		$render .= '<h2>Post delete</h2>';
-		$render .= '<p><a class="post_delete_confirm_action" data-post_id="'.$this->get['post_id'].'" href="?a=postdeleteconfirm&amp;post_id='.$this->get['post_id'].'">Confirm</a> · <a class="popin_hide" href="#">Cancel</a></p>';
+		$render .= '<h2>'.$this->str[$this->language]['post_delete'].'</h2>';
+		$render .= '<p><a class="post_delete_confirm_action" data-post_id="'.$this->get['post_id'].'" href="?a=postdeleteconfirm&amp;post_id='.$this->get['post_id'].'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
 		$render .= ']]></content>';
 		return $render;
 	}
@@ -209,8 +209,8 @@ class wall369 {
 			} else {
 				$render .= '<status>not_your_post</status>';
 				$render .= '<content><![CDATA[';
-				$render .= '<h2>Post delete</h2>';
-				$render .= '<p>Not your post · <a class="popin_hide" href="#">Cancel</a></p>';
+				$render .= '<h2>'.$this->str[$this->language]['post_delete'].'</h2>';
+				$render .= '<p>'.$this->str[$this->language]['not_your_post'].' · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
 				$render .= ']]></content>';
 			}
 		} else {
@@ -251,8 +251,8 @@ class wall369 {
 	function action_commentdelete() {
 		$render = '';
 		$render .= '<content><![CDATA[';
-		$render .= '<h2>Comment delete</h2>';
-		$render .= '<p><a class="comment_delete_confirm_action" data-comment_id="'.$this->get['comment_id'].'" href="?a=commentdeleteconfirm&amp;comment_id='.$this->get['comment_id'].'">Confirm</a> · <a class="popin_hide" href="#">Cancel</a></p>';
+		$render .= '<h2>'.$this->str[$this->language]['comment_delete'].'</h2>';
+		$render .= '<p><a class="comment_delete_confirm_action" data-comment_id="'.$this->get['comment_id'].'" href="?a=commentdeleteconfirm&amp;comment_id='.$this->get['comment_id'].'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
 		$render .= ']]></content>';
 		return $render;
 	}
@@ -267,8 +267,8 @@ class wall369 {
 			} else {
 				$render .= '<status>not_your_comment</status>';
 				$render .= '<content><![CDATA[';
-				$render .= '<h2>Comment delete</h2>';
-				$render .= '<p>Not your comment · <a class="popin_hide" href="#">Cancel</a></p>';
+				$render .= '<h2>'.$this->str[$this->language]['comment_delete'].'</h2>';
+				$render .= '<p>'.$this->str[$this->language]['not_your_comment'].' · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
 				$render .= ']]></content>';
 			}
 		} else {
@@ -578,7 +578,7 @@ class wall369 {
 					if($comment_all->count_comment > LIMIT_COMMENTS) {
 						$render .= '<div class="comment comment_all" id="comment_all_'.$post_id.'">
 							<div class="comment_display comment_all_display">
-								<p><a class="commentall_action" data-post_id="'.$post_id.'" href="?a=commentlist&amp;post_id='.$post_id.'">View all '.$comment_all->count_comment.' comments</a></p>
+								<p><a class="commentall_action" data-post_id="'.$post_id.'" href="?a=commentlist&amp;post_id='.$post_id.'">'.sprintf($this->str[$this->language]['view_all_comments'], $comment_all->count_comment).'</a></p>
 							</div>
 						</div>';
 						$min = $comment_all->count_comment - LIMIT_COMMENTS;
@@ -820,13 +820,13 @@ class wall369 {
 			} elseif($diff == -1) {
 				$mention = $this->str[$this->language]['yesterday'];
 			} elseif(abs($diff) >= 730) {
-				$mention = sprintf($this->str[$this->language]['years-diff'], ceil(intval(abs($diff))/365));
+				$mention = sprintf($this->str[$this->language]['years_diff'], ceil(intval(abs($diff))/365));
 			} elseif(abs($diff) > 56) {
-				$mention = sprintf($this->str[$this->language]['months-diff'], ceil(intval(abs($diff))/28));
+				$mention = sprintf($this->str[$this->language]['months_diff'], ceil(intval(abs($diff))/28));
 			} elseif(abs($diff) >= 14) {
-				$mention = sprintf($this->str[$this->language]['weeks-diff'], ceil(intval(abs($diff))/7));
+				$mention = sprintf($this->str[$this->language]['weeks_diff'], ceil(intval(abs($diff))/7));
 			} else {
-				$mention = sprintf($this->str[$this->language]['days-diff'], intval(abs($diff)));
+				$mention = sprintf($this->str[$this->language]['days_diff'], intval(abs($diff)));
 			}
 		}
 		return $mention;
@@ -852,22 +852,19 @@ class wall369 {
 			if(abs($diff) <= 1) {
 				$mention = '<strong>'.$this->str[$this->language]['now'].'</strong>';
 			} elseif(abs($diff) >= 120) {
-				$mention = sprintf($this->str[$this->language]['hours-diff'], ceil(intval(abs($diff))/60));
+				$mention = sprintf($this->str[$this->language]['hours_diff'], ceil(intval(abs($diff))/60));
 			} else {
-				$mention = sprintf($this->str[$this->language]['minutes-diff'], intval(abs($diff)));
+				$mention = sprintf($this->str[$this->language]['minutes_diff'], intval(abs($diff)));
 			}
 		}
 		return $mention;
 	}
 	function date_transform($prm) {
 		$date = '';
-		$days_key = 'days_values';
-		$months_key = 'months_values';
+		$format = '';
 		foreach($prm as $_key => $_val) {
 			switch($_key) {
 				case 'date':
-				case 'days_key':
-				case 'months_key':
 				case 'format':
 					$$_key = (string)$_val;
 					break;
@@ -882,17 +879,25 @@ class wall369 {
 					$date = date($format, strtotime($date));
 				}
 			}
-			if(isset($this->str[$this->language][$months_key]) == 1 && count($this->str[$this->language][$months_key]) != 0) {
-				$months = $this->str[$this->language][$months_key];
-				$date = str_replace(array_keys($months), array_values($months), $date);
+			if(strstr($format, 'l') && isset($this->str[$this->language]['date_l']) == 1 && count($this->str[$this->language]['date_l']) != 0) {
+				$ref = $this->str[$this->language]['date_l'];
+				$date = str_replace(array_keys($ref), array_values($ref), $date);
 			}
-			if(isset($this->str[$this->language][$days_key]) == 1 && count($this->str[$this->language][$days_key]) != 0) {
-				$days = $this->str[$this->language][$days_key];
-				$date = str_replace(array_keys($days), array_values($days), $date);
+			if(strstr($format, 'D') && isset($this->str[$this->language]['date_D']) == 1 && count($this->str[$this->language]['date_D']) != 0) {
+				$ref = $this->str[$this->language]['date_D'];
+				$date = str_replace(array_keys($ref), array_values($ref), $date);
 			}
-			if(isset($this->str[$this->language]['daynumber_suffix_values']) == 1 && count($this->str[$this->language]['daynumber_suffix_values']) != 0) {
-				$days = array_reverse($this->str[$this->language]['daynumber_suffix_values'], 1);
-				$date = str_replace(array_keys($days), array_values($days), $date);
+			if(strstr($format, 'jS') && isset($this->str[$this->language]['date_jS']) == 1 && count($this->str[$this->language]['date_jS']) != 0) {
+				$ref = $this->str[$this->language]['date_jS'];
+				$date = str_replace(array_keys($ref), array_values($ref), $date);
+			}
+			if(strstr($format, 'F') && isset($this->str[$this->language]['date_F']) == 1 && count($this->str[$this->language]['date_F']) != 0) {
+				$ref = $this->str[$this->language]['date_F'];
+				$date = str_replace(array_keys($ref), array_values($ref), $date);
+			}
+			if(strstr($format, 'M') && isset($this->str[$this->language]['date_M']) == 1 && count($this->str[$this->language]['date_M']) != 0) {
+				$ref = $this->str[$this->language]['date_M'];
+				$date = str_replace(array_keys($ref), array_values($ref), $date);
 			}
 		}
 		return $date;
