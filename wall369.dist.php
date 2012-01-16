@@ -144,7 +144,7 @@ class wall369 {
 		$render = '';
 		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_POST.' (user_id, post_content, post_latitude, post_longitude, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, NULLIF(:post_latitude, \'\'), NULLIF(:post_longitude, \'\'), NULLIF(:post_httpuseragent, \'\'), NULLIF(:post_remoteaddr, \'\'), :post_datecreated)');
 		$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_latitude'=>$_SESSION['wall369']['latitude'], ':post_longitude'=>$_SESSION['wall369']['longitude'], ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
-		if($execute) {
+		if($execute == 1) {
 			$post_id = $this->pdo->lastinsertid();
 			if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0) {
 				$photo_inputfile = $this->file_add('storage', 'photo_inputfile', 1, 1);
@@ -175,6 +175,8 @@ class wall369 {
 					}
 				}
 			}
+		} else {
+			$this->sql_error($prepare);
 		}
 		$render .= '<result>'.$execute.'</result>';
 		$render .= $this->action_refreshnew();
@@ -193,19 +195,23 @@ class wall369 {
 		$post = $this->get_post($this->get['post_id']);
 		if($post) {
 			if($post->user_id == $this->user->user_id) {
-				$sql = 'DELETE FROM '.TABLE_POST.' WHERE user_id = '.$this->user->user_id.' AND post_id = '.$this->get['post_id'];
-				$execute = $this->pdo->exec($sql);
-				$sql = 'DELETE FROM '.TABLE_ADDRESS.' WHERE post_id = '.$this->get['post_id'];
-				$execute = $this->pdo->exec($sql);
-				$sql = 'DELETE FROM '.TABLE_COMMENT.' WHERE post_id = '.$this->get['post_id'];
-				$execute = $this->pdo->exec($sql);
-				$sql = 'DELETE FROM '.TABLE_LIKE.' WHERE post_id = '.$this->get['post_id'];
-				$execute = $this->pdo->exec($sql);
-				$sql = 'DELETE FROM '.TABLE_LINK.' WHERE post_id = '.$this->get['post_id'];
-				$execute = $this->pdo->exec($sql);
-				$sql = 'DELETE FROM '.TABLE_PHOTO.' WHERE post_id = '.$this->get['post_id'];
-				$execute = $this->pdo->exec($sql);
-				$render .= '<status>delete_post</status>';
+				$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_POST.' WHERE user_id = :user_id AND post_id = :post_id');
+				$execute = $prepare->execute(array(':post_id'=>$this->get['post_id'], ':user_id'=>$this->user->user_id));
+				if($execute == 1) {
+					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_ADDRESS.' WHERE post_id = :post_id');
+					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
+					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_COMMENT.' WHERE post_id = :post_id');
+					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
+					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_LIKE.' WHERE post_id = :post_id');
+					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
+					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_LINK.' WHERE post_id = :post_id');
+					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
+					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_PHOTO.' WHERE post_id = :post_id');
+					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
+					$render .= '<status>delete_post</status>';
+				} else {
+					$this->sql_error($prepare);
+				}
 			} else {
 				$render .= '<status>not_your_post</status>';
 				$render .= '<content><![CDATA[';
@@ -231,13 +237,15 @@ class wall369 {
 		if($post) {
 			$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_COMMENT.' (user_id, post_id, comment_content, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, :comment_datecreated)');
 			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_datecreated'=>date('Y-m-d H:i:s')));
-			if($execute) {
+			if($execute == 1) {
 				$comment_id = $this->pdo->lastinsertid();
 				$render .= '<status>comment_insert</status>';
 				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 				$render .= '<content><![CDATA[';
 				$render .= $this->render_comment($this->get_comment($comment_id));
 				$render .= ']]></content>';
+			} else {
+				$this->sql_error($prepare);
 			}
 		} else {
 			$render .= '<status>post_deleted</status>';
@@ -261,9 +269,13 @@ class wall369 {
 		$comment = $this->get_comment($this->get['comment_id']);
 		if($comment) {
 			if($comment->user_id == $this->user->user_id) {
-				$sql = 'DELETE FROM '.TABLE_COMMENT.' WHERE user_id = '.$this->user->user_id.' AND comment_id = '.$this->get['comment_id'];
-				$execute = $this->pdo->exec($sql);
-				$render .= '<status>delete_comment</status>';
+				$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_COMMENT.' WHERE user_id = :user_id AND comment_id = :comment_id');
+				$execute = $prepare->execute(array(':comment_id'=>$this->get['comment_id'], ':user_id'=>$this->user->user_id));
+				if($execute == 1) {
+					$render .= '<status>delete_comment</status>';
+				} else {
+					$this->sql_error($prepare);
+				}
 			} else {
 				$render .= '<status>not_your_comment</status>';
 				$render .= '<content><![CDATA[';
@@ -282,13 +294,15 @@ class wall369 {
 		if($post) {
 			$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_LIKE.' (user_id, post_id, like_datecreated) VALUES (:user_id, :post_id, :like_datecreated)');
 			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':like_datecreated'=>date('Y-m-d H:i:s')));
-			if($execute) {
+			if($execute == 1) {
 				$render .= '<status>like_insert</status>';
 				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 				$render .= '<content><![CDATA[';
 				$post = $this->get_post($this->get['post_id']);
 				$render .= $this->render_like($post);
 				$render .= ']]></content>';
+			} else {
+				$this->sql_error($prepare);
 			}
 		} else {
 			$render .= '<status>post_deleted</status>';
@@ -303,18 +317,18 @@ class wall369 {
 		$render = '';
 		$post = $this->get_post($this->get['post_id']);
 		if($post) {
-			//$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_LIKE.' WHERE user_id = :user_id AND post_id = :post_id)');
-			//$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id']));
-			$sql = 'DELETE FROM '.TABLE_LIKE.' WHERE user_id = '.$this->user->user_id.' AND post_id = '.$this->get['post_id'];
-			$execute = $this->pdo->exec($sql);
-			//if($execute) {
+			$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_LIKE.' WHERE user_id = :user_id AND post_id = :post_id');
+			$execute = $prepare->execute(array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id']));
+			if($execute == 1) {
 				$render .= '<status>like_delete</status>';
 				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 				$render .= '<content><![CDATA[';
 				$post = $this->get_post($this->get['post_id']);
 				$render .= $this->render_like($post);
 				$render .= ']]></content>';
-			//}
+			} else {
+				$this->sql_error($prepare);
+			}
 		} else {
 			$render .= '<status>post_deleted</status>';
 			$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
@@ -344,13 +358,17 @@ class wall369 {
 		$parameters[':today_limit'] = $this->date_day.'%';
 		$prepare = $this->pdo->prepare('SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id');
 		$execute = $prepare->execute($parameters);
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			$render .= '<posts>';
-			while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-				$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_datecreated($post->post_datecreated).']]></post>';
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$render .= '<posts>';
+				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
+					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_datecreated($post->post_datecreated).']]></post>';
+				}
+				$render .= '</posts>';
 			}
-			$render .= '</posts>';
+		} else {
+			$this->sql_error($prepare);
 		}
 		$flt = array();
 		$parameters = array();
@@ -359,13 +377,17 @@ class wall369 {
 		$parameters[':today_limit'] = $this->date_day.'%';
 		$prepare = $this->pdo->prepare('SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id');
 		$execute = $prepare->execute($parameters);
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			$render .= '<comments>';
-			while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
-				$render .= '<comment comment_id="'.$comment->comment_id.'"><![CDATA['.$this->render_datecreated($comment->comment_datecreated).']]></comment>';
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$render .= '<comments>';
+				while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
+					$render .= '<comment comment_id="'.$comment->comment_id.'"><![CDATA['.$this->render_datecreated($comment->comment_datecreated).']]></comment>';
+				}
+				$render .= '</comments>';
 			}
-			$render .= '</comments>';
+		} else {
+			$this->sql_error($prepare);
 		}
 		return $render;
 	}
@@ -380,14 +402,18 @@ class wall369 {
 		}
 		$prepare = $this->pdo->prepare($this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id ASC');
 		$execute = $prepare->execute($parameters);
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			$render .= '<posts>';
-			while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-				$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
-				$_SESSION['wall369']['post_id_newest'] = $post->post_id;
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$render .= '<posts>';
+				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
+					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
+					$_SESSION['wall369']['post_id_newest'] = $post->post_id;
+				}
+				$render .= '</posts>';
 			}
-			$render .= '</posts>';
+		} else {
+			$this->sql_error($prepare);
 		}
 		/*$flt = array();
 		$parameters = array();
@@ -409,46 +435,80 @@ class wall369 {
 	function get_user($user_id) {
 		$prepare = $this->pdo->prepare('SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_id = :user_id GROUP BY user.user_id');
 		$execute = $prepare->execute(array(':user_id'=>$user_id));
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			return $prepare->fetch(PDO::FETCH_OBJ);
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				return $prepare->fetch(PDO::FETCH_OBJ);
+			}
+		} else {
+			$this->sql_error($prepare);
 		}
 	}
 	function get_post($post_id) {
 		$prepare = $this->pdo->prepare($this->post_query.' WHERE post.post_id = :post_id GROUP BY post.post_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			return $prepare->fetch(PDO::FETCH_OBJ);
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				return $prepare->fetch(PDO::FETCH_OBJ);
+			}
+		} else {
+			$this->sql_error($prepare);
 		}
 	}
 	function get_comment($comment_id) {
 		$prepare = $this->pdo->prepare('SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id');
 		$execute = $prepare->execute(array(':comment_id'=>$comment_id));
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			return $prepare->fetch(PDO::FETCH_OBJ);
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				return $prepare->fetch(PDO::FETCH_OBJ);
+			}
+		} else {
+			$this->sql_error($prepare);
 		}
 	}
 	function get_photo($photo_id) {
 		$prepare = $this->pdo->prepare('SELECT photo.*, DATE_ADD(photo.photo_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS photo_datecreated FROM '.TABLE_PHOTO.' photo WHERE photo.photo_id = :photo_id GROUP BY photo.photo_id');
 		$execute = $prepare->execute(array(':photo_id'=>$photo_id));
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			return $prepare->fetch(PDO::FETCH_OBJ);
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				return $prepare->fetch(PDO::FETCH_OBJ);
+			}
+		} else {
+			$this->sql_error($prepare);
 		}
 	}
 	function insert_photo($post_id, $data) {
 		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_PHOTO.' (post_id, photo_file, photo_datecreated) VALUES (:post_id, :photo_file, :photo_datecreated)');
 		$execute = $prepare->execute(array(':post_id'=>$post_id, ':photo_file'=>$data['photo_inputfile'], ':photo_datecreated'=>date('Y-m-d H:i:s')));
+		if($execute == 1) {
+		} else {
+			$this->sql_error($prepare);
+		}
 	}
 	function insert_link($post_id, $data) {
 		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_LINK.' (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_content, \'\'), :link_datecreated)');
 		$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_video'=>$data['video'], ':link_videotype'=>$data['videotype'], ':link_videowidth'=>$data['videowidth'], ':link_videoheight'=>$data['videoheight'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
+		if($execute == 1) {
+		} else {
+			$this->sql_error($prepare);
+		}
 	}
 	function insert_address($post_id, $address_title) {
 		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)');
 		$execute = $prepare->execute(array(':post_id'=>$post_id, ':address_title'=>$address_title, ':address_datecreated'=>date('Y-m-d H:i:s')));
+		if($execute == 1) {
+		} else {
+			$this->sql_error($prepare);
+		}
+	}
+	function sql_error($prepare) {
+		if($prepare->errorCode() != 0) {
+			$errorinfo = $prepare->errorinfo();
+			trigger_error($errorinfo[2]);
+		}
 	}
 	function render_postlist() {
 		$render = '';
@@ -479,11 +539,13 @@ class wall369 {
 			$prepare = $this->pdo->prepare('SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt));
 			$execute = $prepare->execute($parameters);
 			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
+			if($execute == 1 && $rowCount > 0) {
 				$fetch = $prepare->fetch(PDO::FETCH_OBJ);
 				if($fetch->count_post > 0) {
 					$render .= '<more><![CDATA[<p><a class="postlist_action" href="?a=postlist">More posts</a></p>]]></more>';
 				}
+			} else {
+				$this->sql_error($prepare);
 			}
 		}
 		return $render;
@@ -1020,6 +1082,7 @@ class wall369 {
 			} else {
 				$link = $headers['Location'];
 			}
+			$data['url'] = $link;
 			$origin_status = $headers[0];
 			$headers = get_headers($link, 1);
 			$headers[0] = $headers[0].' ('.$origin_status.')';
