@@ -521,32 +521,38 @@ class wall369 {
 		}
 		$prepare = $this->pdo->prepare($this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id DESC LIMIT 0,'.LIMIT_POSTS);
 		$execute = $prepare->execute($parameters);
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			$u = 0;
-			while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-				if($u == 0) {
-					$_SESSION['wall369']['post_id_newest'] = $post->post_id;
-				}
-				$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
-				$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
-				$u++;
-			}
-			$flt = array();
-			$flt[] = '1';
-			$flt[] = 'post.post_id < :post_id_oldest';
-			$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
-			$prepare = $this->pdo->prepare('SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt));
-			$execute = $prepare->execute($parameters);
+		if($execute == 1) {
 			$rowCount = $prepare->rowCount();
-			if($execute == 1 && $rowCount > 0) {
-				$fetch = $prepare->fetch(PDO::FETCH_OBJ);
-				if($fetch->count_post > 0) {
-					$render .= '<more><![CDATA[<p><a class="postlist_action" href="?a=postlist">More posts</a></p>]]></more>';
+			if($rowCount > 0) {
+				$u = 0;
+				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
+					if($u == 0) {
+						$_SESSION['wall369']['post_id_newest'] = $post->post_id;
+					}
+					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
+					$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
+					$u++;
 				}
-			} else {
-				$this->sql_error($prepare);
+				$flt = array();
+				$flt[] = '1';
+				$flt[] = 'post.post_id < :post_id_oldest';
+				$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
+				$prepare = $this->pdo->prepare('SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt));
+				$execute = $prepare->execute($parameters);
+				if($execute == 1) {
+					$rowCount = $prepare->rowCount();
+					if($rowCount > 0) {
+						$fetch = $prepare->fetch(PDO::FETCH_OBJ);
+						if($fetch->count_post > 0) {
+							$render .= '<more><![CDATA[<p><a class="postlist_action" href="?a=postlist">More posts</a></p>]]></more>';
+						}
+					}
+				} else {
+					$this->sql_error($prepare);
+				}
 			}
+		} else {
+			$this->sql_error($prepare);
 		}
 		return $render;
 	}
@@ -627,35 +633,43 @@ class wall369 {
 		$render = '';
 		$prepare = $this->pdo->prepare('SELECT COUNT(comment.comment_id) AS count_comment FROM '.TABLE_COMMENT.' comment WHERE comment.post_id = :post_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			$comment_all = $prepare->fetch(PDO::FETCH_OBJ);
-			if($comment_all->count_comment > 0) {
-				$limit = '';
-				if($all == 1) {
-					$max = $comment_all->count_comment - LIMIT_COMMENTS;
-					$limit = ' LIMIT 0, '.$max;
-				}
-				if($all == 0) {
-					if($comment_all->count_comment > LIMIT_COMMENTS) {
-						$render .= '<div class="comment comment_all" id="comment_all_'.$post_id.'">
-							<div class="comment_display comment_all_display">
-								<p><a class="commentall_action" data-post_id="'.$post_id.'" href="?a=commentlist&amp;post_id='.$post_id.'">'.sprintf($this->str[$this->language]['view_all_comments'], $comment_all->count_comment).'</a></p>
-							</div>
-						</div>';
-						$min = $comment_all->count_comment - LIMIT_COMMENTS;
-						$limit = ' LIMIT '.$min.', '.LIMIT_COMMENTS;
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$comment_all = $prepare->fetch(PDO::FETCH_OBJ);
+				if($comment_all->count_comment > 0) {
+					$limit = '';
+					if($all == 1) {
+						$max = $comment_all->count_comment - LIMIT_COMMENTS;
+						$limit = ' LIMIT 0, '.$max;
 					}
-				}
-				$prepare = $this->pdo->prepare('SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id'.$limit);
-				$execute = $prepare->execute(array(':post_id'=>$post_id));
-				$rowCount = $prepare->rowCount();
-				if($rowCount > 0) {
-					while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
-						$render .= $this->render_comment($comment);
+					if($all == 0) {
+						if($comment_all->count_comment > LIMIT_COMMENTS) {
+							$render .= '<div class="comment comment_all" id="comment_all_'.$post_id.'">
+								<div class="comment_display comment_all_display">
+									<p><a class="commentall_action" data-post_id="'.$post_id.'" href="?a=commentlist&amp;post_id='.$post_id.'">'.sprintf($this->str[$this->language]['view_all_comments'], $comment_all->count_comment).'</a></p>
+								</div>
+							</div>';
+							$min = $comment_all->count_comment - LIMIT_COMMENTS;
+							$limit = ' LIMIT '.$min.', '.LIMIT_COMMENTS;
+						}
+					}
+					$prepare = $this->pdo->prepare('SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id'.$limit);
+					$execute = $prepare->execute(array(':post_id'=>$post_id));
+					if($execute == 1) {
+						$rowCount = $prepare->rowCount();
+						if($rowCount > 0) {
+							while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
+								$render .= $this->render_comment($comment);
+							}
+						}
+					} else {
+						$this->sql_error($prepare);
 					}
 				}
 			}
+		} else {
+			$this->sql_error($prepare);
 		}
 		return $render;
 	}
@@ -698,36 +712,39 @@ class wall369 {
 			}
 			$prepare = $this->pdo->prepare('SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = \''.$this->user->user_id.'\', 1, 0) AS ordering FROM '.TABLE_LIKE.' wl LEFT JOIN '.TABLE_USER.' usr ON usr.user_id = wl.user_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit);
 			$execute = $prepare->execute(array(':post_id'=>$post->post_id));
-			$rowCount = $prepare->rowCount();
-		
-			if($rowCount > 0) {
-				$values = array();
-				$render .= '<div class="comment post_like" id="post_like_'.$post->post_id.'">
-					<div class="comment_display post_like_display">';
-				$render .= '<p>';
-				$u = 1;
-				while($like = $prepare->fetch(PDO::FETCH_OBJ)) {
-					if($this->user->user_id == $like->userid) {
-						$render .= '<span class="username">You</span>';
-					} else {
-						$render .= '<span class="username">'.$like->username.'</span>';
-					}
-					if($post->count_like != 1) {
-						if($u == $rowCount && $rowCount < $post->count_like) {
-							$diff = $post->count_like - $rowCount;
-							$render .=  ' and <a id="'.$post->post_id.'" class="others_like" href="#">'.$diff.' others</a> ';
-						} elseif($u == $rowCount - 1 && $rowCount == $post->count_like) {
-							$render .=  ' and ';
-						} elseif($u < $rowCount) {
-							$render .= ', ';
+			if($execute == 1) {
+				$rowCount = $prepare->rowCount();
+				if($rowCount > 0) {
+					$values = array();
+					$render .= '<div class="comment post_like" id="post_like_'.$post->post_id.'">
+						<div class="comment_display post_like_display">';
+					$render .= '<p>';
+					$u = 1;
+					while($like = $prepare->fetch(PDO::FETCH_OBJ)) {
+						if($this->user->user_id == $like->userid) {
+							$render .= '<span class="username">You</span>';
+						} else {
+							$render .= '<span class="username">'.$like->username.'</span>';
 						}
+						if($post->count_like != 1) {
+							if($u == $rowCount && $rowCount < $post->count_like) {
+								$diff = $post->count_like - $rowCount;
+								$render .=  ' and <a id="'.$post->post_id.'" class="others_like" href="#">'.$diff.' others</a> ';
+							} elseif($u == $rowCount - 1 && $rowCount == $post->count_like) {
+								$render .=  ' and ';
+							} elseif($u < $rowCount) {
+								$render .= ', ';
+							}
+						}
+						$u++;
 					}
-					$u++;
+					$render .= ' like this';
+					$render .= '</p>';
+					$render .= '</div>';
+					$render .= '</div>';
 				}
-				$render .= ' like this';
-				$render .= '</p>';
-				$render .= '</div>';
-				$render .= '</div>';
+			} else {
+				$this->sql_error($prepare);
 			}
 		}
 		return $render;
@@ -736,13 +753,17 @@ class wall369 {
 		$render = '';
 		$prepare = $this->pdo->prepare('SELECT photo.* FROM '.TABLE_PHOTO.' photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			$render .= '<div class="photolist">';
-			while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
-				$render .= $this->render_photo($link);
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$render .= '<div class="photolist">';
+				while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
+					$render .= $this->render_photo($link);
+				}
+				$render .= '</div>';
 			}
-			$render .= '</div>';
+		} else {
+			$this->sql_error($prepare);
 		}
 		return $render;
 	}
@@ -758,13 +779,17 @@ class wall369 {
 		$render = '';
 		$prepare = $this->pdo->prepare('SELECT link.* FROM '.TABLE_LINK.' link WHERE link.post_id = :post_id GROUP BY link.link_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			$render .= '<div class="linklist">';
-			while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
-				$render .= $this->render_link($link);
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$render .= '<div class="linklist">';
+				while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
+					$render .= $this->render_link($link);
+				}
+				$render .= '</div>';
 			}
-			$render .= '</div>';
+		} else {
+			$this->sql_error($prepare);
 		}
 		return $render;
 	}
@@ -804,13 +829,17 @@ class wall369 {
 		$render = '';
 		$prepare = $this->pdo->prepare('SELECT address.* FROM '.TABLE_ADDRESS.' address WHERE address.post_id = :post_id GROUP BY address.address_id');
 		$execute = $prepare->execute(array(':post_id'=>$post_id));
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			$render .= '<div class="addresslist">';
-			while($address = $prepare->fetch(PDO::FETCH_OBJ)) {
-				$render .= $this->render_address($address);
+		if($execute == 1) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$render .= '<div class="addresslist">';
+				while($address = $prepare->fetch(PDO::FETCH_OBJ)) {
+					$render .= $this->render_address($address);
+				}
+				$render .= '</div>';
 			}
-			$render .= '</div>';
+		} else {
+			$this->sql_error($prepare);
 		}
 		return $render;
 	}
