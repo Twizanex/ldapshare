@@ -368,6 +368,10 @@ $(document).ready(function() {
 		popin_show(href);
     });
 	data = {};
+	xml = ajax('index.php?a=postform', data);
+	content = $(xml).find('content').text();
+	$('#post_form').html(content);
+	data = {};
 	xml = ajax('index.php?a=postlist', data);
 	$(xml).find('post').each(function(){
 		post_id = $(this).attr('post_id');

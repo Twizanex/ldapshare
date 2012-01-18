@@ -15,16 +15,6 @@
 <div id="wall369">
 	<div id="wall369_display">
 		<div id="post_form">
-			<form action="?a=post" enctype="multipart/form-data" method="post">
-			<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>
-			<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"></p>
-			<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""></p>
-			<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>
-			<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value=" Share "></p>
-			<div class="post_form_preview" id="post_form_link_preview"></div>
-			<div class="post_form_preview" id="post_form_address_preview"></div>
-			<div class="post_form_preview" id="post_form_photo_preview"></div>
-			</form>
 		</div>
 		<div class="postlist">
 		</div>

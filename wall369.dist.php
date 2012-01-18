@@ -140,6 +140,27 @@ class wall369 {
 		$render .= $this->render_postlist();
 		return $render;
 	}
+	function action_postform() {
+		$render = '';
+		$render .= '<content><![CDATA[';
+		$render .= $this->render_postform();
+		$render .= ']]></content>';
+		return $render;
+	}
+	function render_postform() {
+		$render = '';
+		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">
+		<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>
+		<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"></p>
+		<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""></p>
+		<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>
+		<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['share'].'"></p>
+		<div class="post_form_preview" id="post_form_link_preview"></div>
+		<div class="post_form_preview" id="post_form_address_preview"></div>
+		<div class="post_form_preview" id="post_form_photo_preview"></div>
+		</form>';
+		return $render;
+	}
 	function action_post() {
 		$render = '';
 		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_POST.' (user_id, post_content, post_latitude, post_longitude, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, NULLIF(:post_latitude, \'\'), NULLIF(:post_longitude, \'\'), NULLIF(:post_httpuseragent, \'\'), NULLIF(:post_remoteaddr, \'\'), :post_datecreated)');
@@ -622,7 +643,7 @@ class wall369 {
 								<div class="comment_text">
 									<form action="?a=comment&amp;post_id='.$post->post_id.'" class="comment_form_form" method="post">
 									<p><textarea class="textarea" name="comment"></textarea></p>
-									<p class="submit_btn"><input class="inputsubmit" type="submit" value=" '.$this->str[$this->language]['comment'].' " data-post_id="'.$post->post_id.'"></p>
+									<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['comment'].'" data-post_id="'.$post->post_id.'"></p>
 									</form>
 								</div>
 							</div>
