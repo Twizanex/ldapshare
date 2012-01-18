@@ -16,6 +16,22 @@ class wall369 {
 			$_SESSION['wall369']['longitude'] = '';
 		}
 		$this->language = 'en';
+		if(isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) == 1) {
+			$lng_array = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+			if(count($lng_array) > 0) {
+				foreach($lng_array as $k => $v) {
+					$lng = explode(';', $v);
+					$lng = explode('-', $lng[0]);
+					$lng = $lng[0];
+					if(preg_match('/^[a-z]{2}$/', $lng)) {
+						if(file_exists('languages/'.$lng.'.dist.php')) {
+							$this->language = $lng;
+							break;
+						}
+					}
+				}
+			}
+		}
 		include_once('languages/'.$this->language.'.dist.php');
 		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['wall369']['timezone']);
 		$this->date_time = gmdate('H:i:s', date('U') + 3600 * $_SESSION['wall369']['timezone']);
@@ -735,7 +751,7 @@ class wall369 {
 			} else {
 				$limit = '';
 			}
-			$prepare = $this->pdo->prepare('SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = \''.$this->user->user_id.'\', 1, 0) AS ordering FROM '.TABLE_LIKE.' wl LEFT JOIN '.TABLE_USER.' usr ON usr.user_id = wl.user_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit);
+			$prepare = $this->pdo->prepare('SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = \''.$this->user->user_id.'\' OR post.user_id = wl.user_id, 1, 0) AS ordering FROM '.TABLE_LIKE.' wl LEFT JOIN '.TABLE_USER.' usr ON usr.user_id = wl.user_id LEFT JOIN '.TABLE_POST.' post ON post.post_id = wl.post_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit);
 			$execute = $prepare->execute(array(':post_id'=>$post->post_id));
 			if($execute) {
 				$rowCount = $prepare->rowCount();
@@ -747,23 +763,35 @@ class wall369 {
 					$u = 1;
 					while($like = $prepare->fetch(PDO::FETCH_OBJ)) {
 						if($this->user->user_id == $like->userid) {
-							$render .= '<span class="username">You</span>';
+							$render .= '<span class="username">'.$this->str[$this->language]['you'].'</span>';
 						} else {
 							$render .= '<span class="username">'.$like->username.'</span>';
 						}
 						if($post->count_like != 1) {
 							if($u == $rowCount && $rowCount < $post->count_like) {
 								$diff = $post->count_like - $rowCount;
-								$render .=  ' and <a id="'.$post->post_id.'" class="others_like" href="#">'.$diff.' others</a> ';
+								$render .=  ' '.$this->str[$this->language]['and'].' <a id="'.$post->post_id.'" class="others_like" href="#">'.sprintf($this->str[$this->language]['others'], $diff).'</a> ';
 							} elseif($u == $rowCount - 1 && $rowCount == $post->count_like) {
-								$render .=  ' and ';
+								$render .=  ' '.$this->str[$this->language]['and'].' ';
 							} elseif($u < $rowCount) {
 								$render .= ', ';
 							}
 						}
 						$u++;
 					}
-					$render .= ' like this';
+					$k = '';
+					if($post->you_like == 1 && $post->count_like > 1) {
+						$k = 'like_people_you';
+					} else if($post->you_like == 1 && $post->count_like == 1) {
+						$k = 'like_you';
+					} else if($post->you_like == 0 && $post->count_like > 1) {
+						$k = 'like_people_plural';
+					} else if($post->you_like == 0 && $post->count_like == 1) {
+						$k = 'like_people_singular';
+					}
+					if(isset($this->str[$this->language][$k]) == 1) {
+						$render .= ' '.$this->str[$this->language][$k].'.';
+					}
 					$render .= '</p>';
 					$render .= '</div>';
 					$render .= '</div>';
