@@ -1176,47 +1176,30 @@ class wall369 {
 			$data['charset_client'] = strtolower($match[2]);
 		}
 
+		$keys = array();
+
 		$pattern = "|<[lL][iI][nN][kK](.*)[hH][rR][eE][fF]=[\"'](.*)[\"'](.*)>|U";
 		$matches = array();
 		preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
 		foreach($matches as $match) {
-			$href = $match[2];
-
-			$rel = '';
-			$pattern = "|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U";
-			$matches_sub = array();
-			preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
-			foreach($matches_sub as $match_sub) {
-				$rel = strtolower($match_sub[2]);
-			}
-			$pattern = "|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U";
-			$matches_sub = array();
-			preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
-			foreach($matches_sub as $match_sub) {
-				$rel = strtolower($match_sub[2]);
-			}
-			if($rel == 'image_src') {
-				$data['image'] = $href;
-			}
-			if($rel == 'icon' || $rel == 'shortcut icon') {
-				$data['icon'] = $href;
-			}
-
-			$ref = '';
-			$pattern = "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U";
-			$matches_sub = array();
-			preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
-			foreach($matches_sub as $match_sub) {
-				$ref = strtolower($match_sub[2]);
-			}
-			$pattern = "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U";
-			$matches_sub = array();
-			preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
-			foreach($matches_sub as $match_sub) {
-				$ref = strtolower($match_sub[2]);
-			}
-			if($ref == 'icon' || $ref == 'shortcut icon') {
-				$data['icon'] = $href;
+			$value = $match[2];
+			$key = '';
+			$pattern_sub = array();
+			$pattern_sub[] = "|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U";
+			$pattern_sub[] = "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U";
+			foreach($pattern_sub as $pattern) {
+				$matches_sub = array();
+				preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
+				foreach($matches_sub as $match_sub) {
+					$key = strtolower($match_sub[2]);
+					$keys[$key] = $value;
+				}
+				$matches_sub = array();
+				preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
+				foreach($matches_sub as $match_sub) {
+					$key = strtolower($match_sub[2]);
+					$keys[$key] = $value;
+				}
 			}
 		}
 
@@ -1225,55 +1208,39 @@ class wall369 {
 		preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
 		foreach($matches as $match) {
 			$value = $match[2];
-
 			$key = '';
-			$pattern = "|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U";
-			$matches_sub = array();
-			preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
-			foreach($matches_sub as $match_sub) {
-				$key = $match_sub[2];
+			$pattern_sub = array();
+			$pattern_sub[] = "|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U";
+			$pattern_sub[] = "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U";
+			$pattern_sub[] = "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U";
+			foreach($pattern_sub as $pattern) {
+				$matches_sub = array();
+				preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
+				foreach($matches_sub as $match_sub) {
+					$key = $match_sub[2];
+					$keys[$key] = $value;
+				}
+				$matches_sub = array();
+				preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
+				foreach($matches_sub as $match_sub) {
+					$key = $match_sub[2];
+					$keys[$key] = $value;
+				}
 			}
-			$pattern = "|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U";
-			$matches_sub = array();
-			preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
-			foreach($matches_sub as $match_sub) {
-				$key = $match_sub[2];
-			}
+		}
 
-			$pattern = "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U";
-			$matches_sub = array();
-			preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
-			foreach($matches_sub as $match_sub) {
-				$key = $match_sub[2];
-			}
-			$pattern = "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U";
-			$matches_sub = array();
-			preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
-			foreach($matches_sub as $match_sub) {
-				$key = $match_sub[2];
-			}
-
-			$pattern = "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U";
-			$matches_sub = array();
-			preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
-			foreach($matches_sub as $match_sub) {
-				$key = $match_sub[2];
-			}
-			$pattern = "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U";
-			$matches_sub = array();
-			preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
-			foreach($matches_sub as $match_sub) {
-				$key = $match_sub[2];
-			}
-			if(strtolower($key) == 'content-type') {
+		foreach($keys as $key => $value) {
+			if($key == 'image_src') {
+				$data['image'] = $value;
+			} else if($key == 'icon' || $key == 'shortcut icon') {
+				$data['icon'] = $value;
+			} else if(strtolower($key) == 'content-type') {
 				$meta_charset = $match[2];
-			}
-
-			if($key == 'description') {
-				$data[$key] = $value;
-			} elseif(substr($key, 0, 3) == 'og:') {
+			} else if(substr($key, 0, 3) == 'og:') {
 				$key = substr($key, 3);
 				$key = str_replace(':', '', $key);
+				$data[$key] = $value;
+			} else {
 				$data[$key] = $value;
 			}
 		}
