@@ -140,7 +140,6 @@ $(document).ready(function() {
 	if(navigator.geolocation) {
 		navigator.geolocation.getCurrentPosition(geolocation_success, geolocation_error);
 	}
-	$('#status_textarea').focus();
 	$('.postlist_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
@@ -372,6 +371,7 @@ $(document).ready(function() {
 	xml = ajax('index.php?a=postform', data);
 	content = $(xml).find('content').text();
 	$('#post_form').html(content);
+	$('#status_textarea').focus();
 	data = {};
 	xml = ajax('index.php?a=postlist', data);
 	$(xml).find('post').each(function(){
