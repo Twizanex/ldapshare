@@ -134,6 +134,21 @@ class wall369 {
 			}
 		}
 	}
+	function query_pdo($query, $parameters) {
+		$prepare = $this->pdo->prepare($query);
+		$execute = $prepare->execute($parameters);
+		if($execute) {
+			return $prepare;
+		} else {
+			$this->sql_error($prepare);
+		}
+	}
+	function sql_error($prepare) {
+		if($prepare->errorCode() != 0) {
+			$errorinfo = $prepare->errorinfo();
+			trigger_error($errorinfo[2]);
+		}
+	}
 	function action_timezone() {
 		$render = '';
 		$this->set_get('t', 0, 'numeric');
@@ -232,9 +247,9 @@ class wall369 {
 		$post = $this->get_post($this->get['post_id']);
 		if($post) {
 			if($post->user_id == $this->user->user_id) {
-				$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_POST.' WHERE user_id = :user_id AND post_id = :post_id');
-				$execute = $prepare->execute(array(':post_id'=>$this->get['post_id'], ':user_id'=>$this->user->user_id));
-				if($execute) {
+				$query = 'DELETE FROM '.TABLE_POST.' WHERE user_id = :user_id AND post_id = :post_id';
+				$prepare = $this->query_pdo($query, array(':post_id'=>$this->get['post_id'], ':user_id'=>$this->user->user_id));
+				if($prepare) {
 					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_ADDRESS.' WHERE post_id = :post_id');
 					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
 					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_COMMENT.' WHERE post_id = :post_id');
@@ -246,8 +261,6 @@ class wall369 {
 					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_PHOTO.' WHERE post_id = :post_id');
 					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
 					$render .= '<status>delete_post</status>';
-				} else {
-					$this->sql_error($prepare);
 				}
 			} else {
 				$render .= '<status>not_your_post</status>';
@@ -306,12 +319,10 @@ class wall369 {
 		$comment = $this->get_comment($this->get['comment_id']);
 		if($comment) {
 			if($comment->user_id == $this->user->user_id) {
-				$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_COMMENT.' WHERE user_id = :user_id AND comment_id = :comment_id');
-				$execute = $prepare->execute(array(':comment_id'=>$this->get['comment_id'], ':user_id'=>$this->user->user_id));
-				if($execute) {
+				$query = 'DELETE FROM '.TABLE_COMMENT.' WHERE user_id = :user_id AND comment_id = :comment_id';
+				$prepare = $this->query_pdo($query, array(':comment_id'=>$this->get['comment_id'], ':user_id'=>$this->user->user_id));
+				if($prepare) {
 					$render .= '<status>delete_comment</status>';
-				} else {
-					$this->sql_error($prepare);
 				}
 			} else {
 				$render .= '<status>not_your_comment</status>';
@@ -470,86 +481,57 @@ class wall369 {
 		return $render;
 	}
 	function get_user($user_id) {
-		$prepare = $this->pdo->prepare('SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_id = :user_id GROUP BY user.user_id');
-		$prepare->bindValue(':user_id', $user_id, PDO::PARAM_INT);
-		$execute = $prepare->execute();
-		if($execute) {
+		$query = 'SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_id = :user_id GROUP BY user.user_id';
+		$prepare = $this->query_pdo($query, array(':user_id'=>$user_id));
+		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
 				return $prepare->fetch(PDO::FETCH_OBJ);
 			}
-		} else {
-			$this->sql_error($prepare);
 		}
 	}
 	function get_post($post_id) {
-		$prepare = $this->pdo->prepare($this->post_query.' WHERE post.post_id = :post_id GROUP BY post.post_id');
-		$prepare->bindValue(':post_id', $post_id, PDO::PARAM_INT);
-		$execute = $prepare->execute();
-		if($execute) {
+		$query = $this->post_query.' WHERE post.post_id = :post_id GROUP BY post.post_id';
+		$prepare = $this->query_pdo($query, array(':post_id'=>$post_id));
+		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
 				return $prepare->fetch(PDO::FETCH_OBJ);
 			}
-		} else {
-			$this->sql_error($prepare);
 		}
 	}
 	function get_comment($comment_id) {
-		$prepare = $this->pdo->prepare('SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id');
-		$prepare->bindValue(':comment_id', $comment_id, PDO::PARAM_INT);
-		$execute = $prepare->execute();
-		if($execute) {
+		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id';
+		$prepare = $this->query_pdo($query, array(':comment_id'=> $comment_id));
+		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
 				return $prepare->fetch(PDO::FETCH_OBJ);
 			}
-		} else {
-			$this->sql_error($prepare);
 		}
 	}
 	function get_photo($photo_id) {
-		$prepare = $this->pdo->prepare('SELECT photo.*, DATE_ADD(photo.photo_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS photo_datecreated FROM '.TABLE_PHOTO.' photo WHERE photo.photo_id = :photo_id GROUP BY photo.photo_id');
-		$prepare->bindValue(':photo_id', $photo_id, PDO::PARAM_INT);
-		$execute = $prepare->execute();
-		if($execute) {
+		$query = 'SELECT photo.*, DATE_ADD(photo.photo_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS photo_datecreated FROM '.TABLE_PHOTO.' photo WHERE photo.photo_id = :photo_id GROUP BY photo.photo_id';
+		$prepare = $this->query_pdo($query, array(':photo_id'=> $photo_id));
+		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
 				return $prepare->fetch(PDO::FETCH_OBJ);
 			}
-		} else {
 			$this->sql_error($prepare);
 		}
 	}
 	function insert_photo($post_id, $data) {
-		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_PHOTO.' (post_id, photo_file, photo_datecreated) VALUES (:post_id, :photo_file, :photo_datecreated)');
-		$execute = $prepare->execute(array(':post_id'=>$post_id, ':photo_file'=>$data['photo_inputfile'], ':photo_datecreated'=>date('Y-m-d H:i:s')));
-		if($execute) {
-		} else {
-			$this->sql_error($prepare);
-		}
+		$query = 'INSERT INTO '.TABLE_PHOTO.' (post_id, photo_file, photo_datecreated) VALUES (:post_id, :photo_file, :photo_datecreated)';
+		$prepare = $this->query_pdo($query, array(':post_id'=>$post_id, ':photo_file'=>$data['photo_inputfile'], ':photo_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function insert_link($post_id, $data) {
-		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_LINK.' (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_content, \'\'), :link_datecreated)');
-		$execute = $prepare->execute(array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_video'=>$data['video'], ':link_videotype'=>$data['videotype'], ':link_videowidth'=>$data['videowidth'], ':link_videoheight'=>$data['videoheight'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
-		if($execute) {
-		} else {
-			$this->sql_error($prepare);
-		}
+		$query = 'INSERT INTO '.TABLE_LINK.' (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_content, \'\'), :link_datecreated)';
+		$prepare = $this->query_pdo($query, array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_video'=>$data['video'], ':link_videotype'=>$data['videotype'], ':link_videowidth'=>$data['videowidth'], ':link_videoheight'=>$data['videoheight'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function insert_address($post_id, $address_title) {
-		$prepare = $this->pdo->prepare('INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)');
-		$execute = $prepare->execute(array(':post_id'=>$post_id, ':address_title'=>$address_title, ':address_datecreated'=>date('Y-m-d H:i:s')));
-		if($execute) {
-		} else {
-			$this->sql_error($prepare);
-		}
-	}
-	function sql_error($prepare) {
-		if($prepare->errorCode() != 0) {
-			$errorinfo = $prepare->errorinfo();
-			trigger_error($errorinfo[2]);
-		}
+		$query = 'INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)';
+		$prepare = $this->query_pdo($query, array(':post_id'=>$post_id, ':address_title'=>$address_title, ':address_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function render_postlist() {
 		$render = '';
