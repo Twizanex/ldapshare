@@ -76,6 +76,7 @@ class wall369 {
 		if(isset($e_type_values[$e_type]) == 1) {
 			$e_type = $e_type_values[$e_type];
 		}
+		$this->header_http_status(500);
 		header('content-type: text/xml; charset=UTF-8');
 		$render = '<?xml version="1.0" encoding="UTF-8"?>'."\r\n";
 		$render .= '<wall369>'."\r\n";
@@ -91,6 +92,7 @@ class wall369 {
 	}
 	function render() {
 		if($this->get['a'] == 'index') {
+			$this->header_http_status(200);
 			header('content-type: text/html; charset=UTF-8');
 			if(file_exists('wall369.tpl')) {
 				$render = file_get_contents('wall369.tpl');
@@ -102,7 +104,10 @@ class wall369 {
 			$render = '<?xml version="1.0" encoding="UTF-8"?>'."\r\n";
 			$render .= '<wall369>'."\r\n";
 			if(method_exists($this, 'action_'.$this->get['a'])) {
+				$this->header_http_status(200);
 				$render .= $this->{'action_'.$this->get['a']}();
+			} else {
+				$this->header_http_status(404);
 			}
 			$render .= '</wall369>'."\r\n";
 		}
@@ -114,6 +119,16 @@ class wall369 {
 			echo $render;
 		}
 		exit(0);
+	}
+	function header_http_status($status) {
+		$http_status = array(200=>'OK', 401=>'Unauthorized', 403=>'Forbidden', 404=>'Not Found', 500=>'Internal Server Error', 503=>'Service Unavailable');
+		if(array_key_exists($status, $http_status)) {
+			$protocol = $_SERVER['SERVER_PROTOCOL'];
+			if($protocol != 'HTTP/1.0' && $protocol != 'HTTP/1.1') {
+				$protocol = 'HTTP/1.0';
+			}
+			header($protocol.' '.$status.' '.$http_status[$status]);
+		}
 	}
 	function set_get($key, $default, $type) {
 		$this->get[$key] = $default;
@@ -260,6 +275,7 @@ class wall369 {
 					$render .= '<status>delete_post</status>';
 				}
 			} else {
+				$this->header_http_status(403);
 				$render .= '<status>not_your_post</status>';
 				$render .= '<content><![CDATA[';
 				$render .= '<h2>'.$this->str[$this->language]['post_delete'].'</h2>';
@@ -320,6 +336,7 @@ class wall369 {
 					$render .= '<status>delete_comment</status>';
 				}
 			} else {
+				$this->header_http_status(403);
 				$render .= '<status>not_your_comment</status>';
 				$render .= '<content><![CDATA[';
 				$render .= '<h2>'.$this->str[$this->language]['comment_delete'].'</h2>';
