@@ -39,7 +39,11 @@ class wall369 {
 		$this->set_get('post_id', '', 'numeric');
 		$this->set_get('comment_id', '', 'numeric');
 		$this->set_get('photo_id', '', 'numeric');
-		$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
+		try {
+			$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
+		} catch(PDOException $e) {
+			trigger_error($e->getMessage());
+		}
 		if(DEMO == 1) {
 			if(isset($_SESSION['wall369']['user_id']) == 0) {
 				$_SESSION['wall369']['user_id'] = rand(1, 100);
