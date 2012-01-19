@@ -106,6 +106,7 @@ function geolocation_success(position) {
 function geolocation_error(msg) {
 }
 $(document).ready(function() {
+	set_positions();
 	$(window).bind('resize scroll', function(event) {
 		set_positions();
 	});
