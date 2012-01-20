@@ -56,7 +56,7 @@ class wall369 {
 			$_SESSION['wall369']['post_id_oldest'] = 0;
 			$_SESSION['wall369']['post_id_newest'] = 0;
 		}
-		$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS count_link, COUNT(DISTINCT(photo.photo_id)) AS count_photo, COUNT(DISTINCT(address.address_id)) AS count_address, COUNT(DISTINCT(l.like_id)) AS count_like, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
+		$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
 		FROM '.TABLE_POST.' post
 		LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id
 		LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id
@@ -170,7 +170,7 @@ class wall369 {
 		}
 	}
 	function pdo_execute($query, $parameters) {
-		if(DEMO == 1) {
+		if(DEBUG == 1) {
 			$this->queries[] = $query;
 		}
 		$prepare = $this->pdo->prepare($query);
@@ -272,16 +272,29 @@ class wall369 {
 				$query = 'DELETE FROM '.TABLE_POST.' WHERE user_id = :user_id AND post_id = :post_id';
 				$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id'], ':user_id'=>$this->user->user_id));
 				if($prepare) {
-					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_ADDRESS.' WHERE post_id = :post_id');
-					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
-					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_COMMENT.' WHERE post_id = :post_id');
-					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
-					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_LIKE.' WHERE post_id = :post_id');
-					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
-					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_LINK.' WHERE post_id = :post_id');
-					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
-					$prepare = $this->pdo->prepare('DELETE FROM '.TABLE_PHOTO.' WHERE post_id = :post_id');
-					$execute = $prepare->execute(array(':post_id'=>$this->get['post_id']));
+					$query = 'DELETE FROM '.TABLE_ADDRESS.' WHERE post_id = :post_id';
+					$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
+					$query = 'DELETE FROM '.TABLE_COMMENT.' WHERE post_id = :post_id';
+					$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
+					$query = 'DELETE FROM '.TABLE_LIKE.' WHERE post_id = :post_id';
+					$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
+					$query = 'DELETE FROM '.TABLE_LINK.' WHERE post_id = :post_id';
+					$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
+					if($post->post_countphoto > 0) {
+						$query = 'SELECT photo.* FROM '.TABLE_PHOTO.' photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id';
+						$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
+						if($prepare) {
+							$rowCount = $prepare->rowCount();
+							if($rowCount > 0) {
+								while($photo = $prepare->fetch(PDO::FETCH_OBJ)) {
+									unlink('storage/'.$photo->photo_file);
+								}
+							}
+						}
+						$query = 'DELETE FROM '.TABLE_PHOTO.' WHERE post_id = :post_id';
+						$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
+					}
+
 					$render .= '<status>delete_post</status>';
 				}
 			} else {
@@ -712,14 +725,14 @@ class wall369 {
 	}
 	function render_like($post) {
 		$render = '';
-		if($post->count_like != 0) {
-			if($post->count_like == 4) {
+		if($post->post_countlike != 0) {
+			if($post->post_countlike == 4) {
 				$display_limit = 2;
 			} else {
 				$display_limit = 3;
 			}
-			if($post->count_like > $display_limit) {
-				$min = $post->count_like - $display_limit;
+			if($post->post_countlike > $display_limit) {
+				$min = $post->post_countlike - $display_limit;
 				$limit = ' LIMIT '.$min.', '.$display_limit;
 			} else {
 				$limit = '';
@@ -740,11 +753,11 @@ class wall369 {
 						} else {
 							$render .= '<span class="username">'.$like->username.'</span>';
 						}
-						if($post->count_like != 1) {
-							if($u == $rowCount && $rowCount < $post->count_like) {
-								$diff = $post->count_like - $rowCount;
+						if($post->post_countlike != 1) {
+							if($u == $rowCount && $rowCount < $post->post_countlike) {
+								$diff = $post->post_countlike - $rowCount;
 								$render .=  ' '.$this->str[$this->language]['and'].' <a id="'.$post->post_id.'" class="others_like" href="#">'.sprintf($this->str[$this->language]['others'], $diff).'</a> ';
-							} elseif($u == $rowCount - 1 && $rowCount == $post->count_like) {
+							} elseif($u == $rowCount - 1 && $rowCount == $post->post_countlike) {
 								$render .=  ' '.$this->str[$this->language]['and'].' ';
 							} elseif($u < $rowCount) {
 								$render .= ', ';
@@ -753,13 +766,13 @@ class wall369 {
 						$u++;
 					}
 					$k = '';
-					if($post->you_like == 1 && $post->count_like > 1) {
+					if($post->you_like == 1 && $post->post_countlike > 1) {
 						$k = 'like_people_you';
-					} else if($post->you_like == 1 && $post->count_like == 1) {
+					} else if($post->you_like == 1 && $post->post_countlike == 1) {
 						$k = 'like_you';
-					} else if($post->you_like == 0 && $post->count_like > 1) {
+					} else if($post->you_like == 0 && $post->post_countlike > 1) {
 						$k = 'like_people_plural';
-					} else if($post->you_like == 0 && $post->count_like == 1) {
+					} else if($post->you_like == 0 && $post->post_countlike == 1) {
 						$k = 'like_people_singular';
 					}
 					if(isset($this->str[$this->language][$k]) == 1) {
@@ -775,7 +788,7 @@ class wall369 {
 	}
 	function render_photolist($post) {
 		$render = '';
-		if($post->count_photo > 0) {
+		if($post->post_countphoto > 0) {
 			$query = 'SELECT photo.* FROM '.TABLE_PHOTO.' photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id';
 			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
 			if($prepare) {
@@ -783,8 +796,8 @@ class wall369 {
 				if($rowCount > 0) {
 					$render .= '<div class="photolist">';
 					$render .= '<div class="photolist_display">';
-					while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
-						$render .= $this->render_photo($link);
+					while($photo = $prepare->fetch(PDO::FETCH_OBJ)) {
+						$render .= $this->render_photo($photo);
 					}
 					$render .= '</div>';
 					$render .= '</div>';
@@ -803,7 +816,7 @@ class wall369 {
 	}
 	function render_linklist($post) {
 		$render = '';
-		if($post->count_link > 0) {
+		if($post->post_countlink > 0) {
 			$query = 'SELECT link.* FROM '.TABLE_LINK.' link WHERE link.post_id = :post_id GROUP BY link.link_id';
 			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
 			if($prepare) {
@@ -853,7 +866,7 @@ class wall369 {
 	}
 	function render_addresslist($post) {
 		$render = '';
-		if($post->count_address > 0) {
+		if($post->post_countaddress > 0) {
 			$query = 'SELECT address.* FROM '.TABLE_ADDRESS.' address WHERE address.post_id = :post_id GROUP BY address.address_id';
 			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
 			if($prepare) {
@@ -1202,7 +1215,7 @@ class wall369 {
 				$data[$key] = $value;
 			}
 		}
-		if($data['icon'] != '' && substr($data['icon'], 0, 4) != 'http') {
+		if($data['icon'] != '' && substr($data['icon'], 0, 4) != 'http' && substr($data['icon'], 0, 5) != 'data:') {
 			$url = parse_url($data['url']);
 			$data['icon'] = $url['scheme'].'://'.$url['host'].'/'.$data['icon'];
 		}
