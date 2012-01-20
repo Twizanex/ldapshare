@@ -222,7 +222,8 @@ class wall369 {
 		$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_latitude'=>$_SESSION['wall369']['latitude'], ':post_longitude'=>$_SESSION['wall369']['longitude'], ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
 		if($prepare) {
 			$post_id = $this->pdo->lastinsertid();
-			if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0) {
+			$photo_types = array('image/gif', 'image/jpeg', 'image/png');
+			if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0 && in_array($_FILES['photo_inputfile']['type'], $photo_types)) {
 				$photo_inputfile = $this->file_add('storage', 'photo_inputfile', 1, 1);
 				$data = array('photo_inputfile'=>$photo_inputfile);
 				$this->insert_photo($post_id, $data);
