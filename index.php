@@ -1,10 +1,9 @@
 <?php
 error_reporting(E_ALL);
 if(function_exists('ini_set')) {
-	ini_set('arg_separator.output', '&amp;');
 	ini_set('display_errors', 'Off');
 	ini_set('magic_quotes_gpc', 'Off');
-	ini_set('memory_limit', '16M');
+	ini_set('memory_limit', '4M');
 	ini_set('register_globals', 'Off');
 	ini_set('session.gc_maxlifetime', 3600);
 }

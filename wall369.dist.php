@@ -1,6 +1,8 @@
 <?php
 class wall369 {
 	function __construct() {
+		$this->microtime_start = microtime(1);
+		$this->queries = array();
 		set_error_handler(array($this, 'error_handler'));
 		register_shutdown_function(array($this, 'shutdown_function'));
 		if(isset($_SESSION['wall369']) == 0) {
@@ -113,6 +115,20 @@ class wall369 {
 			} else {
 				$this->header_http_status(404);
 			}
+			if(DEBUG == 1) {
+				$this->microtime_end = microtime(1);
+				$microtime_total = $this->microtime_end - $this->microtime_start;
+				$render .= '<microtime_total>'.round($microtime_total, 5).'</microtime_total>'."\r\n";
+				if(function_exists('memory_get_peak_usage')) {
+					$render .= '<memory_get_peak_usage>'.number_format(memory_get_peak_usage(), 0, '.', ' ').'</memory_get_peak_usage>'."\r\n";
+				}
+				if(function_exists('memory_get_usage')) {
+					$render .= '<memory_get_usage>'.number_format(memory_get_usage(), 0, '.', ' ').'</memory_get_usage>'."\r\n";
+				}
+				foreach($this->queries as $query) {
+					$render .= '<query><![CDATA['.$query.']]></query>'."\r\n";
+				}
+			}
 			$render .= '</wall369>'."\r\n";
 		}
 		if(GZHANDLER == 1 && isset($_SERVER['HTTP_ACCEPT_ENCODING']) == 1 && substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') && extension_loaded('zlib')) {
@@ -154,6 +170,9 @@ class wall369 {
 		}
 	}
 	function pdo_execute($query, $parameters) {
+		if(DEMO == 1) {
+			$this->queries[] = $query;
+		}
 		$prepare = $this->pdo->prepare($query);
 		$execute = $prepare->execute($parameters);
 		if($execute) {
@@ -213,7 +232,8 @@ class wall369 {
 				$this->insert_link($post_id, $data);
 			}
 			if(isset($_POST['address_inputtext']) == 1 && $_POST['address_inputtext'] != '') {
-				$this->insert_address($post_id, $_POST['address_inputtext']);
+				$data = array('address_title'=>$_POST['address_inputtext']);
+				$this->insert_address($post_id, $data);
 			}
 			$links = preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['status_textarea'], $matches);
 			$matches = $matches[0];
@@ -275,8 +295,9 @@ class wall369 {
 	}
 	function action_commentlist() {
 		$render = '';
+		$post = $this->get_post($this->get['post_id']);
 		$render .= '<content><![CDATA[';
-		$render .= $this->render_commentlist($this->get['post_id'], 1);
+		$render .= $this->render_commentlist($post, 1);
 		$render .= ']]></content>';
 		return $render;
 	}
@@ -394,9 +415,9 @@ class wall369 {
 		$flt[] = '1';
 		$flt[] = 'post.post_datecreated LIKE :today_limit';
 		$parameters[':today_limit'] = $this->date_day.'%';
-		$prepare = $this->pdo->prepare('SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id');
-		$execute = $prepare->execute($parameters);
-		if($execute) {
+		$query = 'SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id';
+		$prepare = $this->pdo_execute($query, $parameters);
+		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
 				$render .= '<posts>';
@@ -413,9 +434,9 @@ class wall369 {
 		$flt[] = '1';
 		$flt[] = 'comment.comment_datecreated LIKE :today_limit';
 		$parameters[':today_limit'] = $this->date_day.'%';
-		$prepare = $this->pdo->prepare('SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id');
-		$execute = $prepare->execute($parameters);
-		if($execute) {
+		$query = 'SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id';
+		$prepare = $this->pdo_execute($query, $parameters);
+		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
 				$render .= '<comments>';
@@ -438,9 +459,9 @@ class wall369 {
 			$flt[] = 'post.post_id > :post_id_newest';
 			$parameters[':post_id_newest'] = $_SESSION['wall369']['post_id_newest'];
 		}
-		$prepare = $this->pdo->prepare($this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id ASC');
-		$execute = $prepare->execute($parameters);
-		if($execute) {
+		$query = $this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id ASC';
+		$prepare = $this->pdo_execute($query, $parameters);
+		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
 				$render .= '<posts>';
@@ -453,21 +474,6 @@ class wall369 {
 		} else {
 			$this->pdo_error($prepare);
 		}
-		/*$flt = array();
-		$parameters = array();
-		$flt[] = '1';
-		$flt[] = 'comment.comment_datecreated LIKE :today_limit';
-		$parameters[':today_limit'] = $this->date_day.'%';
-		$prepare = $this->pdo->prepare('SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id');
-		$execute = $prepare->execute($parameters);
-		$rowCount = $prepare->rowCount();
-		if($rowCount > 0) {
-			$render .= '<comments>';
-			while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
-				$render .= '<comment comment_id="'.$comment->comment_id.'"><![CDATA['.$this->render_datecreated($comment->comment_datecreated).']]></comment>';
-			}
-			$render .= '</comments>';
-		}*/
 		return $render;
 	}
 	function get_user($user_id) {
@@ -518,9 +524,9 @@ class wall369 {
 		$query = 'INSERT INTO '.TABLE_LINK.' (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_content, \'\'), :link_datecreated)';
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_video'=>$data['video'], ':link_videotype'=>$data['videotype'], ':link_videowidth'=>$data['videowidth'], ':link_videoheight'=>$data['videoheight'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
 	}
-	function insert_address($post_id, $address_title) {
+	function insert_address($post_id, $data) {
 		$query = 'INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)';
-		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':address_title'=>$address_title, ':address_datecreated'=>date('Y-m-d H:i:s')));
+		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':address_title'=>$data['address_title'], ':address_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function render_postform() {
 		$render = '';
@@ -545,9 +551,9 @@ class wall369 {
 			$flt[] = 'post.post_id < :post_id_oldest';
 			$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
 		}
-		$prepare = $this->pdo->prepare($this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id DESC LIMIT 0,'.LIMIT_POSTS);
-		$execute = $prepare->execute($parameters);
-		if($execute) {
+		$query = $this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id DESC LIMIT 0,'.LIMIT_POSTS;
+		$prepare = $this->pdo_execute($query, $parameters);
+		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
 				$u = 0;
@@ -563,9 +569,9 @@ class wall369 {
 				$flt[] = '1';
 				$flt[] = 'post.post_id < :post_id_oldest';
 				$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
-				$prepare = $this->pdo->prepare('SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt));
-				$execute = $prepare->execute($parameters);
-				if($execute) {
+				$query = 'SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt);
+				$prepare = $this->pdo_execute($query, $parameters);
+				if($prepare) {
 					$rowCount = $prepare->rowCount();
 					if($rowCount > 0) {
 						$fetch = $prepare->fetch(PDO::FETCH_OBJ);
@@ -599,16 +605,9 @@ class wall369 {
 					$render .= '<p><span class="username">'.$post->user_firstname.' '.$post->user_lastname.'</span></p>
 					<p>'.$this->render_content($post->post_content).'</p>';
 				$render .= '</div>';
-
-					if($post->count_link > 0) {
-						$render .= $this->render_linklist($post->post_id);
-					}
-					if($post->count_address > 0) {
-						$render .= $this->render_addresslist($post->post_id);
-					}
-					if($post->count_photo > 0) {
-						$render .= $this->render_photolist($post->post_id);
-					}
+				$render .= $this->render_linklist($post);
+				$render .= $this->render_addresslist($post);
+				$render .= $this->render_photolist($post);
 					$render .= '<p class="post_detail">';
 					if($post->you_like == 1) {
 						$render .= '<span class="like like_inactive">';
@@ -631,7 +630,7 @@ class wall369 {
 						$render .= '</div>';
 						$render .= '<div class="commentlist_display">';
 						if($post->count_comment > 0) {
-							$render .= $this->render_commentlist($post->post_id, 0);
+							$render .= $this->render_commentlist($post, 0);
 						}
 						$render .= '</div>
 						<div class="comment comment_form" id="comment_form_'.$post->post_id.'">
@@ -656,40 +655,32 @@ class wall369 {
 		</div>';
 		return $render;
 	}
-	function render_commentlist($post_id, $all) {
+	function render_commentlist($post, $all) {
 		$render = '';
-		$query = 'SELECT COUNT(comment.comment_id) AS count_comment FROM '.TABLE_COMMENT.' comment WHERE comment.post_id = :post_id';
-		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id));
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				$comment_all = $prepare->fetch(PDO::FETCH_OBJ);
-				if($comment_all->count_comment > 0) {
-					$limit = '';
-					if($all == 1) {
-						$max = $comment_all->count_comment - LIMIT_COMMENTS;
-						$limit = ' LIMIT 0, '.$max;
-					}
-					if($all == 0) {
-						if($comment_all->count_comment > LIMIT_COMMENTS) {
-							$render .= '<div class="comment comment_all" id="comment_all_'.$post_id.'">
-								<div class="comment_display comment_all_display">
-									<p><a class="commentall_action" data-post_id="'.$post_id.'" href="?a=commentlist&amp;post_id='.$post_id.'">'.sprintf($this->str[$this->language]['view_all_comments'], $comment_all->count_comment).'</a></p>
-								</div>
-							</div>';
-							$min = $comment_all->count_comment - LIMIT_COMMENTS;
-							$limit = ' LIMIT '.$min.', '.LIMIT_COMMENTS;
-						}
-					}
-					$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id'.$limit;
-					$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id));
-					if($prepare) {
-						$rowCount = $prepare->rowCount();
-						if($rowCount > 0) {
-							while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
-								$render .= $this->render_comment($comment);
-							}
-						}
+		if($post->count_comment > 0) {
+			$limit = '';
+			if($all == 1) {
+				$max = $post->count_comment - LIMIT_COMMENTS;
+				$limit = ' LIMIT 0, '.$max;
+			}
+			if($all == 0) {
+				if($post->count_comment > LIMIT_COMMENTS) {
+					$render .= '<div class="comment comment_all" id="comment_all_'.$post->post_id.'">
+						<div class="comment_display comment_all_display">
+							<p><a class="commentall_action" data-post_id="'.$post->post_id.'" href="?a=commentlist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['view_all_comments'], $post->count_comment).'</a></p>
+						</div>
+					</div>';
+					$min = $post->count_comment - LIMIT_COMMENTS;
+					$limit = ' LIMIT '.$min.', '.LIMIT_COMMENTS;
+				}
+			}
+			$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id'.$limit;
+			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
+			if($prepare) {
+				$rowCount = $prepare->rowCount();
+				if($rowCount > 0) {
+					while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
+						$render .= $this->render_comment($comment);
 					}
 				}
 			}
@@ -782,20 +773,22 @@ class wall369 {
 		}
 		return $render;
 	}
-	function render_photolist($post_id) {
+	function render_photolist($post) {
 		$render = '';
-		$query = 'SELECT photo.* FROM '.TABLE_PHOTO.' photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id';
-		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id));
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				$render .= '<div class="photolist">';
-				$render .= '<div class="photolist_display">';
-				while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
-					$render .= $this->render_photo($link);
+		if($post->count_photo > 0) {
+			$query = 'SELECT photo.* FROM '.TABLE_PHOTO.' photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id';
+			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
+			if($prepare) {
+				$rowCount = $prepare->rowCount();
+				if($rowCount > 0) {
+					$render .= '<div class="photolist">';
+					$render .= '<div class="photolist_display">';
+					while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
+						$render .= $this->render_photo($link);
+					}
+					$render .= '</div>';
+					$render .= '</div>';
 				}
-				$render .= '</div>';
-				$render .= '</div>';
 			}
 		}
 		return $render;
@@ -808,18 +801,20 @@ class wall369 {
 		</div>';
 		return $render;
 	}
-	function render_linklist($post_id) {
+	function render_linklist($post) {
 		$render = '';
-		$query = 'SELECT link.* FROM '.TABLE_LINK.' link WHERE link.post_id = :post_id GROUP BY link.link_id';
-		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id));
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				$render .= '<div class="linklist">';
-				while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
-					$render .= $this->render_link($link);
+		if($post->count_link > 0) {
+			$query = 'SELECT link.* FROM '.TABLE_LINK.' link WHERE link.post_id = :post_id GROUP BY link.link_id';
+			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
+			if($prepare) {
+				$rowCount = $prepare->rowCount();
+				if($rowCount > 0) {
+					$render .= '<div class="linklist">';
+					while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
+						$render .= $this->render_link($link);
+					}
+					$render .= '</div>';
 				}
-				$render .= '</div>';
 			}
 		}
 		return $render;
@@ -856,18 +851,20 @@ class wall369 {
 		</div>';
 		return $render;
 	}
-	function render_addresslist($post_id) {
+	function render_addresslist($post) {
 		$render = '';
-		$query = 'SELECT address.* FROM '.TABLE_ADDRESS.' address WHERE address.post_id = :post_id GROUP BY address.address_id';
-		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id));
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				$render .= '<div class="addresslist">';
-				while($address = $prepare->fetch(PDO::FETCH_OBJ)) {
-					$render .= $this->render_address($address);
+		if($post->count_address > 0) {
+			$query = 'SELECT address.* FROM '.TABLE_ADDRESS.' address WHERE address.post_id = :post_id GROUP BY address.address_id';
+			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
+			if($prepare) {
+				$rowCount = $prepare->rowCount();
+				if($rowCount > 0) {
+					$render .= '<div class="addresslist">';
+					while($address = $prepare->fetch(PDO::FETCH_OBJ)) {
+						$render .= $this->render_address($address);
+					}
+					$render .= '</div>';
 				}
-				$render .= '</div>';
 			}
 		}
 		return $render;
@@ -1204,6 +1201,10 @@ class wall369 {
 			} else {
 				$data[$key] = $value;
 			}
+		}
+		if($data['icon'] != '' && substr($data['icon'], 0, 4) != 'http') {
+			$url = parse_url($data['url']);
+			$data['icon'] = $url['scheme'].'://'.$url['host'].'/'.$data['icon'];
 		}
 
 		if(isset($headers['Content-Type']) == 1 && stristr($headers['Content-Type'], 'charset')) {

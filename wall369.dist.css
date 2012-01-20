@@ -32,7 +32,6 @@ form{margin:0px;padding:0px;}
 #post_form .textarea{width:570px;}
 #post_form .inputtext{border:1px solid #999999;padding:3px 5px;width:570px;}
 #post_form p{background-position:left 2px;background-repeat:no-repeat;padding-left:20px;}
-#post_form .form_status{background-image:url(medias/icon_status.png);}
 #post_form .form_link{background-image:url(medias/icon_link.png);}
 #post_form .form_address{background-image:url(medias/icon_address.png);}
 #post_form .form_photo{background-image:url(medias/icon_photo.png);}
@@ -51,7 +50,7 @@ form{margin:0px;padding:0px;}
 .photolist_display, .address_display, .link_display{border-top:1px solid #dedede;margin-left:20px;overflow:auto;padding-top:10px}
 .photolist, .address, .link{overflow:auto;}
 .photolist, .address, .link{background-position:left 10px;background-repeat:no-repeat;}
-.photolist{background-image:url(medias/icon_photo.png);}
+.photolist{background-image:url(medias/icon_photo.png);margin-bottom:10px;}
 .address{background-image:url(medias/icon_address.png);}
 .link{background-image:url(medias/icon_link.png);}
 .post_detail{border-top:1px solid #dedede;clear:both;margin-left:60px;margin-top:5px;padding:5px 0px 0px 0px;}
