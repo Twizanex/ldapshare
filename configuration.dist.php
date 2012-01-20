@@ -11,6 +11,17 @@ define('GRAVATAR', 1);//0, 1
 define('GRAVATAR_DEFAULT', 'identicon');//identicon, mm, monsterid, retro, wavatar
 define('GRAVATAR_RATING', 'pg');//g, pg, r, x
 define('GZHANDLER', 1);//0, 1
+
+define('LDAP', 0);//0, 1
+define('LDAP_SERVER', 'ldap://hostname');
+define('LDAP_ADMIN_DN', 'YOURDOMAIN\\user');
+define('LDAP_ADMINPW', 'password');
+define('LDAP_DOMAINS', array('yourdomain.com'));
+define('LDAP_DN', 'DC=yourdomain,DC=com');
+define('LDAP_FILTER', 'userprincipalname=[email]');
+define('LDAP_LASTNAME', 'sn');
+define('LDAP_FIRSTNAME', 'givenname');
+
 define('LIMIT_COMMENTS', 5);
 define('LIMIT_POSTS', 10);
 define('TABLE_ADDRESS', 'wall369_address');
