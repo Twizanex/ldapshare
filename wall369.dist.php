@@ -724,8 +724,8 @@ class wall369 {
 			} else {
 				$limit = '';
 			}
-			$query = 'SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = \''.$this->user->user_id.'\' OR post.user_id = wl.user_id, 1, 0) AS ordering FROM '.TABLE_LIKE.' wl LEFT JOIN '.TABLE_USER.' usr ON usr.user_id = wl.user_id LEFT JOIN '.TABLE_POST.' post ON post.post_id = wl.post_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit;
-			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
+			$query = 'SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = :user_id OR post.user_id = wl.user_id, 1, 0) AS ordering FROM '.TABLE_LIKE.' wl LEFT JOIN '.TABLE_USER.' usr ON usr.user_id = wl.user_id LEFT JOIN '.TABLE_POST.' post ON post.post_id = wl.post_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit;
+			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id, ':user_id'=>$this->user->user_id));
 			if($prepare) {
 				$rowCount = $prepare->rowCount();
 				if($rowCount > 0) {
