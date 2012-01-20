@@ -615,8 +615,11 @@ class wall369 {
 				<div class="post_text">';
 					if($post->user_id == $this->user->user_id) {
 						$render .= '<a class="delete_action post_delete_action" data-post_id="'.$post->post_id.'" href="?a=postdelete&amp;post_id='.$post->post_id.'"></a>';
+						$username = $this->str[$this->language]['you'];
+					} else {
+						$username = $post->user_firstname.' '.$post->user_lastname;
 					}
-					$render .= '<p><span class="username">'.$post->user_firstname.' '.$post->user_lastname.'</span></p>
+					$render .= '<p><span class="username">'.$username.'</span></p>
 					<p>'.$this->render_content($post->post_content).'</p>';
 				$render .= '</div>';
 				$render .= $this->render_linklist($post);
@@ -714,8 +717,11 @@ class wall369 {
 				<div class="comment_text">';
 					if($comment->user_id == $this->user->user_id) {
 						$render .= '<a class="delete_action comment_delete_action" data-comment_id="'.$comment->comment_id.'" href="?a=commentdelete&amp;comment_id='.$comment->comment_id.'"></a>';
+						$username = $this->str[$this->language]['you'];
+					} else {
+						$username = $comment->user_firstname.' '.$comment->user_lastname;
 					}
-					$render .= '<p><span class="username">'.$comment->user_firstname.' '.$comment->user_lastname.'</span> '.$this->render_content($comment->comment_content).'</p>
+					$render .= '<p><span class="username">'.$username.'</span> '.$this->render_content($comment->comment_content).'</p>
 					<p class="comment_detail">';
 					$render .= '<span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'">'.$this->render_datecreated($comment->comment_datecreated).'</span>';
 					$render .= '</p>
@@ -738,7 +744,7 @@ class wall369 {
 			} else {
 				$limit = '';
 			}
-			$query = 'SELECT wl.*, DATE_ADD(wl.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS wl_datecreated, usr.user_id AS userid, CONCAT(usr.user_firstname, \' \', usr.user_lastname) AS username, IF(wl.user_id = :user_id OR post.user_id = wl.user_id, 1, 0) AS ordering FROM '.TABLE_LIKE.' wl LEFT JOIN '.TABLE_USER.' usr ON usr.user_id = wl.user_id LEFT JOIN '.TABLE_POST.' post ON post.post_id = wl.post_id WHERE wl.post_id = :post_id GROUP BY wl.like_id ORDER BY ordering ASC, wl.like_id ASC'.$limit;
+			$query = 'SELECT l.*, user.*, DATE_ADD(l.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS like_datecreated, IF(l.user_id = :user_id OR post.user_id = l.user_id, 1, 0) AS ordering FROM '.TABLE_LIKE.' l LEFT JOIN '.TABLE_USER.' user ON user.user_id = l.user_id LEFT JOIN '.TABLE_POST.' post ON post.post_id = l.post_id WHERE l.post_id = :post_id GROUP BY l.like_id ORDER BY ordering ASC, l.like_id ASC'.$limit;
 			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id, ':user_id'=>$this->user->user_id));
 			if($prepare) {
 				$rowCount = $prepare->rowCount();
@@ -749,11 +755,12 @@ class wall369 {
 					$render .= '<p>';
 					$u = 1;
 					while($like = $prepare->fetch(PDO::FETCH_OBJ)) {
-						if($this->user->user_id == $like->userid) {
-							$render .= '<span class="username">'.$this->str[$this->language]['you'].'</span>';
+						if($this->user->user_id == $like->user_id) {
+							$username = $this->str[$this->language]['you'];
 						} else {
-							$render .= '<span class="username">'.$like->username.'</span>';
+							$username = $like->user_firstname.' '.$like->user_lastname;
 						}
+						$render .= '<span class="username" title="'.$this->date_transform($like->like_datecreated, $this->str[$this->language]['date_format']).'">'.$username.'</span>';
 						if($post->post_countlike != 1) {
 							if($u == $rowCount && $rowCount < $post->post_countlike) {
 								$diff = $post->post_countlike - $rowCount;
