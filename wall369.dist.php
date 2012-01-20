@@ -598,6 +598,8 @@ class wall369 {
 					}
 					$render .= '<p><span class="username">'.$post->user_firstname.' '.$post->user_lastname.'</span></p>
 					<p>'.$this->render_content($post->post_content).'</p>';
+				$render .= '</div>';
+
 					if($post->count_link > 0) {
 						$render .= $this->render_linklist($post->post_id);
 					}
@@ -650,7 +652,6 @@ class wall369 {
 							</div>
 						</div>
 					</div>
-				</div>
 			</div>
 		</div>';
 		return $render;
@@ -789,9 +790,11 @@ class wall369 {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
 				$render .= '<div class="photolist">';
+				$render .= '<div class="photolist_display">';
 				while($link = $prepare->fetch(PDO::FETCH_OBJ)) {
 					$render .= $this->render_photo($link);
 				}
+				$render .= '</div>';
 				$render .= '</div>';
 			}
 		}

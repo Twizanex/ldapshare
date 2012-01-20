@@ -41,16 +41,21 @@ form{margin:0px;padding:0px;}
 .post_form_preview{padding-left:60px;}
 .postlist{border-top:1px solid #dedede;margin-bottom:110px;margin-top:10px;}
 .post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
-.photolist{border-top:1px solid #dedede;margin-top:10px;overflow:auto;padding-top:10px;}
+.photolist{margin-top:10px;overflow:auto;}
 .photo{float:left;}
 .photo img{max-height:150px;max-width:150px;}
 #popin_display img{max-height:600px;max-width:600px;}
 .address_display img{width:540px;}
 #post_form_address_preview img{width:540px;}
-.linklist{margin-top:10px;}
-.address, .link{border-top:1px solid #dedede;overflow:auto;padding-top:10px;}
-.post_detail{border-top:1px solid #dedede;clear:both;margin-top:5px;padding:5px 0px 0px 0px;}
-.commentlist{margin:10px 0px;}
+.photolist, .addresslist, .linklist{clear:both;margin-left:40px;margin-top:10px;}
+.photolist_display, .address_display, .link_display{border-top:1px solid #dedede;margin-left:20px;overflow:auto;padding-top:10px}
+.photolist, .address, .link{overflow:auto;}
+.photolist, .address, .link{background-position:left 10px;background-repeat:no-repeat;}
+.photolist{background-image:url(medias/icon_photo.png);}
+.address{background-image:url(medias/icon_address.png);}
+.link{background-image:url(medias/icon_link.png);}
+.post_detail{border-top:1px solid #dedede;clear:both;margin-left:60px;margin-top:5px;padding:5px 0px 0px 0px;}
+.commentlist{clear:both;margin:10px 0px 10px 60px;}
 .comment{background-color:#EDEFF4;border-bottom:1px solid #D2D9E7;clear:both;margin-top:1px;overflow:auto;}
 .comment_all_display p, .post_like_display p{margin:5px 10px 5px 30px;}
 .comment_all, .post_like{background-position:10px 5px;background-repeat:no-repeat;}
@@ -90,4 +95,8 @@ form{margin:0px;padding:0px;}
 .address_display img{width:260px;}
 #post_form_address_preview img{width:260px;}
 .post_form_preview{padding-left:40px;}
+.post_detail{margin-left:40px;}
+.photolist, .addresslist, .linklist{margin-left:20px;}
+.commentlist{clear:both;margin:10px 0px 10px 40px;}
+.photolist_display, .address_display, .link_display{margin-left:20px;}
 }
