@@ -1099,7 +1099,7 @@ class wall369 {
 		return $string;
 	}
 	function analyze_link($link) {
-		$data = array('url'=>$link, 'icon'=>'', 'image'=>'', 'video'=>'', 'videotype'=>'', 'videowidth'=>'', 'videoheight'=>'', 'title'=>'', 'description'=>'', 'charset_server'=>'', 'charset_client'=>'');
+		$data = array('url'=>$link, 'icon'=>'', 'image'=>'', 'video'=>'', 'videotype'=>'', 'videowidth'=>'', 'videoheight'=>'', 'title'=>'', 'description'=>'', 'charsetserver'=>'', 'charsetclient'=>'');
 
 		$headers = get_headers($link, 1);
 		if(isset($headers['Location']) == 1) {
@@ -1125,28 +1125,27 @@ class wall369 {
 		$content_flat = str_replace("\r\n", '', $content);
 		$content_flat = str_replace("\n", '', $content_flat);
 
+		$keys = array();
+
 		$pattern = "|<[tT][iI][tT][lL][eE](.*)>(.*)<\/[tT][iI][tT][lL][eE]>|U";
 		$matches = array();
 		preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
 		foreach($matches as $match) {
-			$data['title'] = trim($match[2]);
+			$keys['title'] = trim($match[2]);
 		}
 
 		$pattern = "|<[mM][eE][tT][aA](.*)[cC][hH][aA][rR][sS][eE][tT]=[\"'](.*)[\"'](.*)>|U";
 		$matches = array();
 		preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
 		foreach($matches as $match) {
-			$data['charset_client'] = strtolower($match[2]);
+			$keys['charsetclient'] = strtolower($match[2]);
 		}
-
-		$keys = array();
 
 		$pattern = "|<[lL][iI][nN][kK](.*)[hH][rR][eE][fF]=[\"'](.*)[\"'](.*)>|U";
 		$matches = array();
 		preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
 		foreach($matches as $match) {
 			$value = $match[2];
-			$key = '';
 			$pattern_sub = array();
 			$pattern_sub[] = "|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U";
 			$pattern_sub[] = "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U";
@@ -1154,14 +1153,12 @@ class wall369 {
 				$matches_sub = array();
 				preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
 				foreach($matches_sub as $match_sub) {
-					$key = strtolower($match_sub[2]);
-					$keys[$key] = $value;
+					$keys[strtolower($match_sub[2])] = $value;
 				}
 				$matches_sub = array();
 				preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
 				foreach($matches_sub as $match_sub) {
-					$key = strtolower($match_sub[2]);
-					$keys[$key] = $value;
+					$keys[strtolower($match_sub[2])] = $value;
 				}
 			}
 		}
@@ -1171,7 +1168,6 @@ class wall369 {
 		preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
 		foreach($matches as $match) {
 			$value = $match[2];
-			$key = '';
 			$pattern_sub = array();
 			$pattern_sub[] = "|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U";
 			$pattern_sub[] = "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U";
@@ -1180,14 +1176,12 @@ class wall369 {
 				$matches_sub = array();
 				preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
 				foreach($matches_sub as $match_sub) {
-					$key = $match_sub[2];
-					$keys[$key] = $value;
+					$keys[strtolower($match_sub[2])] = $value;
 				}
 				$matches_sub = array();
 				preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
 				foreach($matches_sub as $match_sub) {
-					$key = $match_sub[2];
-					$keys[$key] = $value;
+					$keys[strtolower($match_sub[2])] = $value;
 				}
 			}
 		}
@@ -1195,13 +1189,14 @@ class wall369 {
 		foreach($keys as $key => $value) {
 			if($key == 'image_src') {
 				$data['image'] = $value;
-			} else if($key == 'icon' || $key == 'shortcut icon') {
+			} else if($key == 'shortcut icon') {
 				$data['icon'] = $value;
-			} else if(strtolower($key) == 'content-type') {
-				$meta_charset = $match[2];
-			} else if(substr($key, 0, 3) == 'og:') {
+			} else if($key == 'content-type' && stristr($value, 'charset')) {
+				$data['charsetclient'] = strtolower(substr($value, strpos($value, '=') + 1));
+			} else if(substr($key, 0, 3) == 'og:' || substr($key, 0, 3) == 'fb:') {
 				$key = substr($key, 3);
 				$key = str_replace(':', '', $key);
+				$key = str_replace('_', '', $key);
 				$data[$key] = $value;
 			} else {
 				$data[$key] = $value;
@@ -1209,14 +1204,10 @@ class wall369 {
 		}
 
 		if(isset($headers['Content-Type']) == 1 && stristr($headers['Content-Type'], 'charset')) {
-			$charset = strtolower(substr($headers['Content-Type'], strpos($headers['Content-Type'], '=')+1));
-			$data['charset_server'] = strtolower($charset);
+			$charset = strtolower(substr($headers['Content-Type'], strpos($headers['Content-Type'], '=') + 1));
+			$data['charsetserver'] = strtolower($charset);
 		}
-		if(isset($meta_charset) == 1 && stristr($meta_charset, 'charset')) {
-			$charset = strtolower(substr($meta_charset, strpos($meta_charset, '=')+1));
-			$data['charset_client'] = strtolower($charset);
-		}
-		if($data['charset_server'] != 'utf-8' && $data['charset_client'] != 'utf-8') {
+		if($data['charsetserver'] != 'utf-8' && $data['charsetclient'] != 'utf-8') {
 			$data['title'] = utf8_encode($data['title']);
 			$data['description'] = utf8_encode($data['description']);
 		}
