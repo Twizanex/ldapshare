@@ -899,41 +899,37 @@ class wall369 {
 		if($diff != 0) {
 			$mention = $this->date_diff_days_mention($diff);
 			if($diff == -1) {
-				$mention .= ' at '.substr($timecreated, 0, 5);
+				$mention .= ' '.$this->str[$this->language]['at'].' '.substr($timecreated, 0, 5);
 			}
 		} else {
 			$diff = $this->date_diff_minutes($this->date_time, $timecreated);
 			$mention = $this->date_diff_minutes_mention($diff);
 		}
-		return '<span title="'.$this->date_transform(array('format'=>DATE_FORMAT, 'date'=>$date)).'">'.$mention.'</span>';
+		return '<span title="'.$this->date_transform($date, $this->str[$this->language]['date_format']).'">'.$mention.'</span>';
 	}
 	function date_diff_days($previous, $next) {
 		if($previous == '' || $next == '') {
 			return '';
 		} else {
-			/*if(function_exists('date_create') && function_exists('date_diff')) {
+			if(function_exists('date_create') && function_exists('date_diff')) {
 				$datetime1 = date_create($previous);
 				$datetime2 = date_create($next);
 				$interval = date_diff($datetime1, $datetime2);
-				return $interval->format('%R%d');
-			} else {*/
+				return intval($interval->format('%R%d'));
+			} else {
 				$datetime1 = strtotime($previous);
 				$datetime2 = strtotime($next);
-				$interval = ($datetime2 - $datetime1)/3600/24;
-				if($interval == 0) {
-					$interval = '0';
-				}
-				return $interval;
-			//}
+				return ($datetime2 - $datetime1) / 3600 / 24;
+			}
 		}
 	}
 	function date_diff_days_mention($diff) {
 		$mention = '';
 		if($diff != '') {
 			if($diff == 0) {
-				$mention = '<strong>'.$this->str[$this->language]['today'].'</strong>';
+				$mention = $this->str[$this->language]['today'];
 			} elseif($diff == 1) {
-				$mention = '<strong>'.$this->str[$this->language]['tomorrow'].'</strong>';
+				$mention = $this->str[$this->language]['tomorrow'];
 			} elseif($diff == -1) {
 				$mention = $this->str[$this->language]['yesterday'];
 			} elseif(abs($diff) >= 730) {
@@ -967,7 +963,7 @@ class wall369 {
 		$mention = '';
 		if($diff != '') {
 			if(abs($diff) <= 1) {
-				$mention = '<strong>'.$this->str[$this->language]['now'].'</strong>';
+				$mention = $this->str[$this->language]['now'];
 			} elseif(abs($diff) >= 120) {
 				$mention = sprintf($this->str[$this->language]['hours_diff'], ceil(intval(abs($diff))/60));
 			} else {
@@ -976,17 +972,7 @@ class wall369 {
 		}
 		return $mention;
 	}
-	function date_transform($prm) {
-		$date = '';
-		$format = '';
-		foreach($prm as $_key => $_val) {
-			switch($_key) {
-				case 'date':
-				case 'format':
-					$$_key = (string)$_val;
-					break;
-			}
-		}
+	function date_transform($date, $format) {
 		if($date != '' && $format != '') {
 			if(function_exists('date_create') && function_exists('date_format')) {
 				$date = date_create($date);

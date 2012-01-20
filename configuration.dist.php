@@ -5,7 +5,6 @@ define('DATABASE_PASSWORD', 'wall369');
 define('DATABASE_PORT', 3306);
 define('DATABASE_TYPE', 'mysql');
 define('DATABASE_USER', 'wall369');
-define('DATE_FORMAT', 'l, F jS, Y, H:i');
 define('DEBUG', 0);//0, 1
 define('DEMO', 1);//0, 1
 define('GRAVATAR', 1);//0, 1
