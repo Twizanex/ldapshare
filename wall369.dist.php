@@ -388,8 +388,8 @@ class wall369 {
 		$render = '';
 		$post = $this->get_post($this->get['post_id']);
 		if($post) {
-			$query = 'INSERT INTO '.TABLE_COMMENT.' (user_id, post_id, comment_content, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, :comment_datecreated)';
-			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_datecreated'=>date('Y-m-d H:i:s')));
+			$query = 'INSERT INTO '.TABLE_COMMENT.' (user_id, post_id, comment_content, comment_latitude, comment_longitude, comment_httpuseragent, comment_remoteaddr, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, NULLIF(:comment_latitude, \'\'), NULLIF(:comment_longitude, \'\'), NULLIF(:comment_httpuseragent, \'\'), NULLIF(:comment_remoteaddr, \'\'), :comment_datecreated)';
+			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_latitude'=>$_SESSION['wall369']['latitude'], ':comment_longitude'=>$_SESSION['wall369']['longitude'], ':comment_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':comment_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':comment_datecreated'=>date('Y-m-d H:i:s')));
 			if($prepare) {
 				$comment_id = $this->pdo->lastinsertid();
 				$render .= '<status>comment_insert</status>';
