@@ -105,6 +105,43 @@ function geolocation_success(position) {
 }
 function geolocation_error(msg) {
 }
+function islogged_ok() {
+	$('#login_form').fadeOut(function() {
+		$('#login_form').html('');
+	});
+	data = {};
+	xml = ajax('index.php?a=postform', data);
+	content = $(xml).find('content').text();
+	$('#post_form').html(content);
+	$('#status_textarea').focus();
+	data = {};
+	xml = ajax('index.php?a=postlist', data);
+	$(xml).find('post').each(function(){
+		post_id = $(this).attr('post_id');
+		content = $(this).text();
+		$('.postlist').append(content);
+	});
+	more = $(xml).find('more').text();
+	if(more != '') {
+		$('.postlist').append(more);
+	}
+	$('#post_form').fadeIn();
+	$('.postlist').fadeIn();
+}
+function islogged_ko() {
+	$('#post_form').fadeOut(function() {
+		$('#post_form').html('');
+	});
+	$('.postlist').fadeOut(function() {
+		$('.postlist').html('');
+	});
+	data = {};
+	xml = ajax('index.php?a=loginform', data);
+	content = $(xml).find('content').text();
+	$('#login_form').html(content);
+	$('#email_inputtext').focus();
+	$('#login_form').fadeIn();
+}
 $(document).ready(function() {
 	set_positions();
 	$(window).bind('resize scroll', function(event) {
@@ -140,6 +177,13 @@ $(document).ready(function() {
 	if(navigator.geolocation) {
 		navigator.geolocation.getCurrentPosition(geolocation_success, geolocation_error);
 	}
+	$('.logout_action').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		data = {};
+		xml = ajax(href, data);
+		islogged_ko();
+	});
 	$('.postlist_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
@@ -249,6 +293,25 @@ $(document).ready(function() {
 			$('#post_like_render_' + post_id).html(content);
 		} else if(status == 'post_deleted') {
 			$('#post_' + post_id).html(content);
+		}
+	});
+	$('#login_form form').live('submit', function(e) {
+		e.preventDefault();
+		action = $(this).attr('action');
+		email_inputtext = $('#email_inputtext').val();
+		password_inputpassword = $('#password_inputpassword').val();
+		if(email_inputtext != '' || password_inputpassword != '') {
+			data = {};
+			data['email_inputtext'] = email_inputtext;
+			data['password_inputpassword'] = password_inputpassword;
+			xml = ajax(action, data);
+			status = $(xml).find('status').text();
+			if(status == 'ok') {
+				islogged_ok();
+			}
+			if(status == 'ko') {
+				islogged_ko();
+			}
 		}
 	});
 	$('#post_form form').live('submit', function(e) {
@@ -368,20 +431,13 @@ $(document).ready(function() {
 		popin_show(href);
     });
 	data = {};
-	xml = ajax('index.php?a=postform', data);
-	content = $(xml).find('content').text();
-	$('#post_form').html(content);
-	$('#status_textarea').focus();
-	data = {};
-	xml = ajax('index.php?a=postlist', data);
-	$(xml).find('post').each(function(){
-		post_id = $(this).attr('post_id');
-		content = $(this).text();
-		$('.postlist').append(content);
-	});
-	more = $(xml).find('more').text();
-	if(more != '') {
-		$('.postlist').append(more);
+	xml = ajax('index.php?a=islogged', data);
+	status = $(xml).find('status').text();
+	if(status == 'ok') {
+		islogged_ok();
+	}
+	if(status == 'ko') {
+		islogged_ko();
 	}
 	setInterval('refresh_datecreated()', 60000 * 1);
 	setInterval('refresh_new()', 60000 * 1);

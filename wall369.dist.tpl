@@ -14,6 +14,8 @@
 </div>
 <div id="wall369">
 	<div id="wall369_display">
+		<div id="login_form">
+		</div>
 		<div id="post_form">
 		</div>
 		<div class="postlist">

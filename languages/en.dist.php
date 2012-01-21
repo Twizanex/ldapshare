@@ -1,4 +1,8 @@
 <?php
+$this->str['en']['login'] = 'Login';
+$this->str['en']['logout'] = 'Logout';
+$this->str['en']['email'] = 'Email';
+$this->str['en']['password'] = 'Password';
 $this->str['en']['share'] = 'Share';
 $this->str['en']['comment'] = 'Comment';
 $this->str['en']['like'] = 'Like';

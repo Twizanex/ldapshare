@@ -46,25 +46,25 @@ class wall369 {
 		} catch(PDOException $e) {
 			trigger_error($e->getMessage());
 		}
-		if(DEMO == 1) {
-			if(isset($_SESSION['wall369']['user_id']) == 0) {
-				$_SESSION['wall369']['user_id'] = rand(1, 100);
-			}
-			$this->user = $this->get_user($_SESSION['wall369']['user_id']);
+		if(DEMO == 1 && isset($_SESSION['wall369']['user_id']) == 0) {
+			$_SESSION['wall369']['user_id'] = rand(1, 100);
 		}
 		if($this->get['a'] == 'index') {
 			$_SESSION['wall369']['post_id_oldest'] = 0;
 			$_SESSION['wall369']['post_id_newest'] = 0;
 		}
-		$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
-		FROM '.TABLE_POST.' post
-		LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id
-		LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id
-		LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id
-		LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id
-		LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id
-		LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id
-		LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = \''.$this->user->user_id.'\'';
+		if(isset($_SESSION['wall369']['user_id']) == 1) {
+			$this->user = $this->get_user($_SESSION['wall369']['user_id']);
+			$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
+			FROM '.TABLE_POST.' post
+			LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id
+			LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id
+			LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id
+			LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id
+			LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id
+			LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id
+			LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = \''.$this->user->user_id.'\'';
+		}
 	}
 	function error_handler($e_type, $e_message, $e_file, $e_line) {
 		$this->render_error($e_type, $e_message, $e_file, $e_line);
@@ -111,7 +111,12 @@ class wall369 {
 			$render .= '<wall369>'."\r\n";
 			if(method_exists($this, 'action_'.$this->get['a'])) {
 				$this->header_http_status(200);
-				$render .= $this->{'action_'.$this->get['a']}();
+				$actions_guest = array('islogged', 'loginform', 'login', 'timezone', 'geolocation');
+				if(isset($_SESSION['wall369']['user_id']) == 0 && !in_array($this->get['a'], $actions_guest)) {
+					$this->header_http_status(403);
+				} else {
+					$render .= $this->{'action_'.$this->get['a']}();
+				}
 			} else {
 				$this->header_http_status(404);
 			}
@@ -187,6 +192,15 @@ class wall369 {
 			trigger_error($errorinfo[2]);
 		}
 	}
+	function action_islogged() {
+		$render = '';
+		if(isset($_SESSION['wall369']['user_id']) == 1) {
+			$render .= '<status>ok</status>';
+		} else {
+			$render .= '<status>ko</status>';
+		}
+		return $render;
+	}
 	function action_timezone() {
 		$render = '';
 		$this->set_get('t', 0, 'numeric');
@@ -202,6 +216,57 @@ class wall369 {
 		$_SESSION['wall369']['longitude'] = $this->get['longitude'];
 		$render .= '<latitude>'.$this->get['latitude'].'</latitude>';
 		$render .= '<longitude>'.$this->get['longitude'].'</longitude>';
+		return $render;
+	}
+	function action_loginform() {
+		$render = '';
+		$render .= '<content><![CDATA[';
+		$render .= $this->render_loginform();
+		$render .= ']]></content>';
+		return $render;
+	}
+	function action_login() {
+		$render = '';
+		$status = 'ko';
+		$ldap_connect = ldap_connect(LDAP_SERVER, LDAP_PORT);
+		if($ldap_connect && filter_var($_POST['email_inputtext'], FILTER_VALIDATE_EMAIL)) {
+			ldap_set_option($ldap_connect, LDAP_OPT_PROTOCOL_VERSION, LDAP_PROTOCOL);
+			if(ldap_bind($ldap_connect, LDAP_ROOTDN, LDAP_ROOTPW)) {
+				$ldap_search = ldap_search($ldap_connect, LDAP_BASEDN, str_replace('[email]', $_POST['email_inputtext'], LDAP_FILTER));
+				if($ldap_search) {
+					$ldap_get_entries = ldap_get_entries($ldap_connect, $ldap_search);
+					if($ldap_get_entries['count'] > 0) {
+						if(@ldap_bind($ldap_connect, $ldap_get_entries[0]['dn'], $_POST['password_inputpassword'])) {
+							$user_lastname = $ldap_get_entries[0][LDAP_LASTNAME][0];
+							$user_firstname = $ldap_get_entries[0][LDAP_FIRSTNAME][0];
+							$status = 'ok';
+							//echo '<img src="data:image/jpeg;base64,'.base64_encode($ldap_get_entries[0]['jpegphoto'][0]).'">';
+							$user = $this->get_user_by_email($_POST['email_inputtext']);
+							if($user) {
+								$query = 'UPDATE '.TABLE_USER.' SET user_lastname = :user_lastname, user_firstname = :user_firstname WHERE user_email = :user_email';
+								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email_inputtext'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname));
+								$user_id = $user->user_id;
+							} else {
+								$query = 'INSERT INTO '.TABLE_USER.' (user_email, user_lastname, user_firstname, user_datecreated) VALUES (:user_email, :user_lastname, :user_firstname, :user_datecreated)';
+								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email_inputtext'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname, ':user_datecreated'=>date('Y-m-d H:i:s')));
+								if($prepare) {
+									$user_id = $this->pdo->lastinsertid();
+								}
+							}
+							$_SESSION['wall369']['user_id'] = $user_id;
+						}
+					}
+				}
+			}
+		}
+		$render .= '<status>'.$status.'</status>';
+		return $render;
+	}
+	function action_logout() {
+		$render = '';
+		unset($_SESSION['wall369']['user_id']);
+		$_SESSION['wall369']['post_id_oldest'] = 0;
+		$_SESSION['wall369']['post_id_newest'] = 0;
 		return $render;
 	}
 	function action_postform() {
@@ -500,6 +565,16 @@ class wall369 {
 			}
 		}
 	}
+	function get_user_by_email($user_email) {
+		$query = 'SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_email = :user_email GROUP BY user.user_id';
+		$prepare = $this->pdo_execute($query, array(':user_email'=>filter_var($user_email, FILTER_VALIDATE_EMAIL)));
+		if($prepare) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				return $prepare->fetch(PDO::FETCH_OBJ);
+			}
+		}
+	}
 	function get_post($post_id) {
 		$query = $this->post_query.' WHERE post.post_id = :post_id GROUP BY post.post_id';
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id));
@@ -542,8 +617,18 @@ class wall369 {
 		$query = 'INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)';
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':address_title'=>$data['address_title'], ':address_datecreated'=>date('Y-m-d H:i:s')));
 	}
+	function render_loginform() {
+		$render = '';
+		$render .= '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">
+		<p class="form_email"><label for="email_inputtext">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email_inputtext" type="text" value=""></p>
+		<p class="form_password"><label for="password_inputpassword">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password_inputpassword" type="password" value=""></p>
+		<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['login'].'"></p>
+		</form>';
+		return $render;
+	}
 	function render_postform() {
 		$render = '';
+		$render .= '<p><a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a></p>';
 		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">
 		<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>
 		<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"></p>

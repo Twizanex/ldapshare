@@ -1,4 +1,8 @@
 <?php
+$this->str['fr']['login'] = 'Connexion';
+$this->str['fr']['logout'] = 'Déconnexion';
+$this->str['fr']['email'] = 'Email';
+$this->str['fr']['password'] = 'Mot de passe';
 $this->str['fr']['share'] = 'Partager';
 $this->str['fr']['comment'] = 'Commenter';
 $this->str['fr']['like'] = 'J\'aime';
