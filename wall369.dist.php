@@ -624,8 +624,8 @@ class wall369 {
 	function render_loginform() {
 		$render = '';
 		$render .= '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">
-		<p class="form_email"><label for="email">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email" type="text" value=""></p>
-		<p class="form_password"><label for="password">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password" type="password" value=""></p>
+		<p class="form_email"><label for="email">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email" name="email" type="text" value=""></p>
+		<p class="form_password"><label for="password">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password" name="password" type="password" value=""></p>
 		<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['login'].'"></p>
 		</form>';
 		return $render;

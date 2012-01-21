@@ -69,7 +69,7 @@ form{margin:0px;padding:0px;}
 .delete_action{background-image:url("medias/icon_delete.png");background-repeat:no-repeat;height:15px;position:absolute;right:0px;top:0px;width:15px;}
 .delete_action:focus, .delete_action:hover{background-position:left -32px;}
 .delete_action:active{background-position:left -48px}
-#popin_display a:link, #popin_display a:visited, .post_detail a:link, .post_detail a:visited, .comment_detail a:link, .comment_detail a:visited{color:#6B84B4;}
+#post_form_detail a:link, #post_form_detail a:visited, #popin_display a:link, #popin_display a:visited, .post_detail a:link, .post_detail a:visited, .comment_detail a:link, .comment_detail a:visited{color:#6B84B4;}
 .link_text, .comment_detail{font-size:11px;}
 .icon img{height:16px;width:16px;}
 .comment_form, .link_more, .unlike_inactive, .like_inactive{display:none;}

@@ -323,7 +323,7 @@ $(document).ready(function() {
 		if(window.FormData) {
 			formdata = new FormData();
 			enable_submit = 0;
-			if(status_textarea != '' || link_inputtext != '' || address_inputtext != '') {
+			if(status_textarea != '' || (link_inputtext != '' && link_inputtext != 'http://') || address_inputtext != '') {
 				enable_submit = 1;
 			}
 			var photo = document.getElementById('photo_inputfile');
