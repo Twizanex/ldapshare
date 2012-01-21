@@ -108,39 +108,39 @@ function geolocation_error(msg) {
 function islogged_ok() {
 	$('#login_form').fadeOut(function() {
 		$('#login_form').html('');
+		data = {};
+		xml = ajax('index.php?a=postform', data);
+		content = $(xml).find('content').text();
+		$('#post_form').html(content);
+		$('#status_textarea').focus();
+		data = {};
+		xml = ajax('index.php?a=postlist', data);
+		$(xml).find('post').each(function(){
+			post_id = $(this).attr('post_id');
+			content = $(this).text();
+			$('.postlist').append(content);
+		});
+		more = $(xml).find('more').text();
+		if(more != '') {
+			$('.postlist').append(more);
+		}
+		$('#post_form').fadeIn();
+		$('.postlist').fadeIn();
 	});
-	data = {};
-	xml = ajax('index.php?a=postform', data);
-	content = $(xml).find('content').text();
-	$('#post_form').html(content);
-	$('#status_textarea').focus();
-	data = {};
-	xml = ajax('index.php?a=postlist', data);
-	$(xml).find('post').each(function(){
-		post_id = $(this).attr('post_id');
-		content = $(this).text();
-		$('.postlist').append(content);
-	});
-	more = $(xml).find('more').text();
-	if(more != '') {
-		$('.postlist').append(more);
-	}
-	$('#post_form').fadeIn();
-	$('.postlist').fadeIn();
 }
 function islogged_ko() {
-	$('#post_form').fadeOut(function() {
-		$('#post_form').html('');
-	});
 	$('.postlist').fadeOut(function() {
 		$('.postlist').html('');
+		$('#post_form').fadeOut(function() {
+			$('#post_form').html('');
+			data = {};
+			xml = ajax('index.php?a=loginform', data);
+			content = $(xml).find('content').text();
+			$('#login_form').html(content);
+			$('#email').focus();
+			$('#login_form').fadeIn();
+		});
 	});
-	data = {};
-	xml = ajax('index.php?a=loginform', data);
-	content = $(xml).find('content').text();
-	$('#login_form').html(content);
-	$('#email_inputtext').focus();
-	$('#login_form').fadeIn();
 }
 $(document).ready(function() {
 	set_positions();
@@ -298,12 +298,12 @@ $(document).ready(function() {
 	$('#login_form form').live('submit', function(e) {
 		e.preventDefault();
 		action = $(this).attr('action');
-		email_inputtext = $('#email_inputtext').val();
-		password_inputpassword = $('#password_inputpassword').val();
-		if(email_inputtext != '' || password_inputpassword != '') {
+		email = $('#email').val();
+		password = $('#password').val();
+		if(email != '' || password != '') {
 			data = {};
-			data['email_inputtext'] = email_inputtext;
-			data['password_inputpassword'] = password_inputpassword;
+			data['email'] = email;
+			data['password'] = password;
 			xml = ajax(action, data);
 			status = $(xml).find('status').text();
 			if(status == 'ok') {

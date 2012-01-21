@@ -28,6 +28,7 @@ form{margin:0px;padding:0px;}
 .comment_thumb{float:left;margin:5px 0px 5px 10px;width:30px;}
 .comment_thumb img{width:30px;}
 .comment_text{float:right;margin:5px 10px 0px 0px;width:480px;}
+#post_form_detail{text-align:right;}
 #post_form .textarea, .comment_form .textarea{border:1px solid #999999;height:50px;min-height:50px;padding:2px 5px;resize:vertical;width:470px;}
 #post_form .textarea{width:570px;}
 #login_form .inputtext, #login_form .inputpassword, #post_form .inputtext{border:1px solid #999999;padding:3px 5px;width:570px;}

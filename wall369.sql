@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS `wall369_user` (
 `user_email` varchar(255) NOT NULL,
 `user_lastname` varchar(255) NOT NULL,
 `user_firstname` varchar(255) NOT NULL,
-`user_file` varchar(100) DEFAULT NULL,
+`user_file` text,
 `user_datecreated` datetime NOT NULL,
 PRIMARY KEY (`user_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;

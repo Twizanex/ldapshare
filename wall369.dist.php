@@ -229,26 +229,30 @@ class wall369 {
 		$render = '';
 		$status = 'ko';
 		$ldap_connect = ldap_connect(LDAP_SERVER, LDAP_PORT);
-		if($ldap_connect && filter_var($_POST['email_inputtext'], FILTER_VALIDATE_EMAIL)) {
+		if($ldap_connect && filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
 			ldap_set_option($ldap_connect, LDAP_OPT_PROTOCOL_VERSION, LDAP_PROTOCOL);
 			if(ldap_bind($ldap_connect, LDAP_ROOTDN, LDAP_ROOTPW)) {
-				$ldap_search = ldap_search($ldap_connect, LDAP_BASEDN, str_replace('[email]', $_POST['email_inputtext'], LDAP_FILTER));
+				$ldap_search = ldap_search($ldap_connect, LDAP_BASEDN, str_replace('[email]', $_POST['email'], LDAP_FILTER));
 				if($ldap_search) {
 					$ldap_get_entries = ldap_get_entries($ldap_connect, $ldap_search);
 					if($ldap_get_entries['count'] > 0) {
-						if(@ldap_bind($ldap_connect, $ldap_get_entries[0]['dn'], $_POST['password_inputpassword'])) {
+						if(@ldap_bind($ldap_connect, $ldap_get_entries[0]['dn'], $_POST['password'])) {
 							$user_lastname = $ldap_get_entries[0][LDAP_LASTNAME][0];
 							$user_firstname = $ldap_get_entries[0][LDAP_FIRSTNAME][0];
 							$status = 'ok';
-							//echo '<img src="data:image/jpeg;base64,'.base64_encode($ldap_get_entries[0]['jpegphoto'][0]).'">';
-							$user = $this->get_user_by_email($_POST['email_inputtext']);
+							if(isset($ldap_get_entries[0]['jpegphoto'][0]) == 1) {
+								$user_file = base64_encode($ldap_get_entries[0]['jpegphoto'][0]);
+							} else {
+								$user_file = '';
+							}
+							$user = $this->get_user_by_email($_POST['email']);
 							if($user) {
-								$query = 'UPDATE '.TABLE_USER.' SET user_lastname = :user_lastname, user_firstname = :user_firstname WHERE user_email = :user_email';
-								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email_inputtext'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname));
+								$query = 'UPDATE '.TABLE_USER.' SET user_lastname = :user_lastname, user_firstname = :user_firstname, user_file = NULLIF(:user_file, \'\') WHERE user_email = :user_email';
+								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname, ':user_file'=>$user_file));
 								$user_id = $user->user_id;
 							} else {
-								$query = 'INSERT INTO '.TABLE_USER.' (user_email, user_lastname, user_firstname, user_datecreated) VALUES (:user_email, :user_lastname, :user_firstname, :user_datecreated)';
-								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email_inputtext'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname, ':user_datecreated'=>date('Y-m-d H:i:s')));
+								$query = 'INSERT INTO '.TABLE_USER.' (user_email, user_lastname, user_firstname, user_file, user_datecreated) VALUES (:user_email, :user_lastname, :user_firstname, NULLIF(:user_file, \'\'), :user_datecreated)';
+								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname, ':user_file'=>$user_file, ':user_datecreated'=>date('Y-m-d H:i:s')));
 								if($prepare) {
 									$user_id = $this->pdo->lastinsertid();
 								}
@@ -620,15 +624,15 @@ class wall369 {
 	function render_loginform() {
 		$render = '';
 		$render .= '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">
-		<p class="form_email"><label for="email_inputtext">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email_inputtext" type="text" value=""></p>
-		<p class="form_password"><label for="password_inputpassword">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password_inputpassword" type="password" value=""></p>
+		<p class="form_email"><label for="email">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email" type="text" value=""></p>
+		<p class="form_password"><label for="password">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password" type="password" value=""></p>
 		<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['login'].'"></p>
 		</form>';
 		return $render;
 	}
 	function render_postform() {
 		$render = '';
-		$render .= '<p><a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a></p>';
+		$render .= '<p id="post_form_detail"><a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a></p>';
 		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">
 		<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>
 		<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"></p>
@@ -691,7 +695,9 @@ class wall369 {
 		$render = '<div class="post" id="post_'.$post->post_id.'">
 			<div class="post_display">
 				<div class="post_thumb">';
-				if(GRAVATAR == 1) {
+				if($post->user_file != '') {
+					$render .= '<img alt="" src="data:image/jpeg;base64,'.$post->user_file.'">';
+				} else if(GRAVATAR == 1) {
 					$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($post->user_email)).'?rating='.GRAVATAR_RATING.'&size=50&default='.GRAVATAR_DEFAULT.'">';
 				} else {
 					$render .= '<img alt="" src="medias/default_mediasmall.gif">';
@@ -738,7 +744,9 @@ class wall369 {
 						<div class="comment comment_form" id="comment_form_'.$post->post_id.'">
 							<div class="comment_display comment_form_display">
 								<div class="comment_thumb">';
-								if(GRAVATAR == 1) {
+								if($this->user->user_file != '') {
+									$render .= '<img alt="" src="data:image/jpeg;base64,'.$this->user->user_file.'">';
+								} else if(GRAVATAR == 1) {
 									$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($this->user->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
 								} else {
 									$render .= '<img alt="" src="medias/default_mediasmall.gif">';
@@ -793,7 +801,9 @@ class wall369 {
 		$render = '<div class="comment" id="comment_'.$comment->comment_id.'">
 			<div class="comment_display">
 				<div class="comment_thumb">';
-				if(GRAVATAR == 1) {
+				if($comment->user_file != '') {
+					$render .= '<img alt="" src="data:image/jpeg;base64,'.$comment->user_file.'">';
+				} else if(GRAVATAR == 1) {
 					$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($comment->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
 				} else {
 					$render .= '<img alt="" src="medias/default_mediasmall.gif">';
