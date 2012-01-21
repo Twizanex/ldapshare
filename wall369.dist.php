@@ -632,7 +632,9 @@ class wall369 {
 	}
 	function render_postform() {
 		$render = '';
-		$render .= '<p id="post_form_detail"><a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a></p>';
+		if(DEMO == 0) {
+			$render .= '<p id="post_form_detail"><a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a></p>';
+		}
 		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">
 		<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>
 		<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"></p>
@@ -1106,6 +1108,7 @@ class wall369 {
 			}
 			if(strstr($format, 'jS') && isset($this->str[$this->language]['date_jS']) == 1) {
 				$ref = $this->str[$this->language]['date_jS'];
+				$ref = array_reverse($ref, 1);
 				$date = str_replace(array_keys($ref), array_values($ref), $date);
 			}
 			if(strstr($format, 'F') && isset($this->str[$this->language]['date_F']) == 1) {
