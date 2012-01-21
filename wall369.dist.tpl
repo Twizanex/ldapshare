@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>wall369</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
 <link href="wall369.dist.css" rel="stylesheet" type="text/css">
 </head>
 <body>
