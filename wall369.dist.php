@@ -623,11 +623,11 @@ class wall369 {
 	}
 	function render_loginform() {
 		$render = '';
-		$render .= '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">
-		<p class="form_email"><label for="email">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email" name="email" type="text" value=""></p>
-		<p class="form_password"><label for="password">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password" name="password" type="password" value=""></p>
-		<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['login'].'"></p>
-		</form>';
+		$render .= '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">';
+		$render .= '<p class="form_email"><label for="email">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email" name="email" type="text" value=""></p>';
+		$render .= '<p class="form_password"><label for="password">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password" name="password" type="password" value=""></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['login'].'"></p>';
+		$render .= '</form>';
 		return $render;
 	}
 	function render_postform() {
@@ -635,16 +635,16 @@ class wall369 {
 		if(DEMO == 0) {
 			$render .= '<p id="postform_detail"><a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a></p>';
 		}
-		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">
-		<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>
-		<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"></p>
-		<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""></p>
-		<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>
-		<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['share'].'"></p>
-		<div class="postform_preview" id="postform_link_preview"></div>
-		<div class="postform_preview" id="postform_address_preview"></div>
-		<div class="postform_preview" id="postform_photo_preview"></div>
-		</form>';
+		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">';
+		$render .= '<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>';
+		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"></p>';
+		$render .= '<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""></p>';
+		$render .= '<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['share'].'"></p>';
+		$render .= '<div class="postform_preview" id="postform_link_preview"></div>';
+		$render .= '<div class="postform_preview" id="postform_address_preview"></div>';
+		$render .= '<div class="postform_preview" id="postform_photo_preview"></div>';
+		$render .= '</form>';
 		return $render;
 	}
 	function render_postlist() {
@@ -694,77 +694,78 @@ class wall369 {
 		return $render;
 	}
 	function render_post($post) {
-		$render = '<div class="post" id="post_'.$post->post_id.'">
-			<div class="post_display">
-				<div class="post_thumb">';
-				if($post->user_file != '') {
-					$render .= '<img alt="" src="data:image/jpeg;base64,'.$post->user_file.'">';
-				} else if(GRAVATAR == 1) {
-					$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($post->user_email)).'?rating='.GRAVATAR_RATING.'&size=50&default='.GRAVATAR_DEFAULT.'">';
-				} else {
-					$render .= '<img alt="" src="medias/default_mediasmall.gif">';
-				}
-				$render .= '</div>
-				<div class="post_text">';
-					if($post->user_id == $this->user->user_id) {
-						$render .= '<a class="delete_action post_delete_action" data-post_id="'.$post->post_id.'" href="?a=postdelete&amp;post_id='.$post->post_id.'"></a>';
-						$username = $this->str[$this->language]['you'];
-					} else {
-						$username = $post->user_firstname.' '.$post->user_lastname;
-					}
-					$render .= '<p><span class="username">'.$username.'</span></p>
-					<p>'.$this->render_content($post->post_content).'</p>';
-				$render .= '</div>';
-				$render .= $this->render_linklist($post);
-				$render .= $this->render_addresslist($post);
-				$render .= $this->render_photolist($post);
-					$render .= '<p class="post_detail">';
-					if($post->you_like == 1) {
-						$render .= '<span class="like like_inactive">';
-					} else {
-						$render .= '<span class="like">';
-					}
-					$render .= '<a class="post_like_action" data-post_id="'.$post->post_id.'" href="?a=postlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> ';
-					if($post->you_like == 1) {
-						$render .= '<span class="unlike">';
-					} else {
-						$render .= '<span class="unlike unlike_inactive">';
-					}
-					$render .= '<a class="post_unlike_action" data-post_id="'.$post->post_id.'" href="?a=postunlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> ';
-					$render .= '<a class="comment_action" data-post_id="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
-					$render .= ' · <span class="datecreated" id="post_datecreated_'.$post->post_id.'">'.$this->render_datecreated($post->post_datecreated).'</span>';
-					$render .= '</p>
-					<div class="commentlist" id="commentlist_'.$post->post_id.'">';
-						$render .= '<div id="post_like_render_'.$post->post_id.'">';
-							$render .= $this->render_like($post);
-						$render .= '</div>';
-						$render .= '<div class="commentlist_display">';
-						if($post->count_comment > 0) {
-							$render .= $this->render_commentlist($post, 0);
-						}
-						$render .= '</div>
-						<div class="comment comment_form" id="comment_form_'.$post->post_id.'">
-							<div class="comment_display comment_form_display">
-								<div class="comment_thumb">';
-								if($this->user->user_file != '') {
-									$render .= '<img alt="" src="data:image/jpeg;base64,'.$this->user->user_file.'">';
-								} else if(GRAVATAR == 1) {
-									$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($this->user->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
-								} else {
-									$render .= '<img alt="" src="medias/default_mediasmall.gif">';
-								}
-								$render .= '</div>
-								<div class="comment_text">
-									<form action="?a=comment&amp;post_id='.$post->post_id.'" class="comment_form_form" method="post">
-									<p><textarea class="textarea" name="comment"></textarea></p>
-									<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['comment'].'" data-post_id="'.$post->post_id.'"></p>
-									</form>
-								</div>
-							</div>
-						</div>
-					</div>
-			</div>
-		</div>';
+		$render = '';
+		$render .= '<div class="post" id="post_'.$post->post_id.'">';
+		$render .= '<div class="post_display">';
+		$render .= '<div class="post_thumb">';
+		if($post->user_file != '') {
+			$render .= '<img alt="" src="data:image/jpeg;base64,'.$post->user_file.'">';
+		} else if(GRAVATAR == 1) {
+			$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($post->user_email)).'?rating='.GRAVATAR_RATING.'&size=50&default='.GRAVATAR_DEFAULT.'">';
+		} else {
+			$render .= '<img alt="" src="medias/default_mediasmall.gif">';
+		}
+		$render .= '</div>';
+		$render .= '<div class="post_text">';
+		if($post->user_id == $this->user->user_id) {
+			$render .= '<a class="delete_action post_delete_action" data-post_id="'.$post->post_id.'" href="?a=postdelete&amp;post_id='.$post->post_id.'"></a>';
+			$username = $this->str[$this->language]['you'];
+		} else {
+			$username = $post->user_firstname.' '.$post->user_lastname;
+		}
+		$render .= '<p><span class="username">'.$username.'</span></p>';
+		$render .= '<p>'.$this->render_content($post->post_content).'</p>';
+		$render .= '</div>';
+		$render .= $this->render_linklist($post);
+		$render .= $this->render_addresslist($post);
+		$render .= $this->render_photolist($post);
+		$render .= '<p class="post_detail">';
+		if($post->you_like == 1) {
+			$render .= '<span class="like like_inactive">';
+		} else {
+			$render .= '<span class="like">';
+		}
+		$render .= '<a class="post_like_action" data-post_id="'.$post->post_id.'" href="?a=postlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> ';
+		if($post->you_like == 1) {
+			$render .= '<span class="unlike">';
+		} else {
+			$render .= '<span class="unlike unlike_inactive">';
+		}
+		$render .= '<a class="post_unlike_action" data-post_id="'.$post->post_id.'" href="?a=postunlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> ';
+		$render .= '<a class="comment_action" data-post_id="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
+		$render .= ' · <span class="datecreated" id="post_datecreated_'.$post->post_id.'">'.$this->render_datecreated($post->post_datecreated).'</span>';
+		$render .= '</p>';
+		$render .= '<div class="commentlist" id="commentlist_'.$post->post_id.'">';
+		$render .= '<div id="post_like_render_'.$post->post_id.'">';
+		$render .= $this->render_like($post);
+		$render .= '</div>';
+		$render .= '<div class="commentlist_display">';
+		if($post->count_comment > 0) {
+			$render .= $this->render_commentlist($post, 0);
+		}
+		$render .= '</div>';
+		$render .= '<div class="comment comment_form" id="comment_form_'.$post->post_id.'">';
+		$render .= '<div class="comment_display comment_form_display">';
+		$render .= '<div class="comment_thumb">';
+		if($this->user->user_file != '') {
+			$render .= '<img alt="" src="data:image/jpeg;base64,'.$this->user->user_file.'">';
+		} else if(GRAVATAR == 1) {
+			$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($this->user->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
+		} else {
+			$render .= '<img alt="" src="medias/default_mediasmall.gif">';
+		}
+		$render .= '</div>';
+		$render .= '<div class="comment_text">';
+		$render .= '<form action="?a=comment&amp;post_id='.$post->post_id.'" class="comment_form_form" method="post">';
+		$render .= '<p><textarea class="textarea" name="comment"></textarea></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['comment'].'" data-post_id="'.$post->post_id.'"></p>';
+		$render .= '</form>';
+		$render .= '</div>';
+		$render .= '</div>';
+		$render .= '</div>';
+		$render .= '</div>';
+		$render .= '</div>';
+		$render .= '</div>';
 		return $render;
 	}
 	function render_commentlist($post, $all) {
@@ -777,11 +778,11 @@ class wall369 {
 			}
 			if($all == 0) {
 				if($post->count_comment > LIMIT_COMMENTS) {
-					$render .= '<div class="comment comment_all" id="comment_all_'.$post->post_id.'">
-						<div class="comment_display comment_all_display">
-							<p><a class="commentall_action" data-post_id="'.$post->post_id.'" href="?a=commentlist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['view_all_comments'], $post->count_comment).'</a></p>
-						</div>
-					</div>';
+					$render .= '<div class="comment comment_all" id="comment_all_'.$post->post_id.'">';
+					$render .= '<div class="comment_display comment_all_display">';
+					$render .= '<p><a class="commentall_action" data-post_id="'.$post->post_id.'" href="?a=commentlist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['view_all_comments'], $post->count_comment).'</a></p>';
+					$render .= '</div>';
+					$render .= '</div>';
 					$min = $post->count_comment - LIMIT_COMMENTS;
 					$limit = ' LIMIT '.$min.', '.LIMIT_COMMENTS;
 				}
@@ -800,31 +801,32 @@ class wall369 {
 		return $render;
 	}
 	function render_comment($comment) {
-		$render = '<div class="comment" id="comment_'.$comment->comment_id.'">
-			<div class="comment_display">
-				<div class="comment_thumb">';
-				if($comment->user_file != '') {
-					$render .= '<img alt="" src="data:image/jpeg;base64,'.$comment->user_file.'">';
-				} else if(GRAVATAR == 1) {
-					$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($comment->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
-				} else {
-					$render .= '<img alt="" src="medias/default_mediasmall.gif">';
-				}
-				$render .= '</div>
-				<div class="comment_text">';
-					if($comment->user_id == $this->user->user_id) {
-						$render .= '<a class="delete_action comment_delete_action" data-comment_id="'.$comment->comment_id.'" href="?a=commentdelete&amp;comment_id='.$comment->comment_id.'"></a>';
-						$username = $this->str[$this->language]['you'];
-					} else {
-						$username = $comment->user_firstname.' '.$comment->user_lastname;
-					}
-					$render .= '<p><span class="username">'.$username.'</span> '.$this->render_content($comment->comment_content).'</p>
-					<p class="comment_detail">';
-					$render .= '<span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'">'.$this->render_datecreated($comment->comment_datecreated).'</span>';
-					$render .= '</p>
-				</div>
-			</div>
-		</div>';
+		$render = '';
+		$render .= '<div class="comment" id="comment_'.$comment->comment_id.'">';
+		$render .= '<div class="comment_display">';
+		$render .= '<div class="comment_thumb">';
+		if($comment->user_file != '') {
+			$render .= '<img alt="" src="data:image/jpeg;base64,'.$comment->user_file.'">';
+		} else if(GRAVATAR == 1) {
+			$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($comment->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
+		} else {
+			$render .= '<img alt="" src="medias/default_mediasmall.gif">';
+		}
+		$render .= '</div>';
+		$render .= '<div class="comment_text">';
+		if($comment->user_id == $this->user->user_id) {
+			$render .= '<a class="delete_action comment_delete_action" data-comment_id="'.$comment->comment_id.'" href="?a=commentdelete&amp;comment_id='.$comment->comment_id.'"></a>';
+			$username = $this->str[$this->language]['you'];
+		} else {
+			$username = $comment->user_firstname.' '.$comment->user_lastname;
+		}
+		$render .= '<p><span class="username">'.$username.'</span> '.$this->render_content($comment->comment_content).'</p>';
+		$render .= '<p class="comment_detail">';
+		$render .= '<span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'">'.$this->render_datecreated($comment->comment_datecreated).'</span>';
+		$render .= '</p>';
+		$render .= '</div>';
+		$render .= '</div>';
+		$render .= '</div>';
 		return $render;
 	}
 	function render_like($post) {
@@ -847,8 +849,8 @@ class wall369 {
 				$rowCount = $prepare->rowCount();
 				if($rowCount > 0) {
 					$values = array();
-					$render .= '<div class="comment post_like" id="post_like_'.$post->post_id.'">
-						<div class="comment_display post_like_display">';
+					$render .= '<div class="comment post_like" id="post_like_'.$post->post_id.'">';
+					$render .= '<div class="comment_display post_like_display">';
 					$render .= '<p>';
 					$u = 1;
 					while($like = $prepare->fetch(PDO::FETCH_OBJ)) {
@@ -912,11 +914,12 @@ class wall369 {
 		return $render;
 	}
 	function render_photo($photo) {
-		$render = '<div class="photo" id="photo_'.$photo->photo_id.'">
-			<div class="photo_display">
-				<a data-photo_id="'.$photo->photo_id.'" href="?a=photozoom&amp;photo_id='.$photo->photo_id.'"><img alt="" src="storage/'.$photo->photo_file.'"></a>
-			</div>
-		</div>';
+		$render = '';
+		$render .= '<div class="photo" id="photo_'.$photo->photo_id.'">';
+		$render .= '<div class="photo_display">';
+		$render .= '<a data-photo_id="'.$photo->photo_id.'" href="?a=photozoom&amp;photo_id='.$photo->photo_id.'"><img alt="" src="storage/'.$photo->photo_file.'"></a>';
+		$render .= '</div>';
+		$render .= '</div>';
 		return $render;
 	}
 	function render_linklist($post) {
@@ -938,35 +941,36 @@ class wall369 {
 		return $render;
 	}
 	function render_link($link) {
+		$render = '';
 		$url = parse_url($link->link_url);
-		$render = '<div class="link" id="link_'.$link->link_id.'">
-			<div class="link_display">';
-				if($link->link_image != '') {
-				$render .= '<div class="link_thumb">';
-					$full = '';
-					$render .= '<a target="_blank" href="'.$link->link_url.'"><img alt="" src="'.$link->link_image.'"></a>';
-				$render .= '</div>';
-				} else {
-					$full = ' link_text_full';
-				}
-				$render .= '<div class="link_text'.$full.'">
-					<p><a target="_blank" href="'.$link->link_url.'">'.$link->link_title.'</a><br>';
-					if($link->link_icon != '') {
-						$render .= '<span class="icon"><img alt="" src="'.$link->link_icon.'"></span> ';
-					}
-					$render .= '<span class="hostname">'.$url['host'].'</span></p>';
-					if($link->link_content != '') {
-						$render .= '<p>'.$this->render_content($link->link_content).'</p>';
-					}
-				$render .= '</div>';
-				if($link->link_video != '' && $link->link_videowidth != '' && $link->link_videoheight != '') {
-					$link->link_videoheight = round(($link->link_videoheight * 540) / $link->link_videowidth);
-					$link->link_videowidth = 540;
-					$render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt=""></a></p>';
-					$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="'.$link->link_videowidth.'" height="'.$link->link_videoheight.'" src="'.$link->link_video.'" frameborder="0"></iframe>';
-				}
-			$render .= '</div>
-		</div>';
+		$render .= '<div class="link" id="link_'.$link->link_id.'">';
+		$render .= '<div class="link_display">';
+		if($link->link_image != '') {
+			$render .= '<div class="link_thumb">';
+			$full = '';
+			$render .= '<a target="_blank" href="'.$link->link_url.'"><img alt="" src="'.$link->link_image.'"></a>';
+			$render .= '</div>';
+		} else {
+			$full = ' link_text_full';
+		}
+		$render .= '<div class="link_text'.$full.'">';
+		$render .= '<p><a target="_blank" href="'.$link->link_url.'">'.$link->link_title.'</a><br>';
+		if($link->link_icon != '') {
+			$render .= '<span class="icon"><img alt="" src="'.$link->link_icon.'"></span> ';
+		}
+		$render .= '<span class="hostname">'.$url['host'].'</span></p>';
+		if($link->link_content != '') {
+			$render .= '<p>'.$this->render_content($link->link_content).'</p>';
+		}
+		$render .= '</div>';
+		if($link->link_video != '' && $link->link_videowidth != '' && $link->link_videoheight != '') {
+			$link->link_videoheight = round(($link->link_videoheight * 540) / $link->link_videowidth);
+			$link->link_videowidth = 540;
+			$render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt=""></a></p>';
+			$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="'.$link->link_videowidth.'" height="'.$link->link_videoheight.'" src="'.$link->link_video.'" frameborder="0"></iframe>';
+		}
+		$render .= '</div>';
+		$render .= '</div>';
 		return $render;
 	}
 	function render_addresslist($post) {
@@ -988,12 +992,13 @@ class wall369 {
 		return $render;
 	}
 	function render_address($address) {
-		$render = '<div class="address" id="address_'.$address->address_id.'">
-			<div class="address_display">';
-				$render .= '<p>'.$address->address_title.'</p>';
-				$render .= '<p><a href="http://maps.google.com/maps?q='.urlencode($address->address_title).'&oe=UTF-8&ie=UTF-8" target="_blank"><img src="http://maps.googleapis.com/maps/api/staticmap?center='.urlencode($address->address_title).'&markers=color:red|'.urlencode($address->address_title).'&zoom=15&size=540x200&sensor=false" alt=""></a></p>';
-			$render .=' </div>
-		</div>';
+		$render = '';
+		$render .= '<div class="address" id="address_'.$address->address_id.'">';
+		$render .= '<div class="address_display">';
+		$render .= '<p>'.$address->address_title.'</p>';
+		$render .= '<p><a href="http://maps.google.com/maps?q='.urlencode($address->address_title).'&oe=UTF-8&ie=UTF-8" target="_blank"><img src="http://maps.googleapis.com/maps/api/staticmap?center='.urlencode($address->address_title).'&markers=color:red|'.urlencode($address->address_title).'&zoom=15&size=540x200&sensor=false" alt=""></a></p>';
+		$render .=' </div>';
+		$render .= '</div>';
 		return $render;
 	}
 	function render_content($text) {
