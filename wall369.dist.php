@@ -633,7 +633,7 @@ class wall369 {
 	function render_postform() {
 		$render = '';
 		if(DEMO == 0) {
-			$render .= '<p id="post_form_detail"><a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a></p>';
+			$render .= '<p id="postform_detail"><a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a></p>';
 		}
 		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">
 		<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>
@@ -641,9 +641,9 @@ class wall369 {
 		<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""></p>
 		<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>
 		<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['share'].'"></p>
-		<div class="post_form_preview" id="post_form_link_preview"></div>
-		<div class="post_form_preview" id="post_form_address_preview"></div>
-		<div class="post_form_preview" id="post_form_photo_preview"></div>
+		<div class="postform_preview" id="postform_link_preview"></div>
+		<div class="postform_preview" id="postform_address_preview"></div>
+		<div class="postform_preview" id="postform_photo_preview"></div>
 		</form>';
 		return $render;
 	}

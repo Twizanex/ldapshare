@@ -106,12 +106,12 @@ function geolocation_success(position) {
 function geolocation_error(msg) {
 }
 function islogged_ok() {
-	$('#login_form').fadeOut(function() {
-		$('#login_form').html('');
+	$('#loginform').fadeOut(function() {
+		$('#loginform').html('');
 		data = {};
 		xml = ajax('index.php?a=postform', data);
 		content = $(xml).find('content').text();
-		$('#post_form').html(content);
+		$('#postform').html(content);
 		$('#status_textarea').focus();
 		data = {};
 		xml = ajax('index.php?a=postlist', data);
@@ -124,21 +124,21 @@ function islogged_ok() {
 		if(more != '') {
 			$('.postlist').append(more);
 		}
-		$('#post_form').fadeIn();
+		$('#postform').fadeIn();
 		$('.postlist').fadeIn();
 	});
 }
 function islogged_ko() {
 	$('.postlist').fadeOut(function() {
 		$('.postlist').html('');
-		$('#post_form').fadeOut(function() {
-			$('#post_form').html('');
+		$('#postform').fadeOut(function() {
+			$('#postform').html('');
 			data = {};
 			xml = ajax('index.php?a=loginform', data);
 			content = $(xml).find('content').text();
-			$('#login_form').html(content);
+			$('#loginform').html(content);
 			$('#email').focus();
-			$('#login_form').fadeIn();
+			$('#loginform').fadeIn();
 		});
 	});
 }
@@ -295,7 +295,7 @@ $(document).ready(function() {
 			$('#post_' + post_id).html(content);
 		}
 	});
-	$('#login_form form').live('submit', function(e) {
+	$('#loginform form').live('submit', function(e) {
 		e.preventDefault();
 		action = $(this).attr('action');
 		email = $('#email').val();
@@ -314,7 +314,7 @@ $(document).ready(function() {
 			}
 		}
 	});
-	$('#post_form form').live('submit', function(e) {
+	$('#postform form').live('submit', function(e) {
 		e.preventDefault();
 		action = $(this).attr('action');
 		status_textarea = $('#status_textarea').val();
@@ -353,8 +353,8 @@ $(document).ready(function() {
 						$('#link_inputtext').attr('value', 'http://');
 						$('#address_inputtext').attr('value', '');
 						$('#photo_inputfile').attr('value', '');
-						$('#post_form_photo_preview').html('');
-						$('#post_form_address_preview').html('');
+						$('#postform_photo_preview').html('');
+						$('#postform_address_preview').html('');
 					},
 					type: 'POST',
 					url: action
@@ -387,11 +387,11 @@ $(document).ready(function() {
         if(photo.files.length != 0 && window.FileReader) {
             var file = photo.files[0];
             if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= 2097152) {
-                $('#post_form_photo_preview').html('');
+                $('#postform_photo_preview').html('');
                 reader = new FileReader();
                 reader.onload = function(event) {
-					$('#post_form_photo_preview').html('<img alt="" id="photo_inputfile_preview" src="' + event.target.result + '">');
-                    $('#post_form_photo_preview').fadeIn();
+					$('#postform_photo_preview').html('<img alt="" id="photo_inputfile_preview" src="' + event.target.result + '">');
+                    $('#postform_photo_preview').fadeIn();
                 };
                 reader.readAsDataURL(file);
             }
@@ -414,7 +414,7 @@ $(document).ready(function() {
 		address_inputtext = $(this).val();
 		if(address_inputtext != '') {
 			address_inputtext = encodeURIComponent(address_inputtext);
-			$('#post_form_address_preview').html('<img src="http://maps.googleapis.com/maps/api/staticmap?center=' + address_inputtext + '&markers=color:red|' + address_inputtext + '&zoom=15&size=540x200&sensor=false" alt="">');
+			$('#postform_address_preview').html('<img src="http://maps.googleapis.com/maps/api/staticmap?center=' + address_inputtext + '&markers=color:red|' + address_inputtext + '&zoom=15&size=540x200&sensor=false" alt="">');
         }
 		$('#loading').hide();
     });
