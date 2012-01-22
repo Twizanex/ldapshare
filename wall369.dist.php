@@ -626,7 +626,7 @@ class wall369 {
 		$render .= '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">';
 		$render .= '<p class="form_email"><label for="email">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email" name="email" type="text" value=""></p>';
 		$render .= '<p class="form_password"><label for="password">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password" name="password" type="password" value=""></p>';
-		$render .= '<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['login'].'"></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['login'].'"></p>';
 		$render .= '</form>';
 		return $render;
 	}
@@ -640,7 +640,7 @@ class wall369 {
 		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"></p>';
 		$render .= '<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""></p>';
 		$render .= '<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>';
-		$render .= '<p class="submit_btn"><input class="inputsubmit" name="inputsubmit" type="submit" value="'.$this->str[$this->language]['share'].'"></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['share'].'"></p>';
 		$render .= '<div class="postform_preview" id="postform_link_preview"></div>';
 		$render .= '<div class="postform_preview" id="postform_address_preview"></div>';
 		$render .= '<div class="postform_preview" id="postform_photo_preview"></div>';
