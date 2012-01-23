@@ -99,12 +99,6 @@ function refresh_new() {
 		$('.postlist').prepend(content);
 	});
 }
-function geolocation_success(position) {
-	data = {};
-	xml = ajax('index.php?a=geolocation&latitude=' + position.coords.latitude + '&longitude=' + position.coords.longitude, data);
-}
-function geolocation_error(msg) {
-}
 function islogged_ok() {
 	$('#loginform').fadeOut(function() {
 		$('#loginform').html('');
@@ -174,9 +168,6 @@ $(document).ready(function() {
 	t = -d.getTimezoneOffset() / 60;
 	data = {};
 	xml = ajax('index.php?a=timezone&t=' + t, data);
-	if(navigator.geolocation) {
-		navigator.geolocation.getCurrentPosition(geolocation_success, geolocation_error);
-	}
 	$('.logout_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');

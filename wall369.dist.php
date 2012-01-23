@@ -11,12 +11,6 @@ class wall369 {
 		if(isset($_SESSION['wall369']['timezone']) == 0) {
 			$_SESSION['wall369']['timezone'] = 0;
 		}
-		if(isset($_SESSION['wall369']['latitude']) == 0) {
-			$_SESSION['wall369']['latitude'] = '';
-		}
-		if(isset($_SESSION['wall369']['longitude']) == 0) {
-			$_SESSION['wall369']['longitude'] = '';
-		}
 		$this->language = 'en';
 		if(isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) == 1) {
 			$lng_array = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
@@ -63,7 +57,7 @@ class wall369 {
 			LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id
 			LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id
 			LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id
-			LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = \''.$this->user->user_id.'\'';
+			LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = :user_id';
 		}
 	}
 	function error_handler($e_type, $e_message, $e_file, $e_line) {
@@ -91,10 +85,27 @@ class wall369 {
 			$render .= '<message><![CDATA['.$e_message.']]></message>'."\r\n";
 			$render .= '<file>'.$e_file.'</file>'."\r\n";
 			$render .= '<line>'.$e_line.'</line>'."\r\n";
+			$render .= $this->render_debug();
 		}
 		$render .= '</wall369>'."\r\n";
 		echo $render;
 		exit(0);
+	}
+	function render_debug() {
+		$render = '';
+		$microtime_end = microtime(1);
+		$microtime_total = $microtime_end - $this->microtime_start;
+		$render .= '<microtime_total>'.round($microtime_total, 5).'</microtime_total>'."\r\n";
+		if(function_exists('memory_get_peak_usage')) {
+			$render .= '<memory_get_peak_usage>'.number_format(memory_get_peak_usage(), 0, '.', ' ').'</memory_get_peak_usage>'."\r\n";
+		}
+		if(function_exists('memory_get_usage')) {
+			$render .= '<memory_get_usage>'.number_format(memory_get_usage(), 0, '.', ' ').'</memory_get_usage>'."\r\n";
+		}
+		foreach($this->queries as $query) {
+			$render .= '<query><![CDATA['.$query.']]></query>'."\r\n";
+		}
+		return $render;
 	}
 	function render() {
 		if($this->get['a'] == 'index') {
@@ -111,7 +122,7 @@ class wall369 {
 			$render .= '<wall369>'."\r\n";
 			if(method_exists($this, 'action_'.$this->get['a'])) {
 				$this->header_http_status(200);
-				$actions_guest = array('islogged', 'loginform', 'login', 'timezone', 'geolocation');
+				$actions_guest = array('islogged', 'loginform', 'login', 'timezone');
 				if(isset($_SESSION['wall369']['user_id']) == 0 && !in_array($this->get['a'], $actions_guest)) {
 					$this->header_http_status(403);
 				} else {
@@ -121,18 +132,7 @@ class wall369 {
 				$this->header_http_status(404);
 			}
 			if(DEBUG == 1) {
-				$this->microtime_end = microtime(1);
-				$microtime_total = $this->microtime_end - $this->microtime_start;
-				$render .= '<microtime_total>'.round($microtime_total, 5).'</microtime_total>'."\r\n";
-				if(function_exists('memory_get_peak_usage')) {
-					$render .= '<memory_get_peak_usage>'.number_format(memory_get_peak_usage(), 0, '.', ' ').'</memory_get_peak_usage>'."\r\n";
-				}
-				if(function_exists('memory_get_usage')) {
-					$render .= '<memory_get_usage>'.number_format(memory_get_usage(), 0, '.', ' ').'</memory_get_usage>'."\r\n";
-				}
-				foreach($this->queries as $query) {
-					$render .= '<query><![CDATA['.$query.']]></query>'."\r\n";
-				}
+				$render .= $this->render_debug();
 			}
 			$render .= '</wall369>'."\r\n";
 		}
@@ -208,16 +208,6 @@ class wall369 {
 		$render .= '<timezone>'.$this->get['t'].'</timezone>';
 		return $render;
 	}
-	function action_geolocation() {
-		$render = '';
-		$this->set_get('latitude', '', 'numeric');
-		$this->set_get('longitude', '', 'numeric');
-		$_SESSION['wall369']['latitude'] = $this->get['latitude'];
-		$_SESSION['wall369']['longitude'] = $this->get['longitude'];
-		$render .= '<latitude>'.$this->get['latitude'].'</latitude>';
-		$render .= '<longitude>'.$this->get['longitude'].'</longitude>';
-		return $render;
-	}
 	function action_loginform() {
 		$render = '';
 		$render .= '<content><![CDATA[';
@@ -288,8 +278,8 @@ class wall369 {
 	}
 	function action_post() {
 		$render = '';
-		$query = 'INSERT INTO '.TABLE_POST.' (user_id, post_content, post_latitude, post_longitude, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, NULLIF(:post_latitude, \'\'), NULLIF(:post_longitude, \'\'), NULLIF(:post_httpuseragent, \'\'), NULLIF(:post_remoteaddr, \'\'), :post_datecreated)';
-		$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_latitude'=>$_SESSION['wall369']['latitude'], ':post_longitude'=>$_SESSION['wall369']['longitude'], ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
+		$query = 'INSERT INTO '.TABLE_POST.' (user_id, post_content, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, NULLIF(:post_httpuseragent, \'\'), NULLIF(:post_remoteaddr, \'\'), :post_datecreated)';
+		$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
 		if($prepare) {
 			$post_id = $this->pdo->lastinsertid();
 			$photo_types = array('image/gif', 'image/jpeg', 'image/png');
@@ -389,8 +379,8 @@ class wall369 {
 		$render = '';
 		$post = $this->get_post($this->get['post_id']);
 		if($post) {
-			$query = 'INSERT INTO '.TABLE_COMMENT.' (user_id, post_id, comment_content, comment_latitude, comment_longitude, comment_httpuseragent, comment_remoteaddr, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, NULLIF(:comment_latitude, \'\'), NULLIF(:comment_longitude, \'\'), NULLIF(:comment_httpuseragent, \'\'), NULLIF(:comment_remoteaddr, \'\'), :comment_datecreated)';
-			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_latitude'=>$_SESSION['wall369']['latitude'], ':comment_longitude'=>$_SESSION['wall369']['longitude'], ':comment_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':comment_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':comment_datecreated'=>date('Y-m-d H:i:s')));
+			$query = 'INSERT INTO '.TABLE_COMMENT.' (user_id, post_id, comment_content, comment_httpuseragent, comment_remoteaddr, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, NULLIF(:comment_httpuseragent, \'\'), NULLIF(:comment_remoteaddr, \'\'), :comment_datecreated)';
+			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':comment_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':comment_datecreated'=>date('Y-m-d H:i:s')));
 			if($prepare) {
 				$comment_id = $this->pdo->lastinsertid();
 				$render .= '<status>comment_insert</status>';
@@ -543,6 +533,7 @@ class wall369 {
 			$flt[] = 'post.post_id > :post_id_newest';
 			$parameters[':post_id_newest'] = $_SESSION['wall369']['post_id_newest'];
 		}
+		$parameters[':user_id'] = $this->user->user_id;
 		$query = $this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id ASC';
 		$prepare = $this->pdo_execute($query, $parameters);
 		if($prepare) {
@@ -582,7 +573,7 @@ class wall369 {
 	}
 	function get_post($post_id) {
 		$query = $this->post_query.' WHERE post.post_id = :post_id GROUP BY post.post_id';
-		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id));
+		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':user_id'=>$this->user->user_id));
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
@@ -657,6 +648,7 @@ class wall369 {
 			$flt[] = 'post.post_id < :post_id_oldest';
 			$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
 		}
+		$parameters[':user_id'] = $this->user->user_id;
 		$query = $this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id DESC LIMIT 0,'.LIMIT_POSTS;
 		$prepare = $this->pdo_execute($query, $parameters);
 		if($prepare) {
@@ -672,6 +664,7 @@ class wall369 {
 					$u++;
 				}
 				$flt = array();
+				$parameters = array();
 				$flt[] = '1';
 				$flt[] = 'post.post_id < :post_id_oldest';
 				$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
