@@ -231,6 +231,7 @@ class wall369 {
 		$ldap_connect = ldap_connect(LDAP_SERVER, LDAP_PORT);
 		if($ldap_connect && filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
 			ldap_set_option($ldap_connect, LDAP_OPT_PROTOCOL_VERSION, LDAP_PROTOCOL);
+			ldap_set_option($ldap_connect, LDAP_OPT_REFERRALS, 0); 
 			if(ldap_bind($ldap_connect, LDAP_ROOTDN, LDAP_ROOTPW)) {
 				$ldap_search = ldap_search($ldap_connect, LDAP_BASEDN, str_replace('[email]', $_POST['email'], LDAP_FILTER));
 				if($ldap_search) {
