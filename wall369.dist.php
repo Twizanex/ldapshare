@@ -302,7 +302,7 @@ class wall369 {
 			$post_id = $this->pdo->lastinsertid();
 			$photo_types = array('image/gif', 'image/jpeg', 'image/png');
 			if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0 && in_array($_FILES['photo_inputfile']['type'], $photo_types)) {
-				$photo_inputfile = $this->file_add('storage', 'photo_inputfile', 1, 1);
+				$photo_inputfile = $this->photo_add();
 				$data = array('photo_inputfile'=>$photo_inputfile);
 				$this->insert_photo($post_id, $data);
 			}
@@ -1149,29 +1149,35 @@ class wall369 {
 		}
 		return $date;
 	}
-	function file_add($folder, $key, $secure = 1, $yearfolder = 1) {
+	function photo_add() {
 		$newfile = '';
-		if(isset($_FILES[$key]) == 1 && $_FILES[$key]['error'] == 0) {
+		if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0) {
+			$folder = 'storage/';
 			if(is_dir($folder)) {
-				if(substr($folder, -1) != '/') {
-					$folder = $folder.'/';
+				$year = date('Y');
+				if(!is_dir($folder.$year)) {
+					mkdir($folder.$year);
+					copy('storage/index.php', $folder.$year.'/index.php');
 				}
-				if($yearfolder == 1) {
-					$year = date('Y');
-					if(!is_dir($folder.$year)) {
-						mkdir($folder.$year);
-						copy('storage/index.php', $folder.$year.'/index.php');
+				$year = $year.'/';
+				$newfile = $year.$this->string_generate(14, 1, 1, 0).'-'.$this->string_clean($_FILES['photo_inputfile']['name']);
+				move_uploaded_file($_FILES['photo_inputfile']['tmp_name'], $folder.$newfile);
+				if($_FILES['photo_inputfile']['type'] == 'image/jpeg') {
+					$filename = $folder.$newfile;
+					$width = 600;
+					$height = 600;
+					list($width_orig, $height_orig) = getimagesize($filename);
+					$ratio_orig = $width_orig / $height_orig;
+					if ($width/$height > $ratio_orig) {
+						$width = $height * $ratio_orig;
+					} else {
+						$height = $width / $ratio_orig;
 					}
-					$year = $year.'/';
-				} else {
-					$year = '';
+					$image = imagecreatetruecolor($width, $height);
+					$image_orig = imagecreatefromjpeg($filename);
+					imagecopyresampled($image, $image_orig, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
+					imagejpeg($image, $filename, 75);
 				}
-				if($secure == 1) {
-					$newfile = $year.$this->string_generate(14, 1, 1, 0).'-'.$this->string_clean($_FILES[$key]['name']);
-				} else {
-					$newfile = $year.$this->string_clean($_FILES[$key]['name']);
-				}
-				move_uploaded_file($_FILES[$key]['tmp_name'], $folder.$newfile);
 			}
 		}
 		return $newfile;
