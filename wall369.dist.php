@@ -52,19 +52,18 @@ class wall369 {
 			if($user) {
 				$_SESSION['wall369']['user_id'] = $user->user_id;
 			}
-		}
-		if(isset($_SESSION['wall369']['user_id']) == 1) {
+		} else if(isset($_SESSION['wall369']['user_id']) == 1) {
 			$this->user = $this->get_user_by_id($_SESSION['wall369']['user_id']);
-			$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
-			FROM '.TABLE_POST.' post
-			LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id
-			LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id
-			LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id
-			LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id
-			LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id
-			LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id
-			LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = :user_id';
 		}
+		$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
+		FROM '.TABLE_POST.' post
+		LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id
+		LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id
+		LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id
+		LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id
+		LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id
+		LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id
+		LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = :user_id';
 	}
 	function error_handler($e_type, $e_message, $e_file, $e_line) {
 		$this->render_error($e_type, $e_message, $e_file, $e_line);
@@ -127,11 +126,11 @@ class wall369 {
 			$render = '<?xml version="1.0" encoding="UTF-8"?>'."\r\n";
 			$render .= '<wall369>'."\r\n";
 			if(method_exists($this, 'action_'.$this->get['a'])) {
-				$this->header_http_status(200);
 				$actions_guest = array('islogged', 'loginform', 'login', 'timezone');
 				if(isset($_SESSION['wall369']['user_id']) == 0 && !in_array($this->get['a'], $actions_guest)) {
 					$this->header_http_status(403);
 				} else {
+					$this->header_http_status(200);
 					$render .= $this->{'action_'.$this->get['a']}();
 				}
 			} else {
@@ -314,7 +313,7 @@ class wall369 {
 				$data = array('address_title'=>$_POST['address_inputtext']);
 				$this->insert_address($post_id, $data);
 			}
-			$links = preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['status_textarea'], $matches);
+			preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['status_textarea'], $matches);
 			$matches = $matches[0];
 			if(count($matches) != 0) {
 				$matches = array_unique($matches);
@@ -870,7 +869,6 @@ class wall369 {
 			if($prepare) {
 				$rowCount = $prepare->rowCount();
 				if($rowCount > 0) {
-					$values = array();
 					$render .= '<div class="comment post_like" id="post_like_'.$post->post_id.'">';
 					$render .= '<div class="comment_display post_like_display">';
 					$render .= '<p>';
@@ -1024,7 +1022,7 @@ class wall369 {
 		return $render;
 	}
 	function render_content($text) {
-		$links = preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $text, $matches);
+		preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $text, $matches);
 		$matches = $matches[0];
 		if(count($matches) != 0) {
 			$matches = array_unique($matches);
@@ -1032,10 +1030,14 @@ class wall369 {
 				$text = str_replace($match, '<a href="'.$match.'" target="_blank">'.$match.'</a>', $text);
 			}
 		}
-
-		//$text = eregi_replace('(((f|ht){1}tp://)[-a-zA-Z0-9@:%_\+.~#?&//=]+)', '<a href="\\1" target="_blank"">\\1</a>', $text);
-		//$text = eregi_replace('([[:space:]()[{}])(www.[-a-zA-Z0-9@:%_\+.~#?&//=]+)', '\\1<a href="http://\\2" target="_blank">\\2</a>', $text);
-		//$text = eregi_replace('([_\.0-9a-z-]+@([0-9a-z][0-9a-z-]+\.)+[a-z]{2,3})', '<a href="mailto:\\1">\\1</a>', $text);
+		preg_match_all("/[a-z0-9]+([_\\.-][a-z0-9]+)*@([a-z0-9]+([\.-][a-z0-9]+)*)+\\.[a-z]{2,}/i", $text, $matches);
+		$matches = $matches[0];
+		if(count($matches) != 0) {
+			$matches = array_unique($matches);
+			foreach($matches as $match) {
+				$text = str_replace($match, '<a href="mailto:'.$match.'">'.$match.'</a>', $text);
+			}
+		}
 		return nl2br($text);
 	}
 	function render_datecreated($date) {
