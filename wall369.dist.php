@@ -1152,18 +1152,17 @@ class wall369 {
 	function photo_add() {
 		$newfile = '';
 		if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0) {
-			$folder = 'storage/';
+			$folder = 'storage';
 			if(is_dir($folder)) {
 				$year = date('Y');
-				if(!is_dir($folder.$year)) {
-					mkdir($folder.$year);
-					copy('storage/index.php', $folder.$year.'/index.php');
+				if(!is_dir($folder.'/'.$year)) {
+					mkdir($folder.'/'.$year);
+					copy($folder.'/index.php', $folder.'/'.$year.'/index.php');
 				}
-				$year = $year.'/';
-				$newfile = $year.$this->string_generate(14, 1, 1, 0).'-'.$this->string_clean($_FILES['photo_inputfile']['name']);
-				move_uploaded_file($_FILES['photo_inputfile']['tmp_name'], $folder.$newfile);
+				$newfile = $year.'/'.$this->string_generate(14, 1, 1, 0).'-'.$this->string_clean($_FILES['photo_inputfile']['name']);
+				move_uploaded_file($_FILES['photo_inputfile']['tmp_name'], $folder.'/'.$newfile);
 				if($_FILES['photo_inputfile']['type'] == 'image/jpeg') {
-					$filename = $folder.$newfile;
+					$filename = $folder.'/'.$newfile;
 					$width = 600;
 					$height = 600;
 					list($width_orig, $height_orig) = getimagesize($filename);
