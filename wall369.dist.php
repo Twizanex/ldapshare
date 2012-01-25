@@ -102,6 +102,7 @@ class wall369 {
 		$render = '';
 		$microtime_end = microtime(1);
 		$microtime_total = $microtime_end - $this->microtime_start;
+		$render .= "\r\n";
 		$render .= '<post_id_oldest>'.$_SESSION['wall369']['post_id_oldest'].'</post_id_oldest>'."\r\n";
 		$render .= '<post_id_newest>'.$_SESSION['wall369']['post_id_newest'].'</post_id_newest>'."\r\n";
 		$render .= '<comment_id_oldest>'.$_SESSION['wall369']['comment_id_oldest'].'</comment_id_oldest>'."\r\n";
@@ -573,6 +574,9 @@ class wall369 {
 				$render .= '<posts>';
 				$u = 0;
 				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
+					if($u == 0 && ($_SESSION['wall369']['post_id_oldest'] > $post->post_id || $_SESSION['wall369']['post_id_oldest'] == 0)) {
+						$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
+					}
 					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
 					$_SESSION['wall369']['post_id_newest'] = $post->post_id;
 					$u++;

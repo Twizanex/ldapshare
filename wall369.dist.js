@@ -93,19 +93,29 @@ function refresh_datecreated() {
 function refreshnew() {
 	data = {};
 	xml = ajax('index.php?a=refreshnew', data);
-	$(xml).find('post').each(function(){
-		post_id = $(this).attr('post_id');
-		content = $(this).text();
-		$('.postlist').prepend(content);
-		$('#post_' + post_id).addClass('post_fresh');
-	});
-	$(xml).find('comment').each(function(){
-		post_id = $(this).attr('post_id');
-		comment_id = $(this).attr('comment_id');
-		content = $(this).text();
-		$('#commentlist_' + post_id).find('.commentlist_display').append(content);
-		$('#comment_' + comment_id).addClass('comment_fresh');
-	});
+	count_post = $(xml).find('post').length;
+	if(count_post > 0) {
+		$('.post').removeClass('post_fresh');
+		$(xml).find('post').each(function(i){
+			post_id = $(this).attr('post_id');
+			content = $(this).text();
+			$('.postlist').prepend(content);
+			if(i == 0) {
+				$('#post_' + post_id).addClass('post_fresh');
+			}
+		});
+	}
+	count_comment = $(xml).find('comment').length;
+	if(count_comment > 0) {
+		$('.comment').removeClass('comment_fresh');
+		$(xml).find('comment').each(function(){
+			post_id = $(this).attr('post_id');
+			comment_id = $(this).attr('comment_id');
+			content = $(this).text();
+			$('#commentlist_' + post_id).find('.commentlist_display').append(content);
+			$('#comment_' + comment_id).addClass('comment_fresh');
+		});
+	}
 }
 function islogged_ok() {
 	$('#loginform').fadeOut(function() {

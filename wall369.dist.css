@@ -41,7 +41,8 @@ form{margin:0px;padding:0px;}
 #postform_photo_preview, #postform_address_preview{margin-top:10px;}
 .postform_preview{padding-left:60px;}
 .postlist{border-top:1px solid #dedede;margin-bottom:110px;margin-top:10px;}
-.post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
+.postlist .post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
+.postlist .post_fresh{border-bottom:1px solid #5B74A8;}
 .photolist{margin-top:10px;overflow:auto;}
 .photo{float:left;}
 .photo img{max-height:150px;max-width:150px;}
