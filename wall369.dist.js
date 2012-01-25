@@ -31,7 +31,7 @@ function set_positions() {
 	_width = $('#popin').width();
 	_height = $('#popin').height();
 	_top = document_top + 10;
-	_margin_left = (window_width - _width) / 2 - 10;// ?
+	_margin_left = (window_width - _width) / 2;// ?
 	$('#popin').css({'margin-left': _margin_left, 'top': _top});
 }
 function loading_hide() {

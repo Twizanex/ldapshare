@@ -348,8 +348,10 @@ class wall369 {
 	function action_postdelete() {
 		$render = '';
 		$render .= '<content><![CDATA[';
+		$render .= '<div class="popin_content">';
 		$render .= '<h2>'.$this->str[$this->language]['post_delete'].'</h2>';
 		$render .= '<p><a class="post_delete_confirm_action" data-post_id="'.$this->get['post_id'].'" href="?a=postdeleteconfirm&amp;post_id='.$this->get['post_id'].'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
+		$render .= '</div>';
 		$render .= ']]></content>';
 		return $render;
 	}
@@ -383,7 +385,6 @@ class wall369 {
 						$query = 'DELETE FROM '.TABLE_PHOTO.' WHERE post_id = :post_id';
 						$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
 					}
-
 					$render .= '<status>delete_post</status>';
 				}
 			} else {
@@ -425,8 +426,10 @@ class wall369 {
 	function action_commentdelete() {
 		$render = '';
 		$render .= '<content><![CDATA[';
+		$render .= '<div class="popin_content">';
 		$render .= '<h2>'.$this->str[$this->language]['comment_delete'].'</h2>';
 		$render .= '<p><a class="comment_delete_confirm_action" data-comment_id="'.$this->get['comment_id'].'" href="?a=commentdeleteconfirm&amp;comment_id='.$this->get['comment_id'].'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
+		$render .= '</div>';
 		$render .= ']]></content>';
 		return $render;
 	}

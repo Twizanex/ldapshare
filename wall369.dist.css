@@ -10,10 +10,11 @@ strong{font-weight:bold;}
 form{margin:0px;padding:0px;}
 #wall369{margin:auto;position:relative;width:600px;}
 #popin{display:none;position:absolute;width:600px;z-index:200;}
-#popin_display{background-color:#FFFFFF;border:1px solid #555555;text-align:center;}
+#popin_display{text-align:center;}
+.popin_content{background-color:#FFFFFF;}
 #popin_display h2{background-color:#6D84B4;color:#FFFFFF;font-size:14px;font-weight:bold;margin:0px;padding:5px 10px;position:relative;}
 #popin_display h3{border-bottom:1px solid #d9d9d9;color:#000000;font-size:11px;font-weight:bold;margin:5px 10px;padding-bottom:5px;position:relative;}
-#popin_display p{margin:5px 10px;text-align:center;}
+#popin_display p{padding:15px 10px;text-align:center;}
 #loading{display:none;position:absolute;z-index:300;}
 #mask{background-color:#000000;display:none;height:3540px;left:0px;position:absolute;top:0px;width:5630px;z-index:100;}
 .comment_fresh{border-left:1px solid #5B74A8;}
