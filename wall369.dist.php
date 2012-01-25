@@ -46,6 +46,8 @@ class wall369 {
 		if($this->get['a'] == 'index') {
 			$_SESSION['wall369']['post_id_oldest'] = 0;
 			$_SESSION['wall369']['post_id_newest'] = 0;
+			$_SESSION['wall369']['comment_id_oldest'] = 0;
+			$_SESSION['wall369']['comment_id_newest'] = 0;
 		}
 		if(isset($_SESSION['wall369']['user_id']) == 0 && isset($_COOKIE['user_token']) == 1) {
 			$user = $this->get_user_by_token($_COOKIE['user_token']);
@@ -100,6 +102,10 @@ class wall369 {
 		$render = '';
 		$microtime_end = microtime(1);
 		$microtime_total = $microtime_end - $this->microtime_start;
+		$render .= '<post_id_oldest>'.$_SESSION['wall369']['post_id_oldest'].'</post_id_oldest>'."\r\n";
+		$render .= '<post_id_newest>'.$_SESSION['wall369']['post_id_newest'].'</post_id_newest>'."\r\n";
+		$render .= '<comment_id_oldest>'.$_SESSION['wall369']['comment_id_oldest'].'</comment_id_oldest>'."\r\n";
+		$render .= '<comment_id_newest>'.$_SESSION['wall369']['comment_id_newest'].'</comment_id_newest>'."\r\n";
 		$render .= '<microtime_total>'.round($microtime_total, 5).'</microtime_total>'."\r\n";
 		if(function_exists('memory_get_peak_usage')) {
 			$render .= '<memory_get_peak_usage>'.number_format(memory_get_peak_usage(), 0, '.', ' ').'</memory_get_peak_usage>'."\r\n";
@@ -281,6 +287,8 @@ class wall369 {
 		setcookie('user_token', NULL, NULL, '/');
 		$_SESSION['wall369']['post_id_oldest'] = 0;
 		$_SESSION['wall369']['post_id_newest'] = 0;
+		$_SESSION['wall369']['comment_id_oldest'] = 0;
+		$_SESSION['wall369']['comment_id_newest'] = 0;
 		return $render;
 	}
 	function action_postform() {
@@ -301,6 +309,7 @@ class wall369 {
 		$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
 		if($prepare) {
 			$post_id = $this->pdo->lastinsertid();
+			$render .= '<status>post_insert</status>';
 			$photo_types = array('image/gif', 'image/jpeg', 'image/png');
 			if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0 && in_array($_FILES['photo_inputfile']['type'], $photo_types)) {
 				$photo_inputfile = $this->photo_add();
@@ -333,7 +342,6 @@ class wall369 {
 				}
 			}
 		}
-		$render .= $this->action_refreshnew();
 		return $render;
 	}
 	function action_postdelete() {
@@ -403,10 +411,6 @@ class wall369 {
 			if($prepare) {
 				$comment_id = $this->pdo->lastinsertid();
 				$render .= '<status>comment_insert</status>';
-				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
-				$render .= '<content><![CDATA[';
-				$render .= $this->render_comment($this->get_comment_by_id($comment_id));
-				$render .= ']]></content>';
 			}
 		} else {
 			$render .= '<status>post_deleted</status>';
@@ -506,6 +510,10 @@ class wall369 {
 		$flt = array();
 		$parameters = array();
 		$flt[] = '1';
+		if(isset($_SESSION['wall369']['post_id_oldest']) == 1 && $_SESSION['wall369']['post_id_oldest'] != 0) {
+			$flt[] = 'post.post_id >= :post_id_oldest';
+			$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
+		}
 		$flt[] = 'post.post_datecreated LIKE :today_limit';
 		$parameters[':today_limit'] = $this->date_day.'%';
 		$query = 'SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id';
@@ -525,6 +533,10 @@ class wall369 {
 		$flt = array();
 		$parameters = array();
 		$flt[] = '1';
+		if(isset($_SESSION['wall369']['comment_id_oldest']) == 1 && $_SESSION['wall369']['comment_id_oldest'] != 0) {
+			$flt[] = 'comment.comment_id >= :comment_id_oldest';
+			$parameters[':comment_id_oldest'] = $_SESSION['wall369']['comment_id_oldest'];
+		}
 		$flt[] = 'comment.comment_datecreated LIKE :today_limit';
 		$parameters[':today_limit'] = $this->date_day.'%';
 		$query = 'SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id';
@@ -567,6 +579,24 @@ class wall369 {
 			}
 		} else {
 			$this->pdo_error($prepare);
+		}
+		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id > :comment_id_newest AND comment.post_id >= :post_id_oldest GROUP BY comment.comment_id';
+		$prepare = $this->pdo_execute($query, array(':comment_id_newest'=>$_SESSION['wall369']['comment_id_newest'], ':post_id_oldest'=>$_SESSION['wall369']['post_id_oldest']));
+		if($prepare) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$u = 0;
+				while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
+					if($u == 0 && ($_SESSION['wall369']['comment_id_oldest'] > $comment->comment_id || $_SESSION['wall369']['comment_id_oldest'] == 0)) {
+						$_SESSION['wall369']['comment_id_oldest'] = $comment->comment_id;
+					}
+					$render .= '<comment post_id="'.$comment->post_id.'" comment_id="'.$comment->comment_id.'"><![CDATA['.$this->render_comment($comment).']]></comment>';
+					if($_SESSION['wall369']['comment_id_newest'] < $comment->comment_id || $_SESSION['wall369']['comment_id_newest'] == 0) {
+						$_SESSION['wall369']['comment_id_newest'] = $comment->comment_id;
+					}
+					$u++;
+				}
+			}
 		}
 		return $render;
 	}
@@ -685,7 +715,7 @@ class wall369 {
 			if($rowCount > 0) {
 				$u = 0;
 				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-					if($u == 0) {
+					if($u == 0 && ($_SESSION['wall369']['post_id_newest'] < $post->post_id || $_SESSION['wall369']['post_id_newest'] == 0)) {
 						$_SESSION['wall369']['post_id_newest'] = $post->post_id;
 					}
 					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
@@ -815,8 +845,16 @@ class wall369 {
 			if($prepare) {
 				$rowCount = $prepare->rowCount();
 				if($rowCount > 0) {
+					$u = 0;
 					while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
+						if($u == 0 && ($_SESSION['wall369']['comment_id_oldest'] > $comment->comment_id || $_SESSION['wall369']['comment_id_oldest'] == 0)) {
+							$_SESSION['wall369']['comment_id_oldest'] = $comment->comment_id;
+						}
 						$render .= $this->render_comment($comment);
+						if($_SESSION['wall369']['comment_id_newest'] < $comment->comment_id || $_SESSION['wall369']['comment_id_newest'] == 0) {
+							$_SESSION['wall369']['comment_id_newest'] = $comment->comment_id;
+						}
+						$u++;
 					}
 				}
 			}

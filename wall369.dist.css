@@ -16,6 +16,7 @@ form{margin:0px;padding:0px;}
 #popin_display p{margin:5px 10px;text-align:center;}
 #loading{display:none;position:absolute;z-index:300;}
 #mask{background-color:#000000;display:none;height:3540px;left:0px;position:absolute;top:0px;width:5630px;z-index:100;}
+.comment_fresh{border-left:1px solid #5B74A8;}
 .post_thumb{float:left;width:50px;}
 .post_thumb img{width:50px;}
 .post_text{float:right;width:540px;}

@@ -90,13 +90,21 @@ function refresh_datecreated() {
 		});
 	});
 }
-function refresh_new() {
+function refreshnew() {
 	data = {};
 	xml = ajax('index.php?a=refreshnew', data);
 	$(xml).find('post').each(function(){
 		post_id = $(this).attr('post_id');
 		content = $(this).text();
 		$('.postlist').prepend(content);
+		$('#post_' + post_id).addClass('post_fresh');
+	});
+	$(xml).find('comment').each(function(){
+		post_id = $(this).attr('post_id');
+		comment_id = $(this).attr('comment_id');
+		content = $(this).text();
+		$('#commentlist_' + post_id).find('.commentlist_display').append(content);
+		$('#comment_' + comment_id).addClass('comment_fresh');
 	});
 }
 function islogged_ok() {
@@ -335,17 +343,16 @@ $(document).ready(function() {
 					dataType: 'xml',
 					processData: false,
 					success: function(xml) {
-						$(xml).find('post').each(function(){
-							post_id = $(this).attr('post_id');
-							content = $(this).text();
-							$('.postlist').prepend(content);
-						});
-						$('#status_textarea').attr('value', '');
-						$('#link_inputtext').attr('value', 'http://');
-						$('#address_inputtext').attr('value', '');
-						$('#photo_inputfile').attr('value', '');
-						$('#postform_photo_preview').html('');
-						$('#postform_address_preview').html('');
+						status = $(xml).find('status').text();
+						if(status == 'post_insert') {
+							refreshnew();
+							$('#status_textarea').attr('value', '');
+							$('#link_inputtext').attr('value', 'http://');
+							$('#address_inputtext').attr('value', '');
+							$('#photo_inputfile').attr('value', '');
+							$('#postform_photo_preview').html('');
+							$('#postform_address_preview').html('');
+						}
 					},
 					type: 'POST',
 					url: action
@@ -365,7 +372,7 @@ $(document).ready(function() {
 			content = $(xml).find('content').text();
 			status = $(xml).find('status').text();
 			if(status == 'comment_insert') {
-				$('#commentlist_' + post_id).find('.commentlist_display').append(content);
+				refreshnew();
 				$(this).find('.textarea').attr('value', '');
 			} else if(status == 'post_deleted') {
 				$('#post_' + post_id).html(content);
@@ -431,5 +438,5 @@ $(document).ready(function() {
 		islogged_ko();
 	}
 	setInterval('refresh_datecreated()', 60000 * 1);
-	setInterval('refresh_new()', 60000 * 1);
+	setInterval('refreshnew()', 60000 * 1);
 });
