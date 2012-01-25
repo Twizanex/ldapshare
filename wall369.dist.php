@@ -573,11 +573,8 @@ class wall369 {
 				$render .= '<posts>';
 				$u = 0;
 				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-					if($u == 0 && ($_SESSION['wall369']['post_id_newest'] < $post->post_id || $_SESSION['wall369']['post_id_newest'] == 0)) {
-						$_SESSION['wall369']['post_id_newest'] = $post->post_id;
-					}
 					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
-					$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
+					$_SESSION['wall369']['post_id_newest'] = $post->post_id;
 					$u++;
 				}
 				$render .= '</posts>';
