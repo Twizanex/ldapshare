@@ -304,6 +304,15 @@ $(document).ready(function() {
 			$('#post_' + post_id).html(content);
 		}
 	});
+	$('.likelist_action').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		post_id = $(this).data('post_id');
+		data = {};
+		xml = ajax(href, data);
+		content = $(xml).find('content').text();
+		$('#post_like_render_' + post_id).html(content);
+	});
 	$('#loginform form').live('submit', function(e) {
 		e.preventDefault();
 		action = $(this).attr('action');

@@ -102,7 +102,6 @@ class wall369 {
 		$render = '';
 		$microtime_end = microtime(1);
 		$microtime_total = $microtime_end - $this->microtime_start;
-		$render .= "\r\n";
 		$render .= '<post_id_oldest>'.$_SESSION['wall369']['post_id_oldest'].'</post_id_oldest>'."\r\n";
 		$render .= '<post_id_newest>'.$_SESSION['wall369']['post_id_newest'].'</post_id_newest>'."\r\n";
 		$render .= '<comment_id_oldest>'.$_SESSION['wall369']['comment_id_oldest'].'</comment_id_oldest>'."\r\n";
@@ -124,9 +123,9 @@ class wall369 {
 			$this->header_http_status(200);
 			header('content-type: text/html; charset=UTF-8');
 			if(file_exists('wall369.tpl')) {
-				$render = file_get_contents('wall369.tpl');
+				$render = file_get_contents('wall369.tpl')."\r\n";
 			} else {
-				$render = file_get_contents('wall369.dist.tpl');
+				$render = file_get_contents('wall369.dist.tpl')."\r\n";
 			}
 		} else {
 			header('content-type: text/xml; charset=UTF-8');
@@ -138,7 +137,7 @@ class wall369 {
 					$this->header_http_status(403);
 				} else {
 					$this->header_http_status(200);
-					$render .= $this->{'action_'.$this->get['a']}();
+					$render .= $this->{'action_'.$this->get['a']}()."\r\n";
 				}
 			} else {
 				$this->header_http_status(404);
@@ -463,7 +462,7 @@ class wall369 {
 				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 				$render .= '<content><![CDATA[';
 				$post = $this->get_post_by_id($this->get['post_id']);
-				$render .= $this->render_like($post);
+				$render .= $this->render_like($post, 0);
 				$render .= ']]></content>';
 			}
 		} else {
@@ -486,7 +485,7 @@ class wall369 {
 				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 				$render .= '<content><![CDATA[';
 				$post = $this->get_post_by_id($this->get['post_id']);
-				$render .= $this->render_like($post);
+				$render .= $this->render_like($post, 0);
 				$render .= ']]></content>';
 			}
 		} else {
@@ -496,6 +495,15 @@ class wall369 {
 			$render .= '<p>Post deleted</p>';
 			$render .= ']]></content>';
 		}
+		return $render;
+	}
+	function action_likelist() {
+		$render = '';
+		$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
+		$render .= '<content><![CDATA[';
+		$post = $this->get_post_by_id($this->get['post_id']);
+		$render .= $this->render_like($post, 1);
+		$render .= ']]></content>';
 		return $render;
 	}
 	function action_photozoom() {
@@ -511,6 +519,7 @@ class wall369 {
 	}
 	function action_refreshdatecreated() {
 		$render = '';
+		$date_day_utc = date('Y-m-d');
 		$flt = array();
 		$parameters = array();
 		$flt[] = '1';
@@ -519,7 +528,7 @@ class wall369 {
 			$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
 		}
 		$flt[] = 'post.post_datecreated LIKE :today_limit';
-		$parameters[':today_limit'] = $this->date_day.'%';
+		$parameters[':today_limit'] = $date_day_utc.'%';
 		$query = 'SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id';
 		$prepare = $this->pdo_execute($query, $parameters);
 		if($prepare) {
@@ -542,7 +551,7 @@ class wall369 {
 			$parameters[':comment_id_oldest'] = $_SESSION['wall369']['comment_id_oldest'];
 		}
 		$flt[] = 'comment.comment_datecreated LIKE :today_limit';
-		$parameters[':today_limit'] = $this->date_day.'%';
+		$parameters[':today_limit'] = $date_day_utc.'%';
 		$query = 'SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id';
 		$prepare = $this->pdo_execute($query, $parameters);
 		if($prepare) {
@@ -799,7 +808,7 @@ class wall369 {
 		$render .= '</p>';
 		$render .= '<div class="commentlist" id="commentlist_'.$post->post_id.'">';
 		$render .= '<div id="post_like_render_'.$post->post_id.'">';
-		$render .= $this->render_like($post);
+		$render .= $this->render_like($post, 0);
 		$render .= '</div>';
 		$render .= '<div class="commentlist_display">';
 		if($post->count_comment > 0) {
@@ -899,7 +908,7 @@ class wall369 {
 		$render .= '</div>';
 		return $render;
 	}
-	function render_like($post) {
+	function render_like($post, $all) {
 		$render = '';
 		if($post->post_countlike != 0) {
 			if($post->post_countlike == 4) {
@@ -907,7 +916,7 @@ class wall369 {
 			} else {
 				$display_limit = 3;
 			}
-			if($post->post_countlike > $display_limit) {
+			if($post->post_countlike > $display_limit && $all == 0) {
 				$min = $post->post_countlike - $display_limit;
 				$limit = ' LIMIT '.$min.', '.$display_limit;
 			} else {
@@ -932,7 +941,7 @@ class wall369 {
 						if($post->post_countlike != 1) {
 							if($u == $rowCount && $rowCount < $post->post_countlike) {
 								$diff = $post->post_countlike - $rowCount;
-								$render .=  ' '.$this->str[$this->language]['and'].' <a id="'.$post->post_id.'" class="others_like" href="#">'.sprintf($this->str[$this->language]['others'], $diff).'</a> ';
+								$render .=  ' '.$this->str[$this->language]['and'].' <a class="likelist_action" data-post_id="'.$post->post_id.'" id="'.$post->post_id.'" href="?a=likelist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['others'], $diff).'</a> ';
 							} elseif($u == $rowCount - 1 && $rowCount == $post->post_countlike) {
 								$render .=  ' '.$this->str[$this->language]['and'].' ';
 							} elseif($u < $rowCount) {
@@ -1176,26 +1185,15 @@ class wall369 {
 			} else {
 				$date = date($format, strtotime($date));
 			}
-			if(strstr($format, 'l') && isset($this->str[$this->language]['date_l']) == 1) {
-				$ref = $this->str[$this->language]['date_l'];
-				$date = str_replace(array_keys($ref), array_values($ref), $date);
-			}
-			if(strstr($format, 'D') && isset($this->str[$this->language]['date_D']) == 1) {
-				$ref = $this->str[$this->language]['date_D'];
-				$date = str_replace(array_keys($ref), array_values($ref), $date);
-			}
-			if(strstr($format, 'jS') && isset($this->str[$this->language]['date_jS']) == 1) {
-				$ref = $this->str[$this->language]['date_jS'];
-				$ref = array_reverse($ref, 1);
-				$date = str_replace(array_keys($ref), array_values($ref), $date);
-			}
-			if(strstr($format, 'F') && isset($this->str[$this->language]['date_F']) == 1) {
-				$ref = $this->str[$this->language]['date_F'];
-				$date = str_replace(array_keys($ref), array_values($ref), $date);
-			}
-			if(strstr($format, 'M') && isset($this->str[$this->language]['date_M']) == 1) {
-				$ref = $this->str[$this->language]['date_M'];
-				$date = str_replace(array_keys($ref), array_values($ref), $date);
+			$formats = array('l', 'D', 'jS', 'F', 'M');
+			foreach($formats as $k) {
+				if(strstr($format, $k) && isset($this->str[$this->language]['date_'.$k]) == 1) {
+					$ref = $this->str[$this->language]['date_'.$k];
+					if($k == 'jS') {
+						$ref = array_reverse($ref, 1);
+					}
+					$date = str_replace(array_keys($ref), array_values($ref), $date);
+				}
 			}
 		}
 		return $date;
