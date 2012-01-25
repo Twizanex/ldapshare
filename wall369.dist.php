@@ -199,7 +199,9 @@ class wall369 {
 	}
 	function action_islogged() {
 		$render = '';
-		if(isset($_SESSION['wall369']['user_id']) == 1 && isset($_COOKIE['user_token']) == 1 && $this->get_user_by_token($_COOKIE['user_token'])) {
+		if(DEMO == 1) {
+			$render .= '<status>ok</status>';
+		} else if(isset($_SESSION['wall369']['user_id']) == 1 && isset($_COOKIE['user_token']) == 1 && $this->get_user_by_token($_COOKIE['user_token'])) {
 			$render .= '<status>ok</status>';
 		} else {
 			$render .= '<status>ko</status>';
