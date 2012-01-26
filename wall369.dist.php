@@ -36,12 +36,13 @@ class wall369 {
 		$this->set_get('post_id', '', 'numeric');
 		$this->set_get('comment_id', '', 'numeric');
 		$this->set_get('photo_id', '', 'numeric');
+		$this->queries = array();
 		try {
-			$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
+			$options = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8', PDO::ATTR_PERSISTENT => 1);
+			$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, $options);
 		} catch(PDOException $e) {
 			trigger_error($e->getMessage());
 		}
-		$this->queries = array();
 		if(DEMO == 1 && isset($_SESSION['wall369']['user_id']) == 0) {
 			$_SESSION['wall369']['user_id'] = rand(1, 100);
 		}
@@ -269,6 +270,7 @@ class wall369 {
 					}
 				}
 			}
+			ldap_unbind($ldap_connect);
 		}
 		$render .= '<status>'.$status.'</status>';
 		return $render;
