@@ -1,8 +1,7 @@
-*{border:none;font-size:12px;font-style:normal;font-weight:normal;margin:0px;padding:0px;vertical-align:baseline;}
+*{border:none;font-size:13px;font-style:normal;font-weight:normal;margin:0px;padding:0px;vertical-align:baseline;}
 body, html{background-color:#ffffff;}
-body{color:#444444;direction:ltr;font-family:arial,sans-serif;font-size:12px;line-height:15px;margin:10px 0px;text-align:left;}
-a:link, a:visited{color:#3B5998;text-decoration:none;}
-a:hover{text-decoration:underline;}
+body{color:#444444;direction:ltr;font-family:arial,sans-serif;font-size:13px;line-height:15px;margin:10px 0px;text-align:left;}
+a:link, a:visited{color:#3B5998;}
 img{vertical-align:middle;}
 p{clear:both;margin:0px 0px 5px 0px;}
 em{color:#000000;font-style:italic;}
@@ -11,13 +10,12 @@ form{margin:0px;padding:0px;}
 #wall369{margin:auto;position:relative;width:600px;}
 #popin{display:none;position:absolute;width:600px;z-index:200;}
 #popin_display{text-align:center;}
-.popin_content{background-color:#FFFFFF;}
+.popin_content{background-color:#EDEFF4;border:1px solid #D2D9E7;}
 #popin_display h2{background-color:#6D84B4;color:#FFFFFF;font-size:14px;font-weight:bold;margin:0px;padding:5px 10px;position:relative;text-align:left;}
 #popin_display h3{border-bottom:1px solid #d9d9d9;color:#000000;font-size:11px;font-weight:bold;margin:5px 10px;padding-bottom:5px;position:relative;}
 #popin_display p{padding:15px 10px;text-align:center;}
 #popin_display p a:link,#popin_display p a:visited{font-size:14px;}
 #loading{display:none;position:absolute;z-index:300;}
-#mask{background-color:#000000;display:none;height:3540px;left:0px;position:absolute;top:0px;width:5630px;z-index:100;}
 .comment_fresh{border-left:1px solid #5B74A8;}
 .post_thumb{float:left;width:50px;}
 .post_thumb img{width:50px;}
@@ -33,11 +31,11 @@ form{margin:0px;padding:0px;}
 .comment_text{float:right;margin:5px 10px 0px 0px;width:480px;}
 #postform_detail{text-align:right;}
 #postform .textarea, .comment_form .textarea{border:1px solid #999999;height:50px;min-height:50px;padding:2px 5px;resize:vertical;width:470px;}
-#postform .textarea{width:570px;}
-#loginform .inputtext, #loginform .inputpassword, #postform .inputtext{border:1px solid #999999;padding:3px 5px;width:570px;}
+#postform .textarea{width:568px;}
+#loginform .inputtext, #loginform .inputpassword, #postform .inputtext{border:1px solid #999999;padding:3px 5px;width:568px;}
 #loginform form p, #postform form p{background-position:left 2px;background-repeat:no-repeat;padding-left:20px;position:relative;}
 #postform .form_link{background-image:url(medias/icon_link.png);}
-#postform form p a:link, #postform form p a:visited{right:0px;position:absolute;top:3px;}
+#postform form p a:link, #postform form p a:visited{right:2px;position:absolute;top:3px;}
 #postform .form_address{background-image:url(medias/icon_address.png);}
 #postform .form_photo{background-image:url(medias/icon_photo.png);}
 #postform_photo_preview img{max-height:150px;max-width:150px;}
@@ -90,9 +88,9 @@ form{margin:0px;padding:0px;}
 .link_text_full{width:260px;}
 .comment_thumb{display:none;}
 .comment_text{width:240px;}
-#postform .textarea, .comment_form .textarea{width:230px;}
-#postform .textarea{width:270px;}
-#loginform .inputtext, #loginform .inputpassword, #postform .inputtext{width:270px;}
+.comment_form .textarea{width:230px;}
+#postform .textarea{width:268px;}
+#loginform .inputtext, #loginform .inputpassword, #postform .inputtext{width:268px;}
 #postform_photo_preview img{max-height:100px;max-width:100px;}
 .photo img{max-height:100px;max-width:100px;}
 #popin_display img{max-height:300px;max-width:300px;}

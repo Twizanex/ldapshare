@@ -19,10 +19,8 @@ function ajax(url, data) {
 }
 function set_positions() {
 	document_top = $(document).scrollTop();
-	document_height = $(document).height();
 	window_width = $(window).width();
 	window_height = $(window).height();
-	$('#mask').css({'height': document_height, 'width': window_width});
 	_width = $('#loading').width();
 	_height = $('#loading').height();
 	_top = document_top + (window_height / 2) - (_height / 2);
@@ -30,8 +28,8 @@ function set_positions() {
 	$('#loading').css({'margin-left': _margin_left, 'top': _top});
 	_width = $('#popin').width();
 	_height = $('#popin').height();
-	_top = document_top + 10;
-	_margin_left = (window_width - _width) / 2;// ?
+	_top = document_top + (window_height / 2) - (_height / 2);
+	_margin_left = (window_width - _width) / 2;
 	$('#popin').css({'margin-left': _margin_left, 'top': _top});
 }
 function loading_hide() {
@@ -40,35 +38,26 @@ function loading_hide() {
 function loading_show() {
 	$('#loading').show();
 }
-function mask_hide() {
-	$('#mask').fadeOut('slow');
-}
-function mask_show() {
-	set_positions();
-	$('#mask').css({'opacity': 0.7});
-	$('#mask').fadeIn(800);
-}
 function popin_hide() {
-	mask_hide();
 	$('#popin').fadeOut('slow', function() {
 		$('#popin_display').html('');
+		$('#wall369').animate({'opacity': 1}, 400);
 	});
 }
 function popin_show(href) {
-	if($('#mask').is(':visible')) {
-	} else {
-		mask_show();
-	}
 	loading_show();
-	data = {};
-	xml = ajax(href, data);
-	content = $(xml).find('content').text();
-	$('#popin_display').html(content);
-	loading_hide();
-	if($('#popin').is(':visible')) {
-	} else {
-		$('#popin').fadeIn(1200);
-	}
+	$('#wall369').animate({'opacity': 0.2}, 400, function() {
+		data = {};
+		xml = ajax(href, data);
+		content = $(xml).find('content').text();
+		$('#popin_display').html(content);
+		set_positions();
+		loading_hide();
+		if($('#popin').is(':visible')) {
+		} else {
+			$('#popin').fadeIn(1200);
+		}
+	});
 }
 function refresh_datecreated() {
 	data = {};
@@ -171,10 +160,6 @@ $(document).ready(function() {
 		if(keycode == 27) {
 			popin_hide();
 		}
-	});
-	$('#mask').live('click', function(event) {
-		event.preventDefault();
-		popin_hide();
 	});
 	$('.popin_hide').live('click', function(event) {
 		event.preventDefault();
