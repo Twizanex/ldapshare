@@ -772,7 +772,7 @@ class wall369 {
 		} else if(GRAVATAR == 1) {
 			$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($post->user_email)).'?rating='.GRAVATAR_RATING.'&size=50&default='.GRAVATAR_DEFAULT.'">';
 		} else {
-			$render .= '<img alt="" src="medias/default_mediasmall.gif">';
+			$render .= '<img alt="" src="medias/avatar.png">';
 		}
 		$render .= '</div>';
 		$render .= '<div class="post_text">';
@@ -821,7 +821,7 @@ class wall369 {
 		} else if(GRAVATAR == 1) {
 			$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($this->user->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
 		} else {
-			$render .= '<img alt="" src="medias/default_mediasmall.gif">';
+			$render .= '<img alt="" src="medias/avatar.png">';
 		}
 		$render .= '</div>';
 		$render .= '<div class="comment_text">';
@@ -887,7 +887,7 @@ class wall369 {
 		} else if(GRAVATAR == 1) {
 			$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($comment->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
 		} else {
-			$render .= '<img alt="" src="medias/default_mediasmall.gif">';
+			$render .= '<img alt="" src="medias/avatar.png">';
 		}
 		$render .= '</div>';
 		$render .= '<div class="comment_text">';
