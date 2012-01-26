@@ -35,14 +35,14 @@ form{margin:0px;padding:0px;}
 #postform .textarea, .comment_form .textarea{border:1px solid #999999;height:50px;min-height:50px;padding:2px 5px;resize:vertical;width:470px;}
 #postform .textarea{width:570px;}
 #loginform .inputtext, #loginform .inputpassword, #postform .inputtext{border:1px solid #999999;padding:3px 5px;width:570px;}
-#loginform p, #postform p{background-position:left 2px;background-repeat:no-repeat;padding-left:20px;}
+#loginform form p, #postform form p{background-position:left 2px;background-repeat:no-repeat;padding-left:20px;position:relative;}
 #postform .form_link{background-image:url(medias/icon_link.png);}
-#postform .form_address{background-image:url(medias/icon_address.png);position:relative;}
-#postform .form_address a:link, #postform .form_address a:visited{right:0px;position:absolute;top:2px;}
+#postform form p a:link, #postform form p a:visited{right:0px;position:absolute;top:3px;}
+#postform .form_address{background-image:url(medias/icon_address.png);}
 #postform .form_photo{background-image:url(medias/icon_photo.png);}
 #postform_photo_preview img{max-height:150px;max-width:150px;}
 #postform_photo_preview, #postform_address_preview{margin-top:10px;}
-.postform_preview{padding-left:60px;}
+.postform_preview{}
 .postlist{border-top:1px solid #dedede;margin-bottom:110px;margin-top:10px;}
 .postlist .post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
 .postlist .post_fresh{border-bottom:1px solid #5B74A8;}
@@ -51,7 +51,6 @@ form{margin:0px;padding:0px;}
 .photo img{max-height:150px;max-width:150px;}
 #popin_display img{max-height:600px;max-width:600px;}
 .address_display img{width:540px;}
-#postform_address_preview img{width:540px;}
 .photolist, .addresslist, .linklist{clear:both;margin-left:40px;margin-top:10px;}
 .photolist_display, .address_display, .link_display{border-top:1px solid #dedede;margin-left:20px;overflow:auto;padding-top:10px}
 .photolist, .address, .link{overflow:auto;}

@@ -359,6 +359,7 @@ $(document).ready(function() {
 							$('#address_inputtext').attr('value', '');
 							$('#photo_inputfile').attr('value', '');
 							$('#postform_photo_preview').html('');
+							$('#postform_link_preview').html('');
 							$('#postform_address_preview').html('');
 						}
 					},
@@ -396,7 +397,7 @@ $(document).ready(function() {
                 $('#postform_photo_preview').html('');
                 reader = new FileReader();
                 reader.onload = function(event) {
-					$('#postform_photo_preview').html('<img alt="" id="photo_inputfile_preview" src="' + event.target.result + '">');
+					$('#postform_photo_preview').html('<div class="photolist"><div class="photolist_display"><div class="photo" id="photo_0"><div class="photo_display"><img alt="" id="photo_inputfile_preview" src="' + event.target.result + '"></div></div></div></div>');
                     $('#postform_photo_preview').fadeIn();
                 };
                 reader.readAsDataURL(file);
@@ -414,13 +415,36 @@ $(document).ready(function() {
 		link_inputtext = $(this).val();
 		if(link_inputtext == '') {
 			$(this).attr('value', 'http://');
+			$('#postform_link_preview').html('');
         }
+    });
+    $('.form_link a').live('click', function(e) {
+		e.preventDefault();
+		$('#loading').show();
+		link_inputtext = $('#link_inputtext').val();
+		if(link_inputtext != '' && link_inputtext != 'http://') {
+			href = $(this).attr('href');
+			data = {};
+			data['link_inputtext'] = link_inputtext;
+			xml = ajax(href, data);
+			content = $(xml).find('content').text();
+			$('#postform_link_preview').html(content);
+        }
+		$('#loading').hide();
     });
     $('#address_inputtext').live('blur', function() {
 		address_inputtext = $(this).val();
+		if(address_inputtext == '') {
+			$('#postform_address_preview').html('');
+        }
+    });
+    $('.form_address a').live('click', function(e) {
+		e.preventDefault();
+		$('#loading').show();
+		address_inputtext = $('#address_inputtext').val();
 		if(address_inputtext != '') {
 			address_inputtext = encodeURIComponent(address_inputtext);
-			$('#postform_address_preview').html('<img src="http://maps.googleapis.com/maps/api/staticmap?center=' + address_inputtext + '&markers=color:red|' + address_inputtext + '&zoom=15&size=540x200&sensor=false" alt="">');
+			$('#postform_address_preview').html('<div class="addresslist"><div class="address" id="address_0"><div class="address_display"><img src="http://maps.googleapis.com/maps/api/staticmap?center=' + address_inputtext + '&markers=color:red|' + address_inputtext + '&zoom=15&size=540x200&sensor=false" alt=""></div></div></div>');
         }
 		$('#loading').hide();
     });

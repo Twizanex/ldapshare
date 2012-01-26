@@ -312,7 +312,7 @@ class wall369 {
 				$data = array('photo_inputfile'=>$photo_inputfile);
 				$this->insert_photo($post_id, $data);
 			}
-			if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
+			if(isset($_POST['link_inputtext']) == 1 && filter_var($_POST['link_inputtext'], FILTER_VALIDATE_URL)) {
 				$data = $this->analyze_link($_POST['link_inputtext']);
 				$this->insert_link($post_id, $data);
 			}
@@ -326,12 +326,12 @@ class wall369 {
 				$matches = array_unique($matches);
 				foreach($matches as $match) {
 					$analyze = 1;
-					if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
+					if(isset($_POST['link_inputtext']) == 1 && filter_var($_POST['link_inputtext'], FILTER_VALIDATE_URL)) {
 						if($match == $_POST['link_inputtext']) {
 							$analyze = 0;
 						}
 					}
-					if($analyze == 1) {
+					if($analyze == 1 && filter_var($match, FILTER_VALIDATE_URL)) {
 						$data = $this->analyze_link($match);
 						$this->insert_link($post_id, $data);
 					}
@@ -500,6 +500,28 @@ class wall369 {
 		$post = $this->get_post_by_id($this->get['post_id']);
 		$render .= $this->render_like($post, 1);
 		$render .= ']]></content>';
+		return $render;
+	}
+	function action_linkpreview() {
+		$render = '';
+		if(isset($_POST['link_inputtext']) == 1 && filter_var($_POST['link_inputtext'], FILTER_VALIDATE_URL)) {
+			$data = $this->analyze_link($_POST['link_inputtext']);
+			$link = new stdClass();
+			$link->link_url = $data['url'];
+			$link->link_id = 0;
+			$link->link_image = $data['image'];
+			$link->link_icon = $data['icon'];
+			$link->link_title = $data['title'];
+			$link->link_content = $data['description'];
+			$link->link_video = $data['video'];
+			$link->link_videowidth = $data['videowidth'];
+			$link->link_videoheight = $data['videoheight'];
+			$render .= '<content><![CDATA[';
+			$render .= '<div class="linklist">';
+			$render .= $this->render_link($link);
+			$render .= '</div>';
+			$render .= ']]></content>';
+		}
 		return $render;
 	}
 	function action_photozoom() {
@@ -704,14 +726,14 @@ class wall369 {
 		}
 		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">';
 		$render .= '<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>';
-		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"></p>';
+		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"><a href="?a=linkpreview"><img src="medias/icon_preview.png" alt=""></a></p>';
 		$render .= '<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""><a href="#"><img src="medias/icon_preview.png" alt=""></a></p>';
 		$render .= '<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>';
 		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['share'].'"></p>';
+		$render .= '</form>';
 		$render .= '<div class="postform_preview" id="postform_link_preview"></div>';
 		$render .= '<div class="postform_preview" id="postform_address_preview"></div>';
 		$render .= '<div class="postform_preview" id="postform_photo_preview"></div>';
-		$render .= '</form>';
 		return $render;
 	}
 	function render_postlist() {
@@ -1300,97 +1322,103 @@ class wall369 {
 	}
 	function analyze_link($link) {
 		$data = array('url'=>$link, 'icon'=>'', 'image'=>'', 'video'=>'', 'videotype'=>'', 'videowidth'=>'', 'videoheight'=>'', 'title'=>'', 'description'=>'', 'charsetserver'=>'', 'charsetclient'=>'');
-		$headers = get_headers($link, 1);
-		if(isset($headers['Location']) == 1) {
-			if(is_array($headers['Location'])) {
-				$link = $headers['Location'][0];
-			} else {
-				$link = $headers['Location'];
-			}
-			$data['url'] = $link;
-			$origin_status = $headers[0];
+		if(filter_var($link, FILTER_VALIDATE_URL)) {
 			$headers = get_headers($link, 1);
-			$headers[0] = $headers[0].' ('.$origin_status.')';
-			if(isset($headers['Content-Type']) == 1 && is_array($headers['Content-Type'])) {
-				$headers['Content-Type'] = $headers['Content-Type'][0];
+			if(isset($headers['Location']) == 1) {
+				if(is_array($headers['Location'])) {
+					$link = $headers['Location'][0];
+				} else {
+					$link = $headers['Location'];
+				}
+				$data['url'] = $link;
+				$origin_status = $headers[0];
+				$headers = get_headers($link, 1);
+				$headers[0] = $headers[0].' ('.$origin_status.')';
+				if(isset($headers['Content-Type']) == 1 && is_array($headers['Content-Type'])) {
+					$headers['Content-Type'] = $headers['Content-Type'][0];
+				}
 			}
-		}
-		$headers = array_unique($headers);
-		$keys = array();
-		foreach($headers as $k => $v) {
-			$keys['headers-'.strtolower($k)] = $v;
-		}
-		$opts = array('http'=>array('header'=>'User-Agent: '.$_SERVER['HTTP_USER_AGENT']."\r\n"));
-		$context = stream_context_create($opts);
-		$content = file_get_contents($link, false, $context);
-		$content = str_replace("\t", '', $content);
-		$content_flat = str_replace("\r\n", '', $content);
-		$content_flat = str_replace("\n", '', $content_flat);
-		$pattern_one = array();
-		$pattern_one['title'] = "|<[tT][iI][tT][lL][eE](.*)>(.*)<\/[tT][iI][tT][lL][eE]>|U";
-		$pattern_one['charsetclient'] = "|<[mM][eE][tT][aA](.*)[cC][hH][aA][rR][sS][eE][tT]=[\"'](.*)[\"'](.*)>|U";
-		foreach($pattern_one as $k => $pattern) {
-			$matches = array();
-			preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
-			foreach($matches as $match) {
-				$keys[$k] = trim($match[2]);
+			$headers = array_unique($headers);
+			$keys = array();
+			foreach($headers as $k => $v) {
+				$keys['headers-'.strtolower($k)] = $v;
 			}
-		}
-		$pattern_multi = array();
-		$pattern_multi["|<[lL][iI][nN][kK](.*)[hH][rR][eE][fF]=[\"'](.*)[\"'](.*)>|U"] = array("|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U", "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U");
-		$pattern_multi["|<[mM][eE][tT][aA](.*)[cC][oO][nN][tT][eE][nN][tT]=\"(.*)\"(.*)>|U"] = array("|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U", "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U", "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U");
-		foreach($pattern_multi as $pattern => $pattern_sub) {
-			$matches = array();
-			preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
-			foreach($matches as $match) {
-				$value = $match[2];
-				foreach($pattern_sub as $pattern) {
-					$matches_sub = array();
-					preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
-					foreach($matches_sub as $match_sub) {
-						$keys[strtolower($match_sub[2])] = $value;
-					}
-					$matches_sub = array();
-					preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
-					foreach($matches_sub as $match_sub) {
-						$keys[strtolower($match_sub[2])] = $value;
+			$opts = array('http'=>array('header'=>'User-Agent: '.$_SERVER['HTTP_USER_AGENT']."\r\n"));
+			$context = stream_context_create($opts);
+			$content = file_get_contents($link, false, $context);
+			$content = str_replace("\t", '', $content);
+			$content_flat = str_replace("\r\n", '', $content);
+			$content_flat = str_replace("\n", '', $content_flat);
+			$pattern_one = array();
+			$pattern_one['title'] = "|<[tT][iI][tT][lL][eE](.*)>(.*)<\/[tT][iI][tT][lL][eE]>|U";
+			$pattern_one['charsetclient'] = "|<[mM][eE][tT][aA](.*)[cC][hH][aA][rR][sS][eE][tT]=[\"'](.*)[\"'](.*)>|U";
+			foreach($pattern_one as $k => $pattern) {
+				$matches = array();
+				preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
+				foreach($matches as $match) {
+					$keys[$k] = trim($match[2]);
+				}
+			}
+			$pattern_multi = array();
+			$pattern_multi["|<[lL][iI][nN][kK](.*)[hH][rR][eE][fF]=[\"'](.*)[\"'](.*)>|U"] = array("|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U", "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U");
+			$pattern_multi["|<[mM][eE][tT][aA](.*)[cC][oO][nN][tT][eE][nN][tT]=\"(.*)\"(.*)>|U"] = array("|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U", "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U", "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U");
+			foreach($pattern_multi as $pattern => $pattern_sub) {
+				$matches = array();
+				preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
+				foreach($matches as $match) {
+					$value = $match[2];
+					foreach($pattern_sub as $pattern) {
+						$matches_sub = array();
+						preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
+						foreach($matches_sub as $match_sub) {
+							$keys[strtolower($match_sub[2])] = $value;
+						}
+						$matches_sub = array();
+						preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
+						foreach($matches_sub as $match_sub) {
+							$keys[strtolower($match_sub[2])] = $value;
+						}
 					}
 				}
 			}
-		}
-		foreach($keys as $key => $value) {
-			if($key == 'image_src') {
-				$data['image'] = $value;
-			} else if($key == 'shortcut icon') {
-				$data['icon'] = $value;
-			} else if($key == 'headers-content-type' && stristr($value, 'charset')) {
-				$data['charsetserver'] = substr($value, strpos($value, '=') + 1);
-				$data['contentserver'] = substr($value, 0, strpos($value, ';'));
-			} else if($key == 'content-type' && stristr($value, 'charset')) {
-				$data['charsetclient'] = substr($value, strpos($value, '=') + 1);
-				$data['contentclient'] = substr($value, 0, strpos($value, ';'));
-			} else if(substr($key, 0, 3) == 'og:' || substr($key, 0, 3) == 'fb:') {
-				$key = substr($key, 3);
-				$key = str_replace(':', '', $key);
-				$key = str_replace('_', '', $key);
-				$data[$key] = $value;
-			} else {
-				$data[$key] = $value;
+			foreach($keys as $key => $value) {
+				if(!is_array($value)) {
+					if($key == 'image_src') {
+						$data['image'] = $value;
+					} else if($key == 'shortcut icon') {
+						$data['icon'] = $value;
+					} else if($key == 'headers-content-type' && stristr($value, 'charset')) {
+						$data['charsetserver'] = substr($value, strpos($value, '=') + 1);
+						$data['contentserver'] = substr($value, 0, strpos($value, ';'));
+					} else if($key == 'content-type' && stristr($value, 'charset')) {
+						$data['charsetclient'] = substr($value, strpos($value, '=') + 1);
+						$data['contentclient'] = substr($value, 0, strpos($value, ';'));
+					} else if(substr($key, 0, 3) == 'og:' || substr($key, 0, 3) == 'fb:') {
+						$key = substr($key, 3);
+						$key = str_replace(':', '', $key);
+						$key = str_replace('_', '', $key);
+						$data[$key] = $value;
+					} else {
+						$data[$key] = $value;
+					}
+				}
 			}
+			if($data['icon'] != '' && substr($data['icon'], 0, 4) != 'http' && substr($data['icon'], 0, 5) != 'data:') {
+				$url = parse_url($data['url']);
+				$data['icon'] = $url['scheme'].'://'.$url['host'].'/'.$data['icon'];
+			}
+			if(strtolower($data['charsetserver']) != 'utf-8' && strtolower($data['charsetclient']) != 'utf-8') {
+				$data['title'] = utf8_encode($data['title']);
+				$data['description'] = utf8_encode($data['description']);
+			}
+			$data_sanityze = array();
+			foreach($data as $k => $v) {
+				$data_sanityze[$k] = strip_tags($v);
+			}
+			return $data_sanityze;
+		} else {
+			return $data;
 		}
-		if($data['icon'] != '' && substr($data['icon'], 0, 4) != 'http' && substr($data['icon'], 0, 5) != 'data:') {
-			$url = parse_url($data['url']);
-			$data['icon'] = $url['scheme'].'://'.$url['host'].'/'.$data['icon'];
-		}
-		if(strtolower($data['charsetserver']) != 'utf-8' && strtolower($data['charsetclient']) != 'utf-8') {
-			$data['title'] = utf8_encode($data['title']);
-			$data['description'] = utf8_encode($data['description']);
-		}
-		$data_sanityze = array();
-		foreach($data as $k => $v) {
-			$data_sanityze[$k] = strip_tags($v);
-		}
-		return $data_sanityze;
 	}
 }
 ?>
