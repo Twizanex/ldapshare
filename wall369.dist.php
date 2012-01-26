@@ -2,7 +2,8 @@
 class wall369 {
 	function __construct() {
 		$this->microtime_start = microtime(1);
-		$this->queries = array();
+		session_set_cookie_params(0, '/', '', $this->is_https(), 1);
+		session_start();
 		set_error_handler(array($this, 'error_handler'));
 		register_shutdown_function(array($this, 'shutdown_function'));
 		if(isset($_SESSION['wall369']) == 0) {
@@ -40,6 +41,7 @@ class wall369 {
 		} catch(PDOException $e) {
 			trigger_error($e->getMessage());
 		}
+		$this->queries = array();
 		if(DEMO == 1 && isset($_SESSION['wall369']['user_id']) == 0) {
 			$_SESSION['wall369']['user_id'] = rand(1, 100);
 		}
@@ -67,6 +69,13 @@ class wall369 {
 		LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id
 		LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = :user_id';
 	}
+	function is_https() {
+		if(isset($_SERVER['HTTPS']) == 1 && strtolower($_SERVER['HTTPS']) == 'on') {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
 	function error_handler($e_type, $e_message, $e_file, $e_line) {
 		$this->render_error($e_type, $e_message, $e_file, $e_line);
 	}
@@ -79,7 +88,7 @@ class wall369 {
 		}
 	}
 	function render_error($e_type, $e_message, $e_file, $e_line) {
-		$this->header_http_status(500);
+		header($_SERVER['SERVER_PROTOCOL'].' 500 Internal Server Error');
 		header('content-type: text/xml; charset=UTF-8');
 		$render = '<?xml version="1.0" encoding="UTF-8"?>'."\r\n";
 		$render .= '<wall369>'."\r\n";
@@ -120,7 +129,7 @@ class wall369 {
 	}
 	function render() {
 		if($this->get['a'] == 'index') {
-			$this->header_http_status(200);
+			header($_SERVER['SERVER_PROTOCOL'].' 200 OK');
 			header('content-type: text/html; charset=UTF-8');
 			if(file_exists('wall369.tpl')) {
 				$render = file_get_contents('wall369.tpl')."\r\n";
@@ -134,13 +143,13 @@ class wall369 {
 			if(method_exists($this, 'action_'.$this->get['a'])) {
 				$actions_guest = array('islogged', 'loginform', 'login', 'timezone');
 				if(isset($_SESSION['wall369']['user_id']) == 0 && !in_array($this->get['a'], $actions_guest)) {
-					$this->header_http_status(403);
+					header($_SERVER['SERVER_PROTOCOL'].' 403 Forbidden');
 				} else {
-					$this->header_http_status(200);
+					header($_SERVER['SERVER_PROTOCOL'].' 200 OK');
 					$render .= $this->{'action_'.$this->get['a']}()."\r\n";
 				}
 			} else {
-				$this->header_http_status(404);
+				header($_SERVER['SERVER_PROTOCOL'].' 404 Not Found');
 			}
 			if(DEBUG == 1) {
 				$render .= $this->render_debug();
@@ -155,16 +164,6 @@ class wall369 {
 			echo $render;
 		}
 		exit(0);
-	}
-	function header_http_status($status) {
-		$http_status = array(200=>'OK', 401=>'Unauthorized', 403=>'Forbidden', 404=>'Not Found', 500=>'Internal Server Error', 503=>'Service Unavailable');
-		if(array_key_exists($status, $http_status)) {
-			$protocol = $_SERVER['SERVER_PROTOCOL'];
-			if($protocol != 'HTTP/1.0' && $protocol != 'HTTP/1.1') {
-				$protocol = 'HTTP/1.0';
-			}
-			header($protocol.' '.$status.' '.$http_status[$status]);
-		}
 	}
 	function set_get($key, $default, $type) {
 		$this->get[$key] = $default;
@@ -262,15 +261,10 @@ class wall369 {
 								}
 							}
 							$_SESSION['wall369']['user_id'] = $user_id;
-							if(isset($_SERVER['HTTPS']) == 1 && $_SERVER['HTTPS'] == 'on') {
-								$secure = 1;
-							} else {
-								$secure = 0;
-							}
 							$user_token = $this->string_generate(40, 1, 1, 1);
 							$query = 'UPDATE '.TABLE_USER.' SET user_token = :user_token WHERE user_id = :user_id';
 							$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id, ':user_token'=>$user_token));
-							setcookie('user_token', $user_token, time()+3600*24*30, '/', '', $secure, 1);
+							setcookie('user_token', $user_token, time()+3600*24*30, '/', '', $this->is_https(), 1);
 						}
 					}
 				}
@@ -387,7 +381,7 @@ class wall369 {
 					$render .= '<status>delete_post</status>';
 				}
 			} else {
-				$this->header_http_status(403);
+				header($_SERVER['SERVER_PROTOCOL'].' 403 Forbidden');
 				$render .= '<status>not_your_post</status>';
 			}
 		} else {
@@ -443,7 +437,7 @@ class wall369 {
 					$render .= '<status>delete_comment</status>';
 				}
 			} else {
-				$this->header_http_status(403);
+				header($_SERVER['SERVER_PROTOCOL'].' 403 Forbidden');
 				$render .= '<status>not_your_comment</status>';
 			}
 		} else {
@@ -603,6 +597,7 @@ class wall369 {
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
+				$render .= '<comments>';
 				$u = 0;
 				while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
 					if($u == 0 && ($_SESSION['wall369']['comment_id_oldest'] > $comment->comment_id || $_SESSION['wall369']['comment_id_oldest'] == 0)) {
@@ -614,6 +609,7 @@ class wall369 {
 					}
 					$u++;
 				}
+				$render .= '</comments>';
 			}
 		}
 		return $render;
@@ -731,6 +727,7 @@ class wall369 {
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
+				$render .= '<posts>';
 				$u = 0;
 				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
 					if($u == 0 && ($_SESSION['wall369']['post_id_newest'] < $post->post_id || $_SESSION['wall369']['post_id_newest'] == 0)) {
@@ -740,6 +737,7 @@ class wall369 {
 					$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
 					$u++;
 				}
+				$render .= '</posts>';
 				$flt = array();
 				$parameters = array();
 				$flt[] = '1';
@@ -1300,7 +1298,6 @@ class wall369 {
 	}
 	function analyze_link($link) {
 		$data = array('url'=>$link, 'icon'=>'', 'image'=>'', 'video'=>'', 'videotype'=>'', 'videowidth'=>'', 'videoheight'=>'', 'title'=>'', 'description'=>'', 'charsetserver'=>'', 'charsetclient'=>'');
-
 		$headers = get_headers($link, 1);
 		if(isset($headers['Location']) == 1) {
 			if(is_array($headers['Location'])) {
@@ -1317,82 +1314,59 @@ class wall369 {
 			}
 		}
 		$headers = array_unique($headers);
-
+		$keys = array();
+		foreach($headers as $k => $v) {
+			$keys['headers-'.strtolower($k)] = $v;
+		}
 		$opts = array('http'=>array('header'=>'User-Agent: '.$_SERVER['HTTP_USER_AGENT']."\r\n"));
 		$context = stream_context_create($opts);
 		$content = file_get_contents($link, false, $context);
 		$content = str_replace("\t", '', $content);
 		$content_flat = str_replace("\r\n", '', $content);
 		$content_flat = str_replace("\n", '', $content_flat);
-
-		$keys = array();
-
-		$pattern = "|<[tT][iI][tT][lL][eE](.*)>(.*)<\/[tT][iI][tT][lL][eE]>|U";
-		$matches = array();
-		preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
-		foreach($matches as $match) {
-			$keys['title'] = trim($match[2]);
+		$pattern_one = array();
+		$pattern_one['title'] = "|<[tT][iI][tT][lL][eE](.*)>(.*)<\/[tT][iI][tT][lL][eE]>|U";
+		$pattern_one['charsetclient'] = "|<[mM][eE][tT][aA](.*)[cC][hH][aA][rR][sS][eE][tT]=[\"'](.*)[\"'](.*)>|U";
+		foreach($pattern_one as $k => $pattern) {
+			$matches = array();
+			preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
+			foreach($matches as $match) {
+				$keys[$k] = trim($match[2]);
+			}
 		}
-
-		$pattern = "|<[mM][eE][tT][aA](.*)[cC][hH][aA][rR][sS][eE][tT]=[\"'](.*)[\"'](.*)>|U";
-		$matches = array();
-		preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
-		foreach($matches as $match) {
-			$keys['charsetclient'] = strtolower($match[2]);
-		}
-
-		$pattern = "|<[lL][iI][nN][kK](.*)[hH][rR][eE][fF]=[\"'](.*)[\"'](.*)>|U";
-		$matches = array();
-		preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
-		foreach($matches as $match) {
-			$value = $match[2];
-			$pattern_sub = array();
-			$pattern_sub[] = "|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U";
-			$pattern_sub[] = "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U";
-			foreach($pattern_sub as $pattern) {
-				$matches_sub = array();
-				preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
-				foreach($matches_sub as $match_sub) {
-					$keys[strtolower($match_sub[2])] = $value;
-				}
-				$matches_sub = array();
-				preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
-				foreach($matches_sub as $match_sub) {
-					$keys[strtolower($match_sub[2])] = $value;
+		$pattern_multi = array();
+		$pattern_multi["|<[lL][iI][nN][kK](.*)[hH][rR][eE][fF]=[\"'](.*)[\"'](.*)>|U"] = array("|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U", "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U");
+		$pattern_multi["|<[mM][eE][tT][aA](.*)[cC][oO][nN][tT][eE][nN][tT]=\"(.*)\"(.*)>|U"] = array("|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U", "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U", "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U");
+		foreach($pattern_multi as $pattern => $pattern_sub) {
+			$matches = array();
+			preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
+			foreach($matches as $match) {
+				$value = $match[2];
+				foreach($pattern_sub as $pattern) {
+					$matches_sub = array();
+					preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
+					foreach($matches_sub as $match_sub) {
+						$keys[strtolower($match_sub[2])] = $value;
+					}
+					$matches_sub = array();
+					preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
+					foreach($matches_sub as $match_sub) {
+						$keys[strtolower($match_sub[2])] = $value;
+					}
 				}
 			}
 		}
-
-		$pattern = "|<[mM][eE][tT][aA](.*)[cC][oO][nN][tT][eE][nN][tT]=\"(.*)\"(.*)>|U";
-		$matches = array();
-		preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
-		foreach($matches as $match) {
-			$value = $match[2];
-			$pattern_sub = array();
-			$pattern_sub[] = "|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U";
-			$pattern_sub[] = "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U";
-			$pattern_sub[] = "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U";
-			foreach($pattern_sub as $pattern) {
-				$matches_sub = array();
-				preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
-				foreach($matches_sub as $match_sub) {
-					$keys[strtolower($match_sub[2])] = $value;
-				}
-				$matches_sub = array();
-				preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
-				foreach($matches_sub as $match_sub) {
-					$keys[strtolower($match_sub[2])] = $value;
-				}
-			}
-		}
-
 		foreach($keys as $key => $value) {
 			if($key == 'image_src') {
 				$data['image'] = $value;
 			} else if($key == 'shortcut icon') {
 				$data['icon'] = $value;
+			} else if($key == 'headers-content-type' && stristr($value, 'charset')) {
+				$data['charsetserver'] = substr($value, strpos($value, '=') + 1);
+				$data['contentserver'] = substr($value, 0, strpos($value, ';'));
 			} else if($key == 'content-type' && stristr($value, 'charset')) {
-				$data['charsetclient'] = strtolower(substr($value, strpos($value, '=') + 1));
+				$data['charsetclient'] = substr($value, strpos($value, '=') + 1);
+				$data['contentclient'] = substr($value, 0, strpos($value, ';'));
 			} else if(substr($key, 0, 3) == 'og:' || substr($key, 0, 3) == 'fb:') {
 				$key = substr($key, 3);
 				$key = str_replace(':', '', $key);
@@ -1406,12 +1380,7 @@ class wall369 {
 			$url = parse_url($data['url']);
 			$data['icon'] = $url['scheme'].'://'.$url['host'].'/'.$data['icon'];
 		}
-
-		if(isset($headers['Content-Type']) == 1 && stristr($headers['Content-Type'], 'charset')) {
-			$charset = strtolower(substr($headers['Content-Type'], strpos($headers['Content-Type'], '=') + 1));
-			$data['charsetserver'] = strtolower($charset);
-		}
-		if($data['charsetserver'] != 'utf-8' && $data['charsetclient'] != 'utf-8') {
+		if(strtolower($data['charsetserver']) != 'utf-8' && strtolower($data['charsetclient']) != 'utf-8') {
 			$data['title'] = utf8_encode($data['title']);
 			$data['description'] = utf8_encode($data['description']);
 		}

@@ -13,13 +13,6 @@ if(function_exists('date_default_timezone_set')) {
 if(function_exists('mb_internal_encoding')) {
 	mb_internal_encoding('UTF-8');
 }
-if(isset($_SERVER['HTTPS']) == 1 && strtolower($_SERVER['HTTPS']) == 'on') {
-	$secure = 1;
-} else {
-	$secure = 0;
-}
-session_set_cookie_params(0, '/', '', $secure, 1);
-session_start();
 if(file_exists('configuration.php')) {
 	include_once('configuration.php');
 } else {
