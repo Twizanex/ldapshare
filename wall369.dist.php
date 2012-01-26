@@ -90,7 +90,7 @@ class wall369 {
 	}
 	function render_error($e_type, $e_message, $e_file, $e_line) {
 		header($_SERVER['SERVER_PROTOCOL'].' 500 Internal Server Error');
-		header('content-type: text/xml; charset=UTF-8');
+		header('Content-Type: text/xml; charset=UTF-8');
 		$render = '<?xml version="1.0" encoding="UTF-8"?>'."\r\n";
 		$render .= '<wall369>'."\r\n";
 		if(DEBUG == 1) {
@@ -131,14 +131,14 @@ class wall369 {
 	function render() {
 		if($this->get['a'] == 'index') {
 			header($_SERVER['SERVER_PROTOCOL'].' 200 OK');
-			header('content-type: text/html; charset=UTF-8');
+			header('Content-Type: text/html; charset=UTF-8');
 			if(file_exists('wall369.tpl')) {
 				$render = file_get_contents('wall369.tpl')."\r\n";
 			} else {
 				$render = file_get_contents('wall369.dist.tpl')."\r\n";
 			}
 		} else {
-			header('content-type: text/xml; charset=UTF-8');
+			header('Content-Type: text/xml; charset=UTF-8');
 			$render = '<?xml version="1.0" encoding="UTF-8"?>'."\r\n";
 			$render .= '<wall369>'."\r\n";
 			if(method_exists($this, 'action_'.$this->get['a'])) {
@@ -265,7 +265,7 @@ class wall369 {
 							$user_token = $this->string_generate(40, 1, 1, 1);
 							$query = 'UPDATE '.TABLE_USER.' SET user_token = :user_token WHERE user_id = :user_id';
 							$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id, ':user_token'=>$user_token));
-							setcookie('user_token', $user_token, time()+3600*24*30, '/', '', $this->is_https(), 1);
+							setcookie('user_token', $user_token, time() + 3600 * 24 * 30, '/', '', $this->is_https(), 1);
 						}
 					}
 				}
@@ -413,7 +413,7 @@ class wall369 {
 			$render .= '<status>post_deleted</status>';
 			$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 			$render .= '<content><![CDATA[';
-			$render .= '<p>Post deleted</p>';
+			$render .= '<p>'.$this->str[$this->language]['post_deleted'].'</p>';
 			$render .= ']]></content>';
 		}
 		return $render;
@@ -465,7 +465,7 @@ class wall369 {
 			$render .= '<status>post_deleted</status>';
 			$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 			$render .= '<content><![CDATA[';
-			$render .= '<p>Post deleted</p>';
+			$render .= '<p>'.$this->str[$this->language]['post_deleted'].'</p>';
 			$render .= ']]></content>';
 		}
 		return $render;
@@ -488,7 +488,7 @@ class wall369 {
 			$render .= '<status>post_deleted</status>';
 			$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 			$render .= '<content><![CDATA[';
-			$render .= '<p>Post deleted</p>';
+			$render .= '<p>'.$this->str[$this->language]['post_deleted'].'</p>';
 			$render .= ']]></content>';
 		}
 		return $render;
@@ -959,14 +959,14 @@ class wall369 {
 						} else {
 							$username = $like->user_firstname.' '.$like->user_lastname;
 						}
-						$render .= '<span class="username" title="'.$this->date_transform($like->like_datecreated, $this->str[$this->language]['date_format']).'">'.$username.'</span>';
+						$render .= '<span class="username" title="'.$this->date_transform($like->like_datecreated).'">'.$username.'</span>';
 						if($post->post_countlike != 1) {
 							if($u == $rowCount && $rowCount < $post->post_countlike) {
 								$diff = $post->post_countlike - $rowCount;
 								$render .=  ' '.$this->str[$this->language]['and'].' <a class="likelist_action" data-post_id="'.$post->post_id.'" id="'.$post->post_id.'" href="?a=likelist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['others'], $diff).'</a> ';
-							} elseif($u == $rowCount - 1 && $rowCount == $post->post_countlike) {
+							} else if($u == $rowCount - 1 && $rowCount == $post->post_countlike) {
 								$render .=  ' '.$this->str[$this->language]['and'].' ';
-							} elseif($u < $rowCount) {
+							} else if($u < $rowCount) {
 								$render .= ', ';
 							}
 						}
@@ -1121,86 +1121,50 @@ class wall369 {
 		return nl2br($text);
 	}
 	function render_datecreated($date) {
-		list($datecreated, $timecreated) = explode(' ', $date);
-		$diff = $this->date_diff_days($this->date_day, $datecreated);
-		if($diff != 0) {
-			$mention = $this->date_diff_days_mention($diff);
-			if($diff == -1) {
-				$mention .= ' '.$this->str[$this->language]['at'].' '.substr($timecreated, 0, 5);
-			}
-		} else {
-			$diff = $this->date_diff_minutes($this->date_time, $timecreated);
-			$mention = $this->date_diff_minutes_mention($diff);
-		}
-		return '<span title="'.$this->date_transform($date, $this->str[$this->language]['date_format']).'">'.$mention.'</span>';
+		return '<span title="'.$this->date_transform($date).'">'.$this->date_mention($date).'</span>';
 	}
-	function date_diff_days($previous, $next) {
-		if($previous == '' || $next == '') {
-			return '';
-		} else {
+	function date_mention($date) {
+		$mention = '';
+		if($date != '') {
+			list($datecreated, $timecreated) = explode(' ', $date);
 			if(function_exists('date_create') && function_exists('date_diff')) {
-				$datetime1 = date_create($previous);
-				$datetime2 = date_create($next);
-				$interval = date_diff($datetime1, $datetime2);
-				return intval($interval->format('%R%d'));
+				$prev = date_create($datecreated);
+				$next = date_create($this->date_day);
+				$interval = date_diff($prev, $next);
+				$diff = $interval->format('%a');
 			} else {
-				$datetime1 = strtotime($previous);
-				$datetime2 = strtotime($next);
-				return ($datetime2 - $datetime1) / 3600 / 24;
+				$prev = strtotime($datecreated);
+				$next = strtotime($this->date_day);
+				$diff = ($next - $prev) / 3600 / 24;
 			}
-		}
-	}
-	function date_diff_days_mention($diff) {
-		$mention = '';
-		if($diff != '') {
 			if($diff == 0) {
-				$mention = $this->str[$this->language]['today'];
-			} elseif($diff == 1) {
-				$mention = $this->str[$this->language]['tomorrow'];
-			} elseif($diff == -1) {
-				$mention = $this->str[$this->language]['yesterday'];
-			} elseif(abs($diff) >= 730) {
-				$mention = sprintf($this->str[$this->language]['years_diff'], ceil(intval(abs($diff))/365));
-			} elseif(abs($diff) > 56) {
-				$mention = sprintf($this->str[$this->language]['months_diff'], ceil(intval(abs($diff))/28));
-			} elseif(abs($diff) >= 14) {
-				$mention = sprintf($this->str[$this->language]['weeks_diff'], ceil(intval(abs($diff))/7));
+				list($prev_h, $prev_m, $prev_s) = explode(':', $timecreated);
+				list($next_h, $next_m, $prev_s) = explode(':', $this->date_time);
+				$diff = ($next_h * 60 + $next_m) - ($prev_h * 60 + $prev_m);
+				if($diff <= 1) {
+					$mention = $this->str[$this->language]['now'];
+				} else if($diff >= 120) {
+					$mention = sprintf($this->str[$this->language]['hours_diff'], ceil($diff/60));
+				} else {
+					$mention = sprintf($this->str[$this->language]['minutes_diff'], $diff);
+				}
+			} else if($diff == 1) {
+				$mention = $this->str[$this->language]['yesterday'].' '.$this->str[$this->language]['at'].' '.substr($timecreated, 0, 5);
+			} else if($diff >= 730) {
+				$mention = sprintf($this->str[$this->language]['years_diff'], ceil($diff/365));
+			} else if($diff >= 60) {
+				$mention = sprintf($this->str[$this->language]['months_diff'], ceil($diff/30));
+			} else if($diff >= 14) {
+				$mention = sprintf($this->str[$this->language]['weeks_diff'], ceil($diff/7));
 			} else {
-				$mention = sprintf($this->str[$this->language]['days_diff'], intval(abs($diff)));
+				$mention = sprintf($this->str[$this->language]['days_diff'], $diff);
 			}
 		}
 		return $mention;
 	}
-	function date_diff_minutes($previous, $next) {
-		if($previous == '' || $next == '') {
-			return '';
-		} else {
-			list($prev_h, $prev_m, $prev_s) = explode(':', $previous);
-			$previous_total = $prev_h*60 + $prev_m;
-			list($next_h, $next_m, $prev_s) = explode(':', $next);
-			$next_total = $next_h*60 + $next_m;
-			$interval = ($next_total - $previous_total);
-			if($interval == 0) {
-				$interval = '0';
-			}
-			return $interval;
-		}
-	}
-	function date_diff_minutes_mention($diff) {
-		$mention = '';
-		if($diff != '') {
-			if(abs($diff) <= 1) {
-				$mention = $this->str[$this->language]['now'];
-			} elseif(abs($diff) >= 120) {
-				$mention = sprintf($this->str[$this->language]['hours_diff'], ceil(intval(abs($diff))/60));
-			} else {
-				$mention = sprintf($this->str[$this->language]['minutes_diff'], intval(abs($diff)));
-			}
-		}
-		return $mention;
-	}
-	function date_transform($date, $format) {
-		if($date != '' && $format != '') {
+	function date_transform($date) {
+		if($date != '') {
+			$format =  $this->str[$this->language]['date_format'];
 			if(function_exists('date_create') && function_exists('date_format')) {
 				$date = date_create($date);
 				$date = date_format($date, $format);

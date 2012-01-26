@@ -17,6 +17,7 @@ $this->str['en']['like_you'] = 'like this';
 $this->str['en']['confirm'] = 'Confirm';
 $this->str['en']['cancel'] = 'Cancel';
 $this->str['en']['post_delete'] = 'Post delete';
+$this->str['en']['post_deleted'] = 'Post deleted';
 $this->str['en']['comment_delete'] = 'Comment delete';
 $this->str['en']['view_all_comments'] = 'View all %1$s comments';
 $this->str['en']['date_format'] = 'l, F jS, Y, H:i';

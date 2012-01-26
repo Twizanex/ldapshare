@@ -358,9 +358,7 @@ $(document).ready(function() {
 							$('#link_inputtext').attr('value', 'http://');
 							$('#address_inputtext').attr('value', '');
 							$('#photo_inputfile').attr('value', '');
-							$('#postform_photo_preview').html('');
-							$('#postform_link_preview').html('');
-							$('#postform_address_preview').html('');
+							$('.postform_preview').html('');
 						}
 					},
 					type: 'POST',
