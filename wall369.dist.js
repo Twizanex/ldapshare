@@ -46,7 +46,7 @@ function popin_hide() {
 }
 function popin_show(href) {
 	loading_show();
-	$('#wall369').animate({'opacity': 0.2}, 400, function() {
+	$('#wall369').animate({'opacity': 0}, 400, function() {
 		data = {};
 		xml = ajax(href, data);
 		content = $(xml).find('content').text();
