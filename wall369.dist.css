@@ -30,7 +30,7 @@ form{margin:0px;padding:0px;}
 .comment_thumb img{width:30px;}
 .comment_text{float:right;margin:5px 10px 0px 0px;width:480px;}
 #postform_detail{text-align:right;}
-#postform .textarea, .comment_form .textarea{border:1px solid #999999;height:50px;min-height:50px;padding:2px 5px;resize:vertical;width:470px;}
+#postform .textarea, .commentform .textarea{border:1px solid #999999;height:50px;min-height:50px;padding:2px 5px;resize:vertical;width:470px;}
 #postform .textarea{width:568px;}
 #loginform .inputtext, #loginform .inputpassword, #postform .inputtext{border:1px solid #999999;padding:3px 5px;width:568px;}
 #loginform form p, #postform form p{background-position:left 2px;background-repeat:no-repeat;padding-left:20px;position:relative;}
@@ -40,7 +40,6 @@ form{margin:0px;padding:0px;}
 #postform .form_photo{background-image:url(medias/icon_photo.png);}
 #postform_photo_preview img{max-height:150px;max-width:150px;}
 #postform_photo_preview, #postform_address_preview{margin-top:10px;}
-.postform_preview{}
 .postlist{border-top:1px solid #dedede;margin-bottom:110px;margin-top:10px;}
 .postlist .post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
 .postlist .post_fresh{border-bottom:1px solid #5B74A8;}
@@ -67,14 +66,14 @@ form{margin:0px;padding:0px;}
 .post_like_display .username{font-weight:normal;}
 .post_text, .link_text, .comment_text{position:relative;text-align:justify;word-wrap:break-word;}
 .link_text{text-align:left;}
-.post_detail, .comment_detail{color:#999999;}
+.datecreated{color:#999999;}
 .delete_action{background-image:url("medias/icon_delete.png");background-repeat:no-repeat;height:15px;position:absolute;right:0px;top:0px;width:15px;}
 .delete_action:focus, .delete_action:hover{background-position:left -32px;}
 .delete_action:active{background-position:left -48px}
 #postform_detail a:link, #postform_detail a:visited, #popin_display a:link, #popin_display a:visited, .post_detail a:link, .post_detail a:visited, .comment_detail a:link, .comment_detail a:visited{color:#6B84B4;}
 .link_text, .comment_detail{font-size:11px;}
 .icon img{height:16px;width:16px;}
-.comment_form, .link_more, .unlike_inactive, .like_inactive{display:none;}
+.commentform, .link_more, .unlike_inactive, .like_inactive{display:none;}
 .inputsubmit{background-color:#5b74a8;color:#ffffff;cursor:pointer;font-size:14px;font-weight:bold;margin:0px;padding:1px 2px 2px;}
 @media only screen and (max-width:600px) {
 #wall369{width:300px;}
@@ -88,7 +87,7 @@ form{margin:0px;padding:0px;}
 .link_text_full{width:260px;}
 .comment_thumb{display:none;}
 .comment_text{width:240px;}
-.comment_form .textarea{width:230px;}
+.commentform .textarea{width:230px;}
 #postform .textarea{width:268px;}
 #loginform .inputtext, #loginform .inputpassword, #postform .inputtext{width:268px;}
 #postform_photo_preview img{max-height:100px;max-width:100px;}
@@ -96,7 +95,6 @@ form{margin:0px;padding:0px;}
 #popin_display img{max-height:300px;max-width:300px;}
 .address_display img{width:260px;}
 #postform_address_preview img{width:260px;}
-.postform_preview{padding-left:40px;}
 .post_detail{margin-left:40px;}
 .photolist, .addresslist, .linklist{margin-left:20px;}
 .commentlist{clear:both;margin:10px 0px 10px 40px;}

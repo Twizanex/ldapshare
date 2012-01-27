@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS `wall369_link` (
 `link_videowidth` int(10) unsigned DEFAULT NULL,
 `link_videoheight` int(10) unsigned DEFAULT NULL,
 `link_icon` varchar(255) DEFAULT NULL,
-`link_content` text,
+`link_description` text,
 `link_datecreated` datetime NOT NULL,
 PRIMARY KEY (`link_id`),
 KEY `post_id` (`post_id`)
@@ -75,7 +75,8 @@ CREATE TABLE IF NOT EXISTS `wall369_user` (
 `user_file` text,
 `user_token` char(40) DEFAULT NULL,
 `user_datecreated` datetime NOT NULL,
-PRIMARY KEY (`user_id`)
+PRIMARY KEY (`user_id`),
+KEY `user_email` (`user_email`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
 
 INSERT INTO `wall369_user` (`user_id`, `user_email`, `user_lastname`, `user_datecreated`) VALUES ('1', 'qoh.kkex@example.it', 'Kaley Cooper', NOW());

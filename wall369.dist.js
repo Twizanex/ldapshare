@@ -189,11 +189,11 @@ $(document).ready(function() {
 	$('.commentall_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		post_id = $(this).data('post_id');
 		data = {};
 		xml = ajax(href, data);
-		$('#comment_all_' + post_id).hide();
 		content = $(xml).find('content').text();
+		post_id = $(xml).find('post_id').text();
+		$('#comment_all_' + post_id).hide();
 		$('#post_' + post_id).find('.commentlist_display').prepend(content);
 	});
 	$('.comment_action').live('click', function(e) {
@@ -214,11 +214,11 @@ $(document).ready(function() {
 	$('.post_delete_confirm_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		post_id = $(this).data('post_id');
 		data = {};
 		xml = ajax(href, data);
 		content = $(xml).find('content').text();
 		status = $(xml).find('status').text();
+		post_id = $(xml).find('post_id').text();
 		if(status == 'delete_post') {
 			popin_hide();
 			$('#post_' + post_id).fadeOut();
@@ -234,11 +234,11 @@ $(document).ready(function() {
 	$('.comment_delete_confirm_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		comment_id = $(this).data('comment_id');
 		data = {};
 		xml = ajax(href, data);
 		content = $(xml).find('content').text();
 		status = $(xml).find('status').text();
+		comment_id = $(xml).find('comment_id').text();
 		if(status == 'delete_comment') {
 			popin_hide();
 			$('#comment_' + comment_id).fadeOut();
@@ -249,11 +249,11 @@ $(document).ready(function() {
 	$('.post_like_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		post_id = $(this).data('post_id');
 		data = {};
 		xml = ajax(href, data);
 		content = $(xml).find('content').text();
 		status = $(xml).find('status').text();
+		post_id = $(xml).find('post_id').text();
 		if(status == 'like_insert') {
 			$('#post_' + post_id).find('.post_detail .like').hide();
 			$('#post_' + post_id).find('.post_detail .unlike').show();
@@ -265,11 +265,11 @@ $(document).ready(function() {
 	$('.post_unlike_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		post_id = $(this).data('post_id');
 		data = {};
 		xml = ajax(href, data);
 		content = $(xml).find('content').text();
 		status = $(xml).find('status').text();
+		post_id = $(xml).find('post_id').text();
 		if(status == 'like_delete') {
 			$('#post_' + post_id).find('.post_detail .unlike').hide();
 			$('#post_' + post_id).find('.post_detail .like').show();
@@ -281,10 +281,10 @@ $(document).ready(function() {
 	$('.likelist_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
-		post_id = $(this).data('post_id');
 		data = {};
 		xml = ajax(href, data);
 		content = $(xml).find('content').text();
+		post_id = $(xml).find('post_id').text();
 		$('#post_like_render_' + post_id).html(content);
 	});
 	$('#loginform form').live('submit', function(e) {
@@ -352,7 +352,7 @@ $(document).ready(function() {
 			}
 		}
 	});
-	$('.comment_form_form').live('submit', function(e) {
+	$('.commentform form').live('submit', function(e) {
 		e.preventDefault();
 		action = $(this).attr('action');
 		comment_textarea = $(this).find('.textarea').val()
@@ -372,7 +372,7 @@ $(document).ready(function() {
 		}
 	});
     $('#photo_inputfile').live('change', function() {
-		$('#loading').show();
+		loading_show();
         var photo = document.getElementById('photo_inputfile');
         if(photo.files.length != 0 && window.FileReader) {
             var file = photo.files[0];
@@ -386,7 +386,7 @@ $(document).ready(function() {
                 reader.readAsDataURL(file);
             }
         }
-		$('#loading').hide();
+		loading_hide();
     });
     $('#link_inputtext').live('focus', function() {
 		link_inputtext = $(this).val();
@@ -403,7 +403,7 @@ $(document).ready(function() {
     });
     $('.form_link a').live('click', function(e) {
 		e.preventDefault();
-		$('#loading').show();
+		loading_show();
 		link_inputtext = $('#link_inputtext').val();
 		if(link_inputtext != '' && link_inputtext != 'http://') {
 			href = $(this).attr('href');
@@ -413,7 +413,7 @@ $(document).ready(function() {
 			content = $(xml).find('content').text();
 			$('#postform_link_preview').html(content);
         }
-		$('#loading').hide();
+		loading_hide();
     });
     $('#address_inputtext').live('blur', function() {
 		address_inputtext = $(this).val();
@@ -423,13 +423,17 @@ $(document).ready(function() {
     });
     $('.form_address a').live('click', function(e) {
 		e.preventDefault();
-		$('#loading').show();
+		loading_show();
 		address_inputtext = $('#address_inputtext').val();
 		if(address_inputtext != '') {
-			address_inputtext = encodeURIComponent(address_inputtext);
-			$('#postform_address_preview').html('<div class="addresslist"><div class="address" id="address_0"><div class="address_display"><img src="http://maps.googleapis.com/maps/api/staticmap?center=' + address_inputtext + '&markers=color:red|' + address_inputtext + '&zoom=15&size=540x200&sensor=false" alt=""></div></div></div>');
+			href = $(this).attr('href');
+			data = {};
+			data['address_inputtext'] = address_inputtext;
+			xml = ajax(href, data);
+			content = $(xml).find('content').text();
+			$('#postform_address_preview').html(content);
         }
-		$('#loading').hide();
+		loading_hide();
     });
 	$('.playvideo_link a').live('click', function(e) {
 		e.preventDefault();

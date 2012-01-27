@@ -312,7 +312,7 @@ class wall369 {
 				$data = array('photo_inputfile'=>$photo_inputfile);
 				$this->insert_photo($post_id, $data);
 			}
-			if(isset($_POST['link_inputtext']) == 1 && filter_var($_POST['link_inputtext'], FILTER_VALIDATE_URL)) {
+			if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
 				$data = $this->analyze_link($_POST['link_inputtext']);
 				$this->insert_link($post_id, $data);
 			}
@@ -326,12 +326,12 @@ class wall369 {
 				$matches = array_unique($matches);
 				foreach($matches as $match) {
 					$analyze = 1;
-					if(isset($_POST['link_inputtext']) == 1 && filter_var($_POST['link_inputtext'], FILTER_VALIDATE_URL)) {
+					if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
 						if($match == $_POST['link_inputtext']) {
 							$analyze = 0;
 						}
 					}
-					if($analyze == 1 && filter_var($match, FILTER_VALIDATE_URL)) {
+					if($analyze == 1) {
 						$data = $this->analyze_link($match);
 						$this->insert_link($post_id, $data);
 					}
@@ -345,7 +345,7 @@ class wall369 {
 		$render .= '<content><![CDATA[';
 		$render .= '<div class="popin_content">';
 		$render .= '<h2>'.$this->str[$this->language]['post_delete'].'</h2>';
-		$render .= '<p><a class="post_delete_confirm_action" data-post_id="'.$this->get['post_id'].'" href="?a=postdeleteconfirm&amp;post_id='.$this->get['post_id'].'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
+		$render .= '<p><a class="post_delete_confirm_action" href="?a=postdeleteconfirm&amp;post_id='.$this->get['post_id'].'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
 		$render .= '</div>';
 		$render .= ']]></content>';
 		return $render;
@@ -353,6 +353,7 @@ class wall369 {
 	function action_postdeleteconfirm() {
 		$render = '';
 		$post = $this->get_post_by_id($this->get['post_id']);
+		$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 		if($post) {
 			if($post->user_id == $this->user->user_id) {
 				$query = 'DELETE FROM '.TABLE_POST.' WHERE user_id = :user_id AND post_id = :post_id';
@@ -394,6 +395,7 @@ class wall369 {
 	function action_commentlist() {
 		$render = '';
 		$post = $this->get_post_by_id($this->get['post_id']);
+		$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 		$render .= '<content><![CDATA[';
 		$render .= $this->render_commentlist($post, 1);
 		$render .= ']]></content>';
@@ -423,7 +425,7 @@ class wall369 {
 		$render .= '<content><![CDATA[';
 		$render .= '<div class="popin_content">';
 		$render .= '<h2>'.$this->str[$this->language]['comment_delete'].'</h2>';
-		$render .= '<p><a class="comment_delete_confirm_action" data-comment_id="'.$this->get['comment_id'].'" href="?a=commentdeleteconfirm&amp;comment_id='.$this->get['comment_id'].'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
+		$render .= '<p><a class="comment_delete_confirm_action" href="?a=commentdeleteconfirm&amp;comment_id='.$this->get['comment_id'].'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
 		$render .= '</div>';
 		$render .= ']]></content>';
 		return $render;
@@ -431,6 +433,7 @@ class wall369 {
 	function action_commentdeleteconfirm() {
 		$render = '';
 		$comment = $this->get_comment_by_id($this->get['comment_id']);
+		$render .= '<comment_id>'.$this->get['comment_id'].'</comment_id>';
 		if($comment) {
 			if($comment->user_id == $this->user->user_id) {
 				$query = 'DELETE FROM '.TABLE_COMMENT.' WHERE user_id = :user_id AND comment_id = :comment_id';
@@ -450,12 +453,12 @@ class wall369 {
 	function action_postlike() {
 		$render = '';
 		$post = $this->get_post_by_id($this->get['post_id']);
+		$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 		if($post) {
 			$query = 'INSERT INTO '.TABLE_LIKE.' (user_id, post_id, like_datecreated) VALUES (:user_id, :post_id, :like_datecreated)';
 			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':like_datecreated'=>date('Y-m-d H:i:s')));
 			if($prepare) {
 				$render .= '<status>like_insert</status>';
-				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 				$render .= '<content><![CDATA[';
 				$post = $this->get_post_by_id($this->get['post_id']);
 				$render .= $this->render_like($post, 0);
@@ -463,7 +466,6 @@ class wall369 {
 			}
 		} else {
 			$render .= '<status>post_deleted</status>';
-			$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 			$render .= '<content><![CDATA[';
 			$render .= '<p>'.$this->str[$this->language]['post_deleted'].'</p>';
 			$render .= ']]></content>';
@@ -473,12 +475,12 @@ class wall369 {
 	function action_postunlike() {
 		$render = '';
 		$post = $this->get_post_by_id($this->get['post_id']);
+		$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 		if($post) {
 			$query = 'DELETE FROM '.TABLE_LIKE.' WHERE user_id = :user_id AND post_id = :post_id';
 			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id']));
 			if($prepare) {
 				$render .= '<status>like_delete</status>';
-				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 				$render .= '<content><![CDATA[';
 				$post = $this->get_post_by_id($this->get['post_id']);
 				$render .= $this->render_like($post, 0);
@@ -486,7 +488,6 @@ class wall369 {
 			}
 		} else {
 			$render .= '<status>post_deleted</status>';
-			$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
 			$render .= '<content><![CDATA[';
 			$render .= '<p>'.$this->str[$this->language]['post_deleted'].'</p>';
 			$render .= ']]></content>';
@@ -504,21 +505,26 @@ class wall369 {
 	}
 	function action_linkpreview() {
 		$render = '';
-		if(isset($_POST['link_inputtext']) == 1 && filter_var($_POST['link_inputtext'], FILTER_VALIDATE_URL)) {
-			$data = $this->analyze_link($_POST['link_inputtext']);
-			$link = new stdClass();
-			$link->link_url = $data['url'];
+		if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
+			$link = $this->analyze_link($_POST['link_inputtext']);
 			$link->link_id = 0;
-			$link->link_image = $data['image'];
-			$link->link_icon = $data['icon'];
-			$link->link_title = $data['title'];
-			$link->link_content = $data['description'];
-			$link->link_video = $data['video'];
-			$link->link_videowidth = $data['videowidth'];
-			$link->link_videoheight = $data['videoheight'];
 			$render .= '<content><![CDATA[';
 			$render .= '<div class="linklist">';
 			$render .= $this->render_link($link);
+			$render .= '</div>';
+			$render .= ']]></content>';
+		}
+		return $render;
+	}
+	function action_addresspreview() {
+		$render = '';
+		if(isset($_POST['address_inputtext']) == 1 && $_POST['address_inputtext'] != '') {
+			$address = new stdClass();
+			$address->address_id = 0;
+			$address->address_title = strip_tags($_POST['address_inputtext']);
+			$render .= '<content><![CDATA[';
+			$render .= '<div class="addresslist">';
+			$render .= $this->render_address($address);
 			$render .= '</div>';
 			$render .= ']]></content>';
 		}
@@ -703,8 +709,8 @@ class wall369 {
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':photo_file'=>$data['photo_inputfile'], ':photo_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function insert_link($post_id, $data) {
-		$query = 'INSERT INTO '.TABLE_LINK.' (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_content, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_content, \'\'), :link_datecreated)';
-		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':link_url'=>$data['url'], ':link_title'=>$data['title'], ':link_image'=>$data['image'], ':link_video'=>$data['video'], ':link_videotype'=>$data['videotype'], ':link_videowidth'=>$data['videowidth'], ':link_videoheight'=>$data['videoheight'], ':link_icon'=>$data['icon'], ':link_content'=>$data['description'], ':link_datecreated'=>date('Y-m-d H:i:s')));
+		$query = 'INSERT INTO '.TABLE_LINK.' (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_description, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_description, \'\'), :link_datecreated)';
+		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':link_url'=>$data->link_url, ':link_title'=>$data->link_title, ':link_image'=>$data->link_image, ':link_video'=>$data->link_video, ':link_videotype'=>$data->link_videotype, ':link_videowidth'=>$data->link_videowidth, ':link_videoheight'=>$data->link_videoheight, ':link_icon'=>$data->link_icon, ':link_description'=>$data->link_description, ':link_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function insert_address($post_id, $data) {
 		$query = 'INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)';
@@ -727,7 +733,7 @@ class wall369 {
 		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">';
 		$render .= '<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>';
 		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"><a href="?a=linkpreview"><img src="medias/icon_preview.png" alt=""></a></p>';
-		$render .= '<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""><a href="#"><img src="medias/icon_preview.png" alt=""></a></p>';
+		$render .= '<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""><a href="?a=addresspreview"><img src="medias/icon_preview.png" alt=""></a></p>';
 		$render .= '<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>';
 		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['share'].'"></p>';
 		$render .= '</form>';
@@ -801,12 +807,12 @@ class wall369 {
 		$render .= '</div>';
 		$render .= '<div class="post_text">';
 		if($post->user_id == $this->user->user_id) {
-			$render .= '<a class="delete_action post_delete_action" data-post_id="'.$post->post_id.'" href="?a=postdelete&amp;post_id='.$post->post_id.'"></a>';
+			$render .= '<a class="delete_action post_delete_action" href="?a=postdelete&amp;post_id='.$post->post_id.'"></a>';
 			$username = $this->str[$this->language]['you'];
 		} else {
 			$username = $post->user_firstname.' '.$post->user_lastname;
 		}
-		$render .= '<p><span class="username">'.$username.'</span></p>';
+		$render .= '<p><span class="username">'.$username.'</span>  · <span class="datecreated" id="post_datecreated_'.$post->post_id.'">'.$this->render_datecreated($post->post_datecreated).'</span></p>';
 		$render .= '<p>'.$this->render_content($post->post_content).'</p>';
 		$render .= '</div>';
 		$render .= $this->render_linklist($post);
@@ -818,15 +824,14 @@ class wall369 {
 		} else {
 			$render .= '<span class="like">';
 		}
-		$render .= '<a class="post_like_action" data-post_id="'.$post->post_id.'" href="?a=postlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> ';
+		$render .= '<a class="post_like_action" href="?a=postlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> ';
 		if($post->you_like == 1) {
 			$render .= '<span class="unlike">';
 		} else {
 			$render .= '<span class="unlike unlike_inactive">';
 		}
-		$render .= '<a class="post_unlike_action" data-post_id="'.$post->post_id.'" href="?a=postunlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> ';
-		$render .= '<a class="comment_action" data-post_id="'.$post->post_id.'" href="#comment_form_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
-		$render .= ' · <span class="datecreated" id="post_datecreated_'.$post->post_id.'">'.$this->render_datecreated($post->post_datecreated).'</span>';
+		$render .= '<a class="post_unlike_action" href="?a=postunlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> ';
+		$render .= '<a class="comment_action" href="#commentform_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
 		$render .= '</p>';
 		$render .= '<div class="commentlist" id="commentlist_'.$post->post_id.'">';
 		$render .= '<div id="post_like_render_'.$post->post_id.'">';
@@ -837,8 +842,8 @@ class wall369 {
 			$render .= $this->render_commentlist($post, 0);
 		}
 		$render .= '</div>';
-		$render .= '<div class="comment comment_form" id="comment_form_'.$post->post_id.'">';
-		$render .= '<div class="comment_display comment_form_display">';
+		$render .= '<div class="comment commentform" id="commentform_'.$post->post_id.'">';
+		$render .= '<div class="comment_display commentform_display">';
 		$render .= '<div class="comment_thumb">';
 		if($this->user->user_file != '') {
 			$render .= '<img alt="" src="data:image/jpeg;base64,'.$this->user->user_file.'">';
@@ -849,9 +854,9 @@ class wall369 {
 		}
 		$render .= '</div>';
 		$render .= '<div class="comment_text">';
-		$render .= '<form action="?a=comment&amp;post_id='.$post->post_id.'" class="comment_form_form" method="post">';
+		$render .= '<form action="?a=comment&amp;post_id='.$post->post_id.'" method="post">';
 		$render .= '<p><textarea class="textarea" name="comment"></textarea></p>';
-		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['comment'].'" data-post_id="'.$post->post_id.'"></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['comment'].'"></p>';
 		$render .= '</form>';
 		$render .= '</div>';
 		$render .= '</div>';
@@ -873,7 +878,7 @@ class wall369 {
 				if($post->count_comment > LIMIT_COMMENTS) {
 					$render .= '<div class="comment comment_all" id="comment_all_'.$post->post_id.'">';
 					$render .= '<div class="comment_display comment_all_display">';
-					$render .= '<p><a class="commentall_action" data-post_id="'.$post->post_id.'" href="?a=commentlist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['view_all_comments'], $post->count_comment).'</a></p>';
+					$render .= '<p><a class="commentall_action" href="?a=commentlist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['view_all_comments'], $post->count_comment).'</a></p>';
 					$render .= '</div>';
 					$render .= '</div>';
 					$min = $post->count_comment - LIMIT_COMMENTS;
@@ -916,15 +921,13 @@ class wall369 {
 		$render .= '</div>';
 		$render .= '<div class="comment_text">';
 		if($comment->user_id == $this->user->user_id) {
-			$render .= '<a class="delete_action comment_delete_action" data-comment_id="'.$comment->comment_id.'" href="?a=commentdelete&amp;comment_id='.$comment->comment_id.'"></a>';
+			$render .= '<a class="delete_action comment_delete_action" href="?a=commentdelete&amp;comment_id='.$comment->comment_id.'"></a>';
 			$username = $this->str[$this->language]['you'];
 		} else {
 			$username = $comment->user_firstname.' '.$comment->user_lastname;
 		}
-		$render .= '<p><span class="username">'.$username.'</span> '.$this->render_content($comment->comment_content).'</p>';
-		$render .= '<p class="comment_detail">';
-		$render .= '<span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'">'.$this->render_datecreated($comment->comment_datecreated).'</span>';
-		$render .= '</p>';
+		$render .= '<p><span class="username">'.$username.'</span> · <span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'">'.$this->render_datecreated($comment->comment_datecreated).'</span></p>';
+		$render .= '<p>'.$this->render_content($comment->comment_content).'</p>';
 		$render .= '</div>';
 		$render .= '</div>';
 		$render .= '</div>';
@@ -963,7 +966,7 @@ class wall369 {
 						if($post->post_countlike != 1) {
 							if($u == $rowCount && $rowCount < $post->post_countlike) {
 								$diff = $post->post_countlike - $rowCount;
-								$render .=  ' '.$this->str[$this->language]['and'].' <a class="likelist_action" data-post_id="'.$post->post_id.'" id="'.$post->post_id.'" href="?a=likelist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['others'], $diff).'</a> ';
+								$render .=  ' '.$this->str[$this->language]['and'].' <a class="likelist_action" href="?a=likelist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['others'], $diff).'</a> ';
 							} else if($u == $rowCount - 1 && $rowCount == $post->post_countlike) {
 								$render .=  ' '.$this->str[$this->language]['and'].' ';
 							} else if($u < $rowCount) {
@@ -1017,7 +1020,7 @@ class wall369 {
 		$render = '';
 		$render .= '<div class="photo" id="photo_'.$photo->photo_id.'">';
 		$render .= '<div class="photo_display">';
-		$render .= '<a data-photo_id="'.$photo->photo_id.'" href="?a=photozoom&amp;photo_id='.$photo->photo_id.'"><img alt="" src="storage/'.$photo->photo_file.'"></a>';
+		$render .= '<a href="?a=photozoom&amp;photo_id='.$photo->photo_id.'"><img alt="" src="storage/'.$photo->photo_file.'"></a>';
 		$render .= '</div>';
 		$render .= '</div>';
 		return $render;
@@ -1059,8 +1062,8 @@ class wall369 {
 			$render .= '<span class="icon"><img alt="" src="'.$link->link_icon.'"></span> ';
 		}
 		$render .= '<span class="hostname">'.$url['host'].'</span></p>';
-		if($link->link_content != '') {
-			$render .= '<p>'.$this->render_content($link->link_content).'</p>';
+		if($link->link_description != '') {
+			$render .= '<p>'.$this->render_content($link->link_description).'</p>';
 		}
 		$render .= '</div>';
 		if($link->link_video != '' && $link->link_videowidth != '' && $link->link_videoheight != '') {
@@ -1285,10 +1288,14 @@ class wall369 {
 		return $string;
 	}
 	function analyze_link($link) {
-		$data = array('url'=>$link, 'icon'=>'', 'image'=>'', 'video'=>'', 'videotype'=>'', 'videowidth'=>'', 'videoheight'=>'', 'title'=>'', 'description'=>'', 'charsetserver'=>'', 'charsetclient'=>'');
+		$data = new stdClass();
+		$default = array('link_url'=>$link, 'link_title'=>'', 'link_image'=>'', 'link_video'=>'', 'link_videotype'=>'', 'link_videowidth'=>'', 'link_videoheight'=>'', 'link_icon'=>'', 'link_description'=>'');
+		foreach($default as $k => $v) {
+			$data->{$k} = $v;
+		}
 		if(isset($_SESSION['wall369'][$link]) == 1) {
 			return unserialize($_SESSION['wall369'][$link]);
-		} else if(filter_var($link, FILTER_VALIDATE_URL)) {
+		} else {
 			$headers = get_headers($link, 1);
 			if(isset($headers['Location']) == 1) {
 				if(is_array($headers['Location'])) {
@@ -1296,7 +1303,7 @@ class wall369 {
 				} else {
 					$link = $headers['Location'];
 				}
-				$data['url'] = $link;
+				$data->link_url = $link;
 				$origin_status = $headers[0];
 				$headers = get_headers($link, 1);
 				$headers[0] = $headers[0].' ('.$origin_status.')';
@@ -1350,40 +1357,32 @@ class wall369 {
 			foreach($keys as $key => $value) {
 				if(!is_array($value)) {
 					if($key == 'image_src') {
-						$data['image'] = $value;
+						$data->link_image = $value;
 					} else if($key == 'shortcut icon') {
-						$data['icon'] = $value;
+						$data->link_icon = $value;
 					} else if($key == 'headers-content-type' && stristr($value, 'charset')) {
-						$data['charsetserver'] = substr($value, strpos($value, '=') + 1);
-						$data['contentserver'] = substr($value, 0, strpos($value, ';'));
+						$data->link_charsetserver = substr($value, strpos($value, '=') + 1);
 					} else if($key == 'content-type' && stristr($value, 'charset')) {
-						$data['charsetclient'] = substr($value, strpos($value, '=') + 1);
-						$data['contentclient'] = substr($value, 0, strpos($value, ';'));
+						$data->link_charsetclient = substr($value, strpos($value, '=') + 1);
 					} else if(substr($key, 0, 3) == 'og:' || substr($key, 0, 3) == 'fb:') {
 						$key = substr($key, 3);
 						$key = str_replace(':', '', $key);
 						$key = str_replace('_', '', $key);
-						$data[$key] = $value;
+						$data->{'link_'.$key} = $value;
 					} else {
-						$data[$key] = $value;
+						$data->{'link_'.$key} = $value;
 					}
 				}
 			}
-			if($data['icon'] != '' && substr($data['icon'], 0, 4) != 'http' && substr($data['icon'], 0, 5) != 'data:') {
-				$url = parse_url($data['url']);
-				$data['icon'] = $url['scheme'].'://'.$url['host'].'/'.$data['icon'];
+			if($data->link_icon != '' && substr($data->link_icon, 0, 4) != 'http' && substr($data->link_icon, 0, 5) != 'data:') {
+				$url = parse_url($data->link_url);
+				$data->link_icon = $url['scheme'].'://'.$url['host'].'/'.$data->link_icon;
 			}
-			if(strtolower($data['charsetserver']) != 'utf-8' && strtolower($data['charsetclient']) != 'utf-8') {
-				$data['title'] = utf8_encode($data['title']);
-				$data['description'] = utf8_encode($data['description']);
+			if(strtolower($data->link_charsetserver) != 'utf-8' && strtolower($data->link_charsetclient) != 'utf-8') {
+				$data->link_title = utf8_encode($data->link_title);
+				$data->link_description = utf8_encode($data->link_description);
 			}
-			$data_sanityze = array();
-			foreach($data as $k => $v) {
-				$data_sanityze[$k] = strip_tags($v);
-			}
-			$_SESSION['wall369'][$link] = serialize($data_sanityze);
-			return $data_sanityze;
-		} else {
+			$_SESSION['wall369'][$link] = serialize($data);
 			return $data;
 		}
 	}
