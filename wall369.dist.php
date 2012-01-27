@@ -732,8 +732,8 @@ class wall369 {
 		}
 		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">';
 		$render .= '<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>';
-		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"><a href="?a=linkpreview"><img src="medias/icon_preview.png" alt=""></a></p>';
-		$render .= '<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""><a href="?a=addresspreview"><img src="medias/icon_preview.png" alt=""></a></p>';
+		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"><a href="?a=linkpreview"><img src="medias/icon_preview.png" alt="" width="16" height="16"></a></p>';
+		$render .= '<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""><a href="?a=addresspreview"><img src="medias/icon_preview.png" alt="" width="16" height="16"></a></p>';
 		$render .= '<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>';
 		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['share'].'"></p>';
 		$render .= '</form>';
