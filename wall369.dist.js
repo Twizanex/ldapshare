@@ -174,6 +174,7 @@ $(document).ready(function() {
 	t = -d.getTimezoneOffset() / 60;
 	data = {};
 	xml = ajax('index.php?a=timezone&t=' + t, data);
+	var upload_max_filesize = $(xml).find('upload_max_filesize').text() * 1048576;
 	$('.logout_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
@@ -325,7 +326,7 @@ $(document).ready(function() {
 			var photo = document.getElementById('photo_inputfile');
 			if(photo.files.length != 0 && window.FileReader) {
 				var file = photo.files[0];
-				if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= 2097152) {
+				if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= upload_max_filesize) {
 					formdata.append('photo_inputfile', file);
 					enable_submit = 1;
 				}
@@ -380,7 +381,7 @@ $(document).ready(function() {
         var photo = document.getElementById('photo_inputfile');
         if(photo.files.length != 0 && window.FileReader) {
             var file = photo.files[0];
-            if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= 2097152) {
+            if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= upload_max_filesize) {
                 $('#postform_photo_preview').html('');
                 reader = new FileReader();
                 reader.onload = function(event) {

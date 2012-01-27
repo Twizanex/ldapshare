@@ -29,5 +29,4 @@ define('TABLE_LINK', 'wall369_link');
 define('TABLE_PHOTO', 'wall369_photo');
 define('TABLE_POST', 'wall369_post');
 define('TABLE_USER', 'wall369_user' );
-define('UPLOAD_SIZE', 4);//mega
 ?>

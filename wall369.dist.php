@@ -209,6 +209,7 @@ class wall369 {
 		$this->set_get('t', 0, 'numeric');
 		$_SESSION['wall369']['timezone'] = $this->get['t'];
 		$render = '<timezone>'.$this->get['t'].'</timezone>';
+		$render .= '<upload_max_filesize>'.intval(ini_get('upload_max_filesize')).'</upload_max_filesize>';
 		return $render;
 	}
 	function action_loginform() {
