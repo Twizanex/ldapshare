@@ -302,7 +302,7 @@ class wall369 {
 	function action_post() {
 		$render = '';
 		$query = 'INSERT INTO '.TABLE_POST.' (user_id, post_content, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, NULLIF(:post_httpuseragent, \'\'), NULLIF(:post_remoteaddr, \'\'), :post_datecreated)';
-		$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':post_datecreated'=>date('Y-m-d H:i:s')));
+		$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP), ':post_datecreated'=>date('Y-m-d H:i:s')));
 		if($prepare) {
 			$post_id = $this->pdo->lastinsertid();
 			$render .= '<status>post_insert</status>';
@@ -404,7 +404,7 @@ class wall369 {
 		$post = $this->get_post_by_id($this->get['post_id']);
 		if($post) {
 			$query = 'INSERT INTO '.TABLE_COMMENT.' (user_id, post_id, comment_content, comment_httpuseragent, comment_remoteaddr, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, NULLIF(:comment_httpuseragent, \'\'), NULLIF(:comment_remoteaddr, \'\'), :comment_datecreated)';
-			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':comment_remoteaddr'=>$_SERVER['REMOTE_ADDR'], ':comment_datecreated'=>date('Y-m-d H:i:s')));
+			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':comment_remoteaddr'=>filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP), ':comment_datecreated'=>date('Y-m-d H:i:s')));
 			if($prepare) {
 				$comment_id = $this->pdo->lastinsertid();
 				$render .= '<status>comment_insert</status>';
@@ -1286,7 +1286,9 @@ class wall369 {
 	}
 	function analyze_link($link) {
 		$data = array('url'=>$link, 'icon'=>'', 'image'=>'', 'video'=>'', 'videotype'=>'', 'videowidth'=>'', 'videoheight'=>'', 'title'=>'', 'description'=>'', 'charsetserver'=>'', 'charsetclient'=>'');
-		if(filter_var($link, FILTER_VALIDATE_URL)) {
+		if(isset($_SESSION['wall369'][$link]) == 1) {
+			return unserialize($_SESSION['wall369'][$link]);
+		} else if(filter_var($link, FILTER_VALIDATE_URL)) {
 			$headers = get_headers($link, 1);
 			if(isset($headers['Location']) == 1) {
 				if(is_array($headers['Location'])) {
@@ -1379,6 +1381,7 @@ class wall369 {
 			foreach($data as $k => $v) {
 				$data_sanityze[$k] = strip_tags($v);
 			}
+			$_SESSION['wall369'][$link] = serialize($data_sanityze);
 			return $data_sanityze;
 		} else {
 			return $data;
