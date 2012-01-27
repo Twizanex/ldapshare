@@ -6,12 +6,6 @@ class wall369 {
 		session_start();
 		set_error_handler(array($this, 'error_handler'));
 		register_shutdown_function(array($this, 'shutdown_function'));
-		if(isset($_SESSION['wall369']) == 0) {
-			$_SESSION['wall369'] = array();
-		}
-		if(isset($_SESSION['wall369']['timezone']) == 0) {
-			$_SESSION['wall369']['timezone'] = 0;
-		}
 		$this->language = 'en';
 		if(isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) == 1) {
 			$lng_array = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
@@ -30,27 +24,24 @@ class wall369 {
 			}
 		}
 		include_once('languages/'.$this->language.'.dist.php');
-		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['wall369']['timezone']);
-		$this->date_time = gmdate('H:i:s', date('U') + 3600 * $_SESSION['wall369']['timezone']);
 		$this->set_get('a', 'index', 'alphabetic');
 		$this->set_get('post_id', '', 'numeric');
 		$this->set_get('comment_id', '', 'numeric');
 		$this->set_get('photo_id', '', 'numeric');
 		$this->queries = array();
+		if($this->get['a'] == 'index') {
+			$_SESSION['wall369'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
+		}
+		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['wall369']['timezone']);
+		$this->date_time = gmdate('H:i:s', date('U') + 3600 * $_SESSION['wall369']['timezone']);
 		try {
-			$options = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8', PDO::ATTR_PERSISTENT => 1);
+			$options = array(PDO::MYSQL_ATTR_INIT_COMMAND=>'SET NAMES utf8', PDO::ATTR_PERSISTENT=>1);
 			$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, $options);
 		} catch(PDOException $e) {
 			trigger_error($e->getMessage());
 		}
-		if(DEMO == 1 && isset($_SESSION['wall369']['user_id']) == 0) {
+		if(isset($_SESSION['wall369']['user_id']) == 0 && DEMO == 1) {
 			$_SESSION['wall369']['user_id'] = rand(1, 100);
-		}
-		if($this->get['a'] == 'index') {
-			$_SESSION['wall369']['post_id_oldest'] = 0;
-			$_SESSION['wall369']['post_id_newest'] = 0;
-			$_SESSION['wall369']['comment_id_oldest'] = 0;
-			$_SESSION['wall369']['comment_id_newest'] = 0;
 		}
 		if(isset($_SESSION['wall369']['user_id']) == 0 && isset($_COOKIE['user_token']) == 1) {
 			$user = $this->get_user_by_token($_COOKIE['user_token']);
@@ -109,10 +100,10 @@ class wall369 {
 		exit(0);
 	}
 	function render_debug() {
-		$render = '';
 		$microtime_end = microtime(1);
 		$microtime_total = $microtime_end - $this->microtime_start;
-		$render .= '<post_id_oldest>'.$_SESSION['wall369']['post_id_oldest'].'</post_id_oldest>'."\r\n";
+		$render = '<timezone>'.$_SESSION['wall369']['timezone'].'</timezone>'."\r\n";
+		$render = '<post_id_oldest>'.$_SESSION['wall369']['post_id_oldest'].'</post_id_oldest>'."\r\n";
 		$render .= '<post_id_newest>'.$_SESSION['wall369']['post_id_newest'].'</post_id_newest>'."\r\n";
 		$render .= '<comment_id_oldest>'.$_SESSION['wall369']['comment_id_oldest'].'</comment_id_oldest>'."\r\n";
 		$render .= '<comment_id_newest>'.$_SESSION['wall369']['comment_id_newest'].'</comment_id_newest>'."\r\n";
@@ -215,21 +206,18 @@ class wall369 {
 		return $render;
 	}
 	function action_timezone() {
-		$render = '';
 		$this->set_get('t', 0, 'numeric');
 		$_SESSION['wall369']['timezone'] = $this->get['t'];
-		$render .= '<timezone>'.$this->get['t'].'</timezone>';
+		$render = '<timezone>'.$this->get['t'].'</timezone>';
 		return $render;
 	}
 	function action_loginform() {
-		$render = '';
-		$render .= '<content><![CDATA[';
+		$render = '<content><![CDATA[';
 		$render .= $this->render_loginform();
 		$render .= ']]></content>';
 		return $render;
 	}
 	function action_login() {
-		$render = '';
 		$status = 'ko';
 		$ldap_connect = ldap_connect(LDAP_SERVER, LDAP_PORT);
 		if($ldap_connect && filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
@@ -272,31 +260,23 @@ class wall369 {
 			}
 			ldap_unbind($ldap_connect);
 		}
-		$render .= '<status>'.$status.'</status>';
+		$render = '<status>'.$status.'</status>';
 		return $render;
 	}
 	function action_logout() {
-		$render = '';
 		$query = 'UPDATE '.TABLE_USER.' SET user_token = NULL WHERE user_id = :user_id';
 		$prepare = $this->pdo_execute($query, array(':user_id'=>$_SESSION['wall369']['user_id']));
-		unset($_SESSION['wall369']['user_id']);
 		setcookie('user_token', NULL, NULL, '/');
-		$_SESSION['wall369']['post_id_oldest'] = 0;
-		$_SESSION['wall369']['post_id_newest'] = 0;
-		$_SESSION['wall369']['comment_id_oldest'] = 0;
-		$_SESSION['wall369']['comment_id_newest'] = 0;
-		return $render;
+		$_SESSION['wall369'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
 	}
 	function action_postform() {
-		$render = '';
-		$render .= '<content><![CDATA[';
+		$render = '<content><![CDATA[';
 		$render .= $this->render_postform();
 		$render .= ']]></content>';
 		return $render;
 	}
 	function action_postlist() {
-		$render = '';
-		$render .= $this->render_postlist();
+		$render = $this->render_postlist();
 		return $render;
 	}
 	function action_post() {
@@ -341,8 +321,7 @@ class wall369 {
 		return $render;
 	}
 	function action_postdelete() {
-		$render = '';
-		$render .= '<content><![CDATA[';
+		$render = '<content><![CDATA[';
 		$render .= '<div class="popin_content">';
 		$render .= '<h2>'.$this->str[$this->language]['post_delete'].'</h2>';
 		$render .= '<p><a class="post_delete_confirm_action" href="?a=postdeleteconfirm&amp;post_id='.$this->get['post_id'].'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
@@ -351,9 +330,8 @@ class wall369 {
 		return $render;
 	}
 	function action_postdeleteconfirm() {
-		$render = '';
 		$post = $this->get_post_by_id($this->get['post_id']);
-		$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
+		$render = '<post_id>'.$this->get['post_id'].'</post_id>';
 		if($post) {
 			if($post->user_id == $this->user->user_id) {
 				$query = 'DELETE FROM '.TABLE_POST.' WHERE user_id = :user_id AND post_id = :post_id';
@@ -393,9 +371,8 @@ class wall369 {
 		return $render;
 	}
 	function action_commentlist() {
-		$render = '';
 		$post = $this->get_post_by_id($this->get['post_id']);
-		$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
+		$render = '<post_id>'.$this->get['post_id'].'</post_id>';
 		$render .= '<content><![CDATA[';
 		$render .= $this->render_commentlist($post, 1);
 		$render .= ']]></content>';
@@ -421,8 +398,7 @@ class wall369 {
 		return $render;
 	}
 	function action_commentdelete() {
-		$render = '';
-		$render .= '<content><![CDATA[';
+		$render = '<content><![CDATA[';
 		$render .= '<div class="popin_content">';
 		$render .= '<h2>'.$this->str[$this->language]['comment_delete'].'</h2>';
 		$render .= '<p><a class="comment_delete_confirm_action" href="?a=commentdeleteconfirm&amp;comment_id='.$this->get['comment_id'].'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
@@ -431,9 +407,8 @@ class wall369 {
 		return $render;
 	}
 	function action_commentdeleteconfirm() {
-		$render = '';
 		$comment = $this->get_comment_by_id($this->get['comment_id']);
-		$render .= '<comment_id>'.$this->get['comment_id'].'</comment_id>';
+		$render = '<comment_id>'.$this->get['comment_id'].'</comment_id>';
 		if($comment) {
 			if($comment->user_id == $this->user->user_id) {
 				$query = 'DELETE FROM '.TABLE_COMMENT.' WHERE user_id = :user_id AND comment_id = :comment_id';
@@ -451,9 +426,8 @@ class wall369 {
 		return $render;
 	}
 	function action_postlike() {
-		$render = '';
 		$post = $this->get_post_by_id($this->get['post_id']);
-		$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
+		$render = '<post_id>'.$this->get['post_id'].'</post_id>';
 		if($post) {
 			$query = 'INSERT INTO '.TABLE_LIKE.' (user_id, post_id, like_datecreated) VALUES (:user_id, :post_id, :like_datecreated)';
 			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':like_datecreated'=>date('Y-m-d H:i:s')));
@@ -473,9 +447,8 @@ class wall369 {
 		return $render;
 	}
 	function action_postunlike() {
-		$render = '';
 		$post = $this->get_post_by_id($this->get['post_id']);
-		$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
+		$render = '<post_id>'.$this->get['post_id'].'</post_id>';
 		if($post) {
 			$query = 'DELETE FROM '.TABLE_LIKE.' WHERE user_id = :user_id AND post_id = :post_id';
 			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id']));
@@ -495,8 +468,7 @@ class wall369 {
 		return $render;
 	}
 	function action_likelist() {
-		$render = '';
-		$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
+		$render = '<post_id>'.$this->get['post_id'].'</post_id>';
 		$render .= '<content><![CDATA[';
 		$post = $this->get_post_by_id($this->get['post_id']);
 		$render .= $this->render_like($post, 1);
@@ -531,7 +503,6 @@ class wall369 {
 		return $render;
 	}
 	function action_photozoom() {
-		$render = '';
 		$render = '';
 		$photo = $this->get_photo_by_id($this->get['photo_id']);
 		if($photo) {
@@ -717,8 +688,7 @@ class wall369 {
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':address_title'=>$data['address_title'], ':address_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	function render_loginform() {
-		$render = '';
-		$render .= '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">';
+		$render = '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">';
 		$render .= '<p class="form_email"><label for="email">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email" name="email" type="text" value=""></p>';
 		$render .= '<p class="form_password"><label for="password">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password" name="password" type="password" value=""></p>';
 		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['login'].'"></p>';
@@ -793,8 +763,7 @@ class wall369 {
 		return $render;
 	}
 	function render_post($post) {
-		$render = '';
-		$render .= '<div class="post" id="post_'.$post->post_id.'">';
+		$render = '<div class="post" id="post_'.$post->post_id.'">';
 		$render .= '<div class="post_display">';
 		$render .= '<div class="post_thumb">';
 		if($post->user_file != '') {
@@ -907,8 +876,7 @@ class wall369 {
 		return $render;
 	}
 	function render_comment($comment) {
-		$render = '';
-		$render .= '<div class="comment" id="comment_'.$comment->comment_id.'">';
+		$render = '<div class="comment" id="comment_'.$comment->comment_id.'">';
 		$render .= '<div class="comment_display">';
 		$render .= '<div class="comment_thumb">';
 		if($comment->user_file != '') {
@@ -1017,8 +985,7 @@ class wall369 {
 		return $render;
 	}
 	function render_photo($photo) {
-		$render = '';
-		$render .= '<div class="photo" id="photo_'.$photo->photo_id.'">';
+		$render = '<div class="photo" id="photo_'.$photo->photo_id.'">';
 		$render .= '<div class="photo_display">';
 		$render .= '<a href="?a=photozoom&amp;photo_id='.$photo->photo_id.'"><img alt="" src="storage/'.$photo->photo_file.'"></a>';
 		$render .= '</div>';
@@ -1044,20 +1011,19 @@ class wall369 {
 		return $render;
 	}
 	function render_link($link) {
-		$render = '';
 		$url = parse_url($link->link_url);
-		$render .= '<div class="link" id="link_'.$link->link_id.'">';
+		$render = '<div class="link" id="link_'.$link->link_id.'">';
 		$render .= '<div class="link_display">';
 		if($link->link_image != '') {
 			$render .= '<div class="link_thumb">';
 			$full = '';
-			$render .= '<a target="_blank" href="'.$link->link_url.'"><img alt="" src="'.$link->link_image.'"></a>';
+			$render .= '<a href="'.$link->link_url.'" target="_blank"><img alt="" src="'.$link->link_image.'"></a>';
 			$render .= '</div>';
 		} else {
 			$full = ' link_text_full';
 		}
 		$render .= '<div class="link_text'.$full.'">';
-		$render .= '<p><a target="_blank" href="'.$link->link_url.'">'.$link->link_title.'</a><br>';
+		$render .= '<p><a href="'.$link->link_url.'" target="_blank">'.$link->link_title.'</a><br>';
 		if($link->link_icon != '') {
 			$render .= '<span class="icon"><img alt="" src="'.$link->link_icon.'"></span> ';
 		}
@@ -1069,8 +1035,8 @@ class wall369 {
 		if($link->link_video != '' && $link->link_videowidth != '' && $link->link_videoheight != '') {
 			$link->link_videoheight = round(($link->link_videoheight * 540) / $link->link_videowidth);
 			$link->link_videowidth = 540;
-			$render .= '<p class="playvideo_link"><a href="#playvideo'.$link->link_id.'"><img src="medias/play_video.png" alt=""></a></p>';
-			$render .= '<iframe class="playvideo" id="playvideo'.$link->link_id.'" width="'.$link->link_videowidth.'" height="'.$link->link_videoheight.'" src="'.$link->link_video.'" frameborder="0"></iframe>';
+			$render .= '<p class="playvideo_link"><a href="#playvideo_'.$link->link_id.'"><img src="medias/play_video.png" alt=""></a></p>';
+			$render .= '<iframe class="playvideo" id="playvideo_'.$link->link_id.'" width="'.$link->link_videowidth.'" height="'.$link->link_videoheight.'" src="'.$link->link_video.'" frameborder="0"></iframe>';
 		}
 		$render .= '</div>';
 		$render .= '</div>';
@@ -1095,8 +1061,7 @@ class wall369 {
 		return $render;
 	}
 	function render_address($address) {
-		$render = '';
-		$render .= '<div class="address" id="address_'.$address->address_id.'">';
+		$render = '<div class="address" id="address_'.$address->address_id.'">';
 		$render .= '<div class="address_display">';
 		$render .= '<p>'.$address->address_title.'</p>';
 		$render .= '<p><a href="http://maps.google.com/maps?q='.urlencode($address->address_title).'&oe=UTF-8&ie=UTF-8" target="_blank"><img src="http://maps.googleapis.com/maps/api/staticmap?center='.urlencode($address->address_title).'&markers=color:red|'.urlencode($address->address_title).'&zoom=15&size=540x200&sensor=false" alt=""></a></p>';
@@ -1147,18 +1112,18 @@ class wall369 {
 				if($diff <= 1) {
 					$mention = $this->str[$this->language]['now'];
 				} else if($diff >= 120) {
-					$mention = sprintf($this->str[$this->language]['hours_diff'], ceil($diff/60));
+					$mention = sprintf($this->str[$this->language]['hours_diff'], ceil($diff / 60));
 				} else {
 					$mention = sprintf($this->str[$this->language]['minutes_diff'], $diff);
 				}
 			} else if($diff == 1) {
 				$mention = $this->str[$this->language]['yesterday'].' '.$this->str[$this->language]['at'].' '.substr($timecreated, 0, 5);
 			} else if($diff >= 730) {
-				$mention = sprintf($this->str[$this->language]['years_diff'], ceil($diff/365));
+				$mention = sprintf($this->str[$this->language]['years_diff'], ceil($diff / 365));
 			} else if($diff >= 60) {
-				$mention = sprintf($this->str[$this->language]['months_diff'], ceil($diff/30));
+				$mention = sprintf($this->str[$this->language]['months_diff'], ceil($diff / 30));
 			} else if($diff >= 14) {
-				$mention = sprintf($this->str[$this->language]['weeks_diff'], ceil($diff/7));
+				$mention = sprintf($this->str[$this->language]['weeks_diff'], ceil($diff / 7));
 			} else {
 				$mention = sprintf($this->str[$this->language]['days_diff'], $diff);
 			}
@@ -1205,7 +1170,7 @@ class wall369 {
 					$height = 600;
 					list($width_orig, $height_orig) = getimagesize($filename);
 					$ratio_orig = $width_orig / $height_orig;
-					if ($width/$height > $ratio_orig) {
+					if($width/$height > $ratio_orig) {
 						$width = $height * $ratio_orig;
 					} else {
 						$height = $width / $ratio_orig;
@@ -1296,38 +1261,34 @@ class wall369 {
 		if(isset($_SESSION['wall369'][$link]) == 1) {
 			return unserialize($_SESSION['wall369'][$link]);
 		} else {
+			$keys = array();
 			$headers = get_headers($link, 1);
 			if(isset($headers['Location']) == 1) {
 				if(is_array($headers['Location'])) {
-					$link = $headers['Location'][0];
+					$data->link_url = array_pop($headers['Location']);
 				} else {
-					$link = $headers['Location'];
-				}
-				$data->link_url = $link;
-				$origin_status = $headers[0];
-				$headers = get_headers($link, 1);
-				$headers[0] = $headers[0].' ('.$origin_status.')';
-				if(isset($headers['Content-Type']) == 1 && is_array($headers['Content-Type'])) {
-					$headers['Content-Type'] = $headers['Content-Type'][0];
+					$data->link_url = $headers['Location'];
 				}
 			}
-			$headers = array_unique($headers);
-			$keys = array();
-			foreach($headers as $k => $v) {
-				$keys['headers-'.strtolower($k)] = $v;
+			if(isset($headers['Content-Type']) == 1) {
+				if(is_array($headers['Content-Type'])) {
+					$keys['content-type-server'] = array_pop($headers['Content-Type']);
+				} else {
+					$keys['content-type-server'] = $headers['Content-Type'];
+				}
 			}
 			$opts = array('http'=>array('header'=>'User-Agent: '.$_SERVER['HTTP_USER_AGENT']."\r\n"));
 			$context = stream_context_create($opts);
-			$content = file_get_contents($link, false, $context);
+			$content = file_get_contents($data->link_url, false, $context);
 			$content = str_replace("\t", '', $content);
-			$content_flat = str_replace("\r\n", '', $content);
-			$content_flat = str_replace("\n", '', $content_flat);
+			$content = str_replace("\r\n", '', $content);
+			$content = str_replace("\n", '', $content);
 			$pattern_one = array();
 			$pattern_one['title'] = "|<[tT][iI][tT][lL][eE](.*)>(.*)<\/[tT][iI][tT][lL][eE]>|U";
 			$pattern_one['charsetclient'] = "|<[mM][eE][tT][aA](.*)[cC][hH][aA][rR][sS][eE][tT]=[\"'](.*)[\"'](.*)>|U";
 			foreach($pattern_one as $k => $pattern) {
 				$matches = array();
-				preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
+				preg_match_all($pattern, $content, $matches, PREG_SET_ORDER);
 				foreach($matches as $match) {
 					$keys[$k] = trim($match[2]);
 				}
@@ -1337,7 +1298,7 @@ class wall369 {
 			$pattern_multi["|<[mM][eE][tT][aA](.*)[cC][oO][nN][tT][eE][nN][tT]=\"(.*)\"(.*)>|U"] = array("|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U", "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U", "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U");
 			foreach($pattern_multi as $pattern => $pattern_sub) {
 				$matches = array();
-				preg_match_all($pattern, $content_flat, $matches, PREG_SET_ORDER);
+				preg_match_all($pattern, $content, $matches, PREG_SET_ORDER);
 				foreach($matches as $match) {
 					$value = $match[2];
 					foreach($pattern_sub as $pattern) {
@@ -1360,7 +1321,7 @@ class wall369 {
 						$data->link_image = $value;
 					} else if($key == 'shortcut icon') {
 						$data->link_icon = $value;
-					} else if($key == 'headers-content-type' && stristr($value, 'charset')) {
+					} else if($key == 'content-type-server' && stristr($value, 'charset')) {
 						$data->link_charsetserver = substr($value, strpos($value, '=') + 1);
 					} else if($key == 'content-type' && stristr($value, 'charset')) {
 						$data->link_charsetclient = substr($value, strpos($value, '=') + 1);

@@ -180,6 +180,10 @@ $(document).ready(function() {
 		data = {};
 		xml = ajax(href, data);
 		islogged_ko();
+		d = new Date();
+		t = -d.getTimezoneOffset() / 60;
+		data = {};
+		xml = ajax('index.php?a=timezone&t=' + t, data);
 	});
 	$('.postlist_action').live('click', function(e) {
 		e.preventDefault();
