@@ -338,14 +338,6 @@ class wall369 {
 				$query = 'DELETE FROM '.TABLE_POST.' WHERE user_id = :user_id AND post_id = :post_id';
 				$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id'], ':user_id'=>$this->user->user_id));
 				if($prepare) {
-					$query = 'DELETE FROM '.TABLE_ADDRESS.' WHERE post_id = :post_id';
-					$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
-					$query = 'DELETE FROM '.TABLE_COMMENT.' WHERE post_id = :post_id';
-					$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
-					$query = 'DELETE FROM '.TABLE_LIKE.' WHERE post_id = :post_id';
-					$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
-					$query = 'DELETE FROM '.TABLE_LINK.' WHERE post_id = :post_id';
-					$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
 					if($post->post_countphoto > 0) {
 						$query = 'SELECT photo.* FROM '.TABLE_PHOTO.' photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id';
 						$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
@@ -357,7 +349,10 @@ class wall369 {
 								}
 							}
 						}
-						$query = 'DELETE FROM '.TABLE_PHOTO.' WHERE post_id = :post_id';
+					}
+					$tables = array(TABLE_ADDRESS, TABLE_COMMENT, TABLE_LIKE, TABLE_LINK, TABLE_PHOTO);
+					foreach($tables as $table) {
+						$query = 'DELETE FROM '.$table.' WHERE post_id = :post_id';
 						$prepare = $this->pdo_execute($query, array(':post_id'=>$this->get['post_id']));
 					}
 					$render .= '<status>delete_post</status>';
@@ -1017,13 +1012,12 @@ class wall369 {
 		$render .= '<div class="link_display">';
 		if($link->link_image != '') {
 			$render .= '<div class="link_thumb">';
-			$full = '';
 			$render .= '<a href="'.$link->link_url.'" target="_blank"><img alt="" src="'.$link->link_image.'"></a>';
 			$render .= '</div>';
+			$render .= '<div class="link_text">';
 		} else {
-			$full = ' link_text_full';
+			$render .= '<div class="link_text link_text_full">';
 		}
-		$render .= '<div class="link_text'.$full.'">';
 		$render .= '<p><a href="'.$link->link_url.'" target="_blank">'.$link->link_title.'</a><br>';
 		if($link->link_icon != '') {
 			$render .= '<span class="icon"><img alt="" src="'.$link->link_icon.'"></span> ';
@@ -1097,14 +1091,10 @@ class wall369 {
 		if($date != '') {
 			list($datecreated, $timecreated) = explode(' ', $date);
 			if(function_exists('date_create') && function_exists('date_diff')) {
-				$prev = date_create($datecreated);
-				$next = date_create($this->date_day);
-				$interval = date_diff($prev, $next);
+				$interval = date_diff(date_create($datecreated), date_create($this->date_day));
 				$diff = $interval->format('%a');
 			} else {
-				$prev = strtotime($datecreated);
-				$next = strtotime($this->date_day);
-				$diff = ($next - $prev) / 3600 / 24;
+				$diff = (strtotime($datecreated) - strtotime($this->date_day)) / 3600 / 24;
 			}
 			if($diff == 0) {
 				list($prev_h, $prev_m, $prev_s) = explode(':', $timecreated);
@@ -1281,9 +1271,7 @@ class wall369 {
 			$opts = array('http'=>array('header'=>'User-Agent: '.$_SERVER['HTTP_USER_AGENT']."\r\n"));
 			$context = stream_context_create($opts);
 			$content = file_get_contents($data->link_url, false, $context);
-			$content = str_replace("\t", '', $content);
-			$content = str_replace("\r\n", '', $content);
-			$content = str_replace("\n", '', $content);
+			$content = str_replace(array("\t", "\r\n", "\n"), array('', '', ''), $content);
 			$pattern_one = array();
 			$pattern_one['title'] = "|<[tT][iI][tT][lL][eE](.*)>(.*)<\/[tT][iI][tT][lL][eE]>|U";
 			$pattern_one['charsetclient'] = "|<[mM][eE][tT][aA](.*)[cC][hH][aA][rR][sS][eE][tT]=[\"'](.*)[\"'](.*)>|U";
@@ -1317,23 +1305,21 @@ class wall369 {
 				}
 			}
 			foreach($keys as $key => $value) {
-				if(!is_array($value)) {
-					if($key == 'image_src') {
-						$data->link_image = $value;
-					} else if($key == 'shortcut icon') {
-						$data->link_icon = $value;
-					} else if($key == 'content-type-server' && stristr($value, 'charset')) {
-						$data->link_charsetserver = substr($value, strpos($value, '=') + 1);
-					} else if($key == 'content-type' && stristr($value, 'charset')) {
-						$data->link_charsetclient = substr($value, strpos($value, '=') + 1);
-					} else if(substr($key, 0, 3) == 'og:' || substr($key, 0, 3) == 'fb:') {
-						$key = substr($key, 3);
-						$key = str_replace(':', '', $key);
-						$key = str_replace('_', '', $key);
-						$data->{'link_'.$key} = $value;
-					} else {
-						$data->{'link_'.$key} = $value;
-					}
+				if($key == 'image_src') {
+					$data->link_image = $value;
+				} else if($key == 'shortcut icon') {
+					$data->link_icon = $value;
+				} else if($key == 'content-type-server' && stristr($value, 'charset')) {
+					$data->link_charsetserver = substr($value, strpos($value, '=') + 1);
+				} else if($key == 'content-type' && stristr($value, 'charset')) {
+					$data->link_charsetclient = substr($value, strpos($value, '=') + 1);
+				} else if(substr($key, 0, 3) == 'og:') {
+					$key = substr($key, 3);
+					$key = str_replace(':', '', $key);
+					$key = str_replace('_', '', $key);
+					$data->{'link_'.$key} = $value;
+				} else {
+					$data->{'link_'.$key} = $value;
 				}
 			}
 			if($data->link_icon != '' && substr($data->link_icon, 0, 4) != 'http' && substr($data->link_icon, 0, 5) != 'data:') {
