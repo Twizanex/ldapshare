@@ -37,7 +37,7 @@ $this->str['fr']['date_l'] = array(
 'Thursday'=>'Jeudi',
 'Friday'=>'Vendredi',
 'Saturday'=>'Samedi',
-'Sunday'=>'Dmanche'
+'Sunday'=>'Dimanche'
 );
 $this->str['fr']['date_D'] = array(
 'Monday'=>'Mon',
