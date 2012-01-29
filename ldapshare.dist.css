@@ -7,7 +7,7 @@ p{clear:both;margin:0px 0px 5px 0px;}
 em{color:#000000;font-style:italic;}
 strong{font-weight:bold;}
 form{margin:0px;padding:0px;}
-#wall369{margin:auto;position:relative;width:600px;}
+#ldapshare{margin:auto;position:relative;width:600px;}
 #popin{display:none;position:absolute;width:600px;z-index:200;}
 #popin_display{text-align:center;}
 .popin_content{background-color:#EDEFF4;border:1px solid #D2D9E7;}
@@ -76,7 +76,7 @@ form{margin:0px;padding:0px;}
 .commentform, .link_more, .unlike_inactive, .like_inactive{display:none;}
 .inputsubmit{background-color:#5b74a8;color:#ffffff;cursor:pointer;font-size:14px;font-weight:bold;margin:0px;padding:1px 2px 2px;}
 @media only screen and (max-width:600px) {
-#wall369{width:300px;}
+#ldapshare{width:300px;}
 #popin{width:300px;}
 .post_thumb{width:30px;}
 .post_thumb img{width:30px;}

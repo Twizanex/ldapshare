@@ -1,5 +1,5 @@
 <?php
-class wall369 {
+class ldapshare {
 	function __construct() {
 		$this->microtime_start = microtime(1);
 		session_set_cookie_params(0, '/', '', $this->is_https(), 1);
@@ -30,32 +30,28 @@ class wall369 {
 		$this->set_get('photo_id', '', 'numeric');
 		$this->queries = array();
 		if($this->get['a'] == 'index') {
-			if(isset($_SESSION['wall369']['user_id']) == 1 && DEMO == 1) {
-				$_SESSION['wall369'] = array('user_id'=>$_SESSION['wall369']['user_id'], 'timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
-			} else {
-				$_SESSION['wall369'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
-			}
+			$_SESSION['ldapshare']['data'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
 		}
-		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['wall369']['timezone']);
-		$this->date_time = gmdate('H:i:s', date('U') + 3600 * $_SESSION['wall369']['timezone']);
+		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['ldapshare']['data']['timezone']);
+		$this->date_time = gmdate('H:i:s', date('U') + 3600 * $_SESSION['ldapshare']['data']['timezone']);
 		try {
 			$options = array(PDO::MYSQL_ATTR_INIT_COMMAND=>'SET NAMES utf8', PDO::ATTR_PERSISTENT=>1);
 			$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, $options);
 		} catch(PDOException $e) {
 			trigger_error($e->getMessage());
 		}
-		if(isset($_SESSION['wall369']['user_id']) == 0 && DEMO == 1) {
-			$_SESSION['wall369']['user_id'] = rand(1, 100);
+		if(isset($_SESSION['ldapshare']['user_id']) == 0 && DEMO == 1) {
+			$_SESSION['ldapshare']['user_id'] = rand(1, 100);
 		}
-		if(isset($_SESSION['wall369']['user_id']) == 0 && isset($_COOKIE['user_token']) == 1) {
+		if(isset($_SESSION['ldapshare']['user_id']) == 0 && isset($_COOKIE['user_token']) == 1) {
 			$user = $this->get_user_by_token($_COOKIE['user_token']);
 			if($user) {
-				$_SESSION['wall369']['user_id'] = $user->user_id;
+				$_SESSION['ldapshare']['user_id'] = $user->user_id;
 			}
-		} else if(isset($_SESSION['wall369']['user_id']) == 1) {
-			$this->user = $this->get_user_by_id($_SESSION['wall369']['user_id']);
+		} else if(isset($_SESSION['ldapshare']['user_id']) == 1) {
+			$this->user = $this->get_user_by_id($_SESSION['ldapshare']['user_id']);
 		}
-		$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
+		$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
 		FROM '.TABLE_POST.' post
 		LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id
 		LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id
@@ -87,7 +83,7 @@ class wall369 {
 		header($_SERVER['SERVER_PROTOCOL'].' 500 Internal Server Error');
 		header('Content-Type: text/xml; charset=UTF-8');
 		$render = '<?xml version="1.0" encoding="UTF-8"?>'."\r\n";
-		$render .= '<wall369>'."\r\n";
+		$render .= '<ldapshare>'."\r\n";
 		if(DEBUG == 1) {
 			$e_type_values = array(1=>'E_ERROR', 2=>'E_WARNING', 4=>'E_PARSE', 8=>'E_NOTICE', 16=>'E_CORE_ERROR', 32=>'E_CORE_WARNING', 64=>'E_COMPILE_ERROR', 128=>'E_COMPILE_WARNING', 256=>'E_USER_ERROR', 512=>'E_USER_WARNING', 1024=>'E_USER_NOTICE', 2048=>'E_STRICT', 4096=>'E_RECOVERABLE_ERROR', 8192=>'E_DEPRECATED', 16384=>'E_USER_DEPRECATED', 30719=>'E_ALL');
 			if(isset($e_type_values[$e_type]) == 1) {
@@ -99,18 +95,18 @@ class wall369 {
 			$render .= '<line>'.$e_line.'</line>'."\r\n";
 			$render .= $this->render_debug();
 		}
-		$render .= '</wall369>'."\r\n";
+		$render .= '</ldapshare>'."\r\n";
 		echo $render;
 		exit(0);
 	}
 	function render_debug() {
 		$microtime_end = microtime(1);
 		$microtime_total = $microtime_end - $this->microtime_start;
-		$render = '<timezone>'.$_SESSION['wall369']['timezone'].'</timezone>'."\r\n";
-		$render = '<post_id_oldest>'.$_SESSION['wall369']['post_id_oldest'].'</post_id_oldest>'."\r\n";
-		$render .= '<post_id_newest>'.$_SESSION['wall369']['post_id_newest'].'</post_id_newest>'."\r\n";
-		$render .= '<comment_id_oldest>'.$_SESSION['wall369']['comment_id_oldest'].'</comment_id_oldest>'."\r\n";
-		$render .= '<comment_id_newest>'.$_SESSION['wall369']['comment_id_newest'].'</comment_id_newest>'."\r\n";
+		$render = '<timezone>'.$_SESSION['ldapshare']['data']['timezone'].'</timezone>'."\r\n";
+		$render = '<post_id_oldest>'.$_SESSION['ldapshare']['data']['post_id_oldest'].'</post_id_oldest>'."\r\n";
+		$render .= '<post_id_newest>'.$_SESSION['ldapshare']['data']['post_id_newest'].'</post_id_newest>'."\r\n";
+		$render .= '<comment_id_oldest>'.$_SESSION['ldapshare']['data']['comment_id_oldest'].'</comment_id_oldest>'."\r\n";
+		$render .= '<comment_id_newest>'.$_SESSION['ldapshare']['data']['comment_id_newest'].'</comment_id_newest>'."\r\n";
 		$render .= '<microtime_total>'.round($microtime_total, 5).'</microtime_total>'."\r\n";
 		if(function_exists('memory_get_peak_usage')) {
 			$render .= '<memory_get_peak_usage>'.number_format(memory_get_peak_usage(), 0, '.', ' ').'</memory_get_peak_usage>'."\r\n";
@@ -127,18 +123,18 @@ class wall369 {
 		if($this->get['a'] == 'index') {
 			header($_SERVER['SERVER_PROTOCOL'].' 200 OK');
 			header('Content-Type: text/html; charset=UTF-8');
-			if(file_exists('wall369.tpl')) {
-				$render = file_get_contents('wall369.tpl')."\r\n";
+			if(file_exists('ldapshare.tpl')) {
+				$render = file_get_contents('ldapshare.tpl')."\r\n";
 			} else {
-				$render = file_get_contents('wall369.dist.tpl')."\r\n";
+				$render = file_get_contents('ldapshare.dist.tpl')."\r\n";
 			}
 		} else {
 			header('Content-Type: text/xml; charset=UTF-8');
 			$render = '<?xml version="1.0" encoding="UTF-8"?>'."\r\n";
-			$render .= '<wall369>'."\r\n";
+			$render .= '<ldapshare>'."\r\n";
 			if(method_exists($this, 'action_'.$this->get['a'])) {
 				$actions_guest = array('islogged', 'loginform', 'login', 'timezone');
-				if(isset($_SESSION['wall369']['user_id']) == 0 && !in_array($this->get['a'], $actions_guest)) {
+				if(isset($_SESSION['ldapshare']['user_id']) == 0 && !in_array($this->get['a'], $actions_guest)) {
 					header($_SERVER['SERVER_PROTOCOL'].' 403 Forbidden');
 				} else {
 					header($_SERVER['SERVER_PROTOCOL'].' 200 OK');
@@ -150,7 +146,7 @@ class wall369 {
 			if(DEBUG == 1) {
 				$render .= $this->render_debug();
 			}
-			$render .= '</wall369>'."\r\n";
+			$render .= '</ldapshare>'."\r\n";
 		}
 		if(GZHANDLER == 1 && isset($_SERVER['HTTP_ACCEPT_ENCODING']) == 1 && substr_count($_SERVER['HTTP_ACCEPT_ENCODING'], 'gzip') && extension_loaded('zlib')) {
 			ob_start('ob_gzhandler');
@@ -202,7 +198,7 @@ class wall369 {
 		$render = '';
 		if(DEMO == 1) {
 			$render .= '<status>ok</status>';
-		} else if(isset($_SESSION['wall369']['user_id']) == 1 && isset($_COOKIE['user_token']) == 1 && $this->get_user_by_token($_COOKIE['user_token'])) {
+		} else if(isset($_SESSION['ldapshare']['user_id']) == 1 && isset($_COOKIE['user_token']) == 1 && $this->get_user_by_token($_COOKIE['user_token'])) {
 			$render .= '<status>ok</status>';
 		} else {
 			$render .= '<status>ko</status>';
@@ -211,7 +207,7 @@ class wall369 {
 	}
 	function action_timezone() {
 		$this->set_get('t', 0, 'numeric');
-		$_SESSION['wall369']['timezone'] = $this->get['t'];
+		$_SESSION['ldapshare']['data']['timezone'] = $this->get['t'];
 		$render = '<timezone>'.$this->get['t'].'</timezone>';
 		$render .= '<upload_max_filesize>'.intval(ini_get('upload_max_filesize')).'</upload_max_filesize>';
 		return $render;
@@ -254,7 +250,7 @@ class wall369 {
 									$user_id = $this->pdo->lastinsertid();
 								}
 							}
-							$_SESSION['wall369']['user_id'] = $user_id;
+							$_SESSION['ldapshare']['user_id'] = $user_id;
 							$user_token = $this->string_generate(40, 1, 1, 1);
 							$query = 'UPDATE '.TABLE_USER.' SET user_token = :user_token WHERE user_id = :user_id';
 							$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id, ':user_token'=>$user_token));
@@ -270,9 +266,10 @@ class wall369 {
 	}
 	function action_logout() {
 		$query = 'UPDATE '.TABLE_USER.' SET user_token = NULL WHERE user_id = :user_id';
-		$prepare = $this->pdo_execute($query, array(':user_id'=>$_SESSION['wall369']['user_id']));
+		$prepare = $this->pdo_execute($query, array(':user_id'=>$_SESSION['ldapshare']['user_id']));
 		setcookie('user_token', NULL, NULL, '/');
-		$_SESSION['wall369'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
+		unset($_SESSION['ldapshare']['user_id']);
+		$_SESSION['ldapshare']['data'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
 	}
 	function action_postform() {
 		$render = '<content><![CDATA[';
@@ -517,13 +514,13 @@ class wall369 {
 		$flt = array();
 		$parameters = array();
 		$flt[] = '1';
-		if(isset($_SESSION['wall369']['post_id_oldest']) == 1 && $_SESSION['wall369']['post_id_oldest'] != 0) {
+		if(isset($_SESSION['ldapshare']['data']['post_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['post_id_oldest'] != 0) {
 			$flt[] = 'post.post_id >= :post_id_oldest';
-			$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
+			$parameters[':post_id_oldest'] = $_SESSION['ldapshare']['data']['post_id_oldest'];
 		}
 		$flt[] = 'post.post_datecreated LIKE :today_limit';
 		$parameters[':today_limit'] = $date_day_utc.'%';
-		$query = 'SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS post_datecreated FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id';
+		$query = 'SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS post_datecreated FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id';
 		$prepare = $this->pdo_execute($query, $parameters);
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
@@ -540,13 +537,13 @@ class wall369 {
 		$flt = array();
 		$parameters = array();
 		$flt[] = '1';
-		if(isset($_SESSION['wall369']['comment_id_oldest']) == 1 && $_SESSION['wall369']['comment_id_oldest'] != 0) {
+		if(isset($_SESSION['ldapshare']['data']['comment_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['comment_id_oldest'] != 0) {
 			$flt[] = 'comment.comment_id >= :comment_id_oldest';
-			$parameters[':comment_id_oldest'] = $_SESSION['wall369']['comment_id_oldest'];
+			$parameters[':comment_id_oldest'] = $_SESSION['ldapshare']['data']['comment_id_oldest'];
 		}
 		$flt[] = 'comment.comment_datecreated LIKE :today_limit';
 		$parameters[':today_limit'] = $date_day_utc.'%';
-		$query = 'SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id';
+		$query = 'SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id';
 		$prepare = $this->pdo_execute($query, $parameters);
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
@@ -564,20 +561,20 @@ class wall369 {
 	}
 	function action_refreshnew() {
 		$render = $this->get_postlist('ASC');
-		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id > :comment_id_newest AND comment.post_id >= :post_id_oldest GROUP BY comment.comment_id';
-		$prepare = $this->pdo_execute($query, array(':comment_id_newest'=>$_SESSION['wall369']['comment_id_newest'], ':post_id_oldest'=>$_SESSION['wall369']['post_id_oldest']));
+		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id > :comment_id_newest AND comment.post_id >= :post_id_oldest GROUP BY comment.comment_id';
+		$prepare = $this->pdo_execute($query, array(':comment_id_newest'=>$_SESSION['ldapshare']['data']['comment_id_newest'], ':post_id_oldest'=>$_SESSION['ldapshare']['data']['post_id_oldest']));
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
 				$render .= '<comments>';
 				$u = 0;
 				while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
-					if($u == 0 && ($_SESSION['wall369']['comment_id_oldest'] > $comment->comment_id || $_SESSION['wall369']['comment_id_oldest'] == 0)) {
-						$_SESSION['wall369']['comment_id_oldest'] = $comment->comment_id;
+					if($u == 0 && ($_SESSION['ldapshare']['data']['comment_id_oldest'] > $comment->comment_id || $_SESSION['ldapshare']['data']['comment_id_oldest'] == 0)) {
+						$_SESSION['ldapshare']['data']['comment_id_oldest'] = $comment->comment_id;
 					}
 					$render .= '<comment post_id="'.$comment->post_id.'" comment_id="'.$comment->comment_id.'"><![CDATA['.$this->render_comment($comment).']]></comment>';
-					if($_SESSION['wall369']['comment_id_newest'] < $comment->comment_id || $_SESSION['wall369']['comment_id_newest'] == 0) {
-						$_SESSION['wall369']['comment_id_newest'] = $comment->comment_id;
+					if($_SESSION['ldapshare']['data']['comment_id_newest'] < $comment->comment_id || $_SESSION['ldapshare']['data']['comment_id_newest'] == 0) {
+						$_SESSION['ldapshare']['data']['comment_id_newest'] = $comment->comment_id;
 					}
 					$u++;
 				}
@@ -592,15 +589,15 @@ class wall369 {
 		$parameters = array();
 		$flt[] = '1';
 		if($order == 'ASC') {
-			if(isset($_SESSION['wall369']['post_id_newest']) == 1 && $_SESSION['wall369']['post_id_newest'] != 0) {
+			if(isset($_SESSION['ldapshare']['data']['post_id_newest']) == 1 && $_SESSION['ldapshare']['data']['post_id_newest'] != 0) {
 				$flt[] = 'post.post_id > :post_id_newest';
-				$parameters[':post_id_newest'] = $_SESSION['wall369']['post_id_newest'];
+				$parameters[':post_id_newest'] = $_SESSION['ldapshare']['data']['post_id_newest'];
 			}
 		}
 		if($order == 'DESC') {
-			if(isset($_SESSION['wall369']['post_id_oldest']) == 1 && $_SESSION['wall369']['post_id_oldest'] != 0) {
+			if(isset($_SESSION['ldapshare']['data']['post_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['post_id_oldest'] != 0) {
 				$flt[] = 'post.post_id < :post_id_oldest';
-				$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
+				$parameters[':post_id_oldest'] = $_SESSION['ldapshare']['data']['post_id_oldest'];
 			}
 		}
 		$parameters[':user_id'] = $this->user->user_id;
@@ -616,16 +613,16 @@ class wall369 {
 				$u = 0;
 				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
 					if($order == 'ASC') {
-						if($u == 0 && ($_SESSION['wall369']['post_id_oldest'] > $post->post_id || $_SESSION['wall369']['post_id_oldest'] == 0)) {
-							$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
+						if($u == 0 && ($_SESSION['ldapshare']['data']['post_id_oldest'] > $post->post_id || $_SESSION['ldapshare']['data']['post_id_oldest'] == 0)) {
+							$_SESSION['ldapshare']['data']['post_id_oldest'] = $post->post_id;
 						}
-						$_SESSION['wall369']['post_id_newest'] = $post->post_id;
+						$_SESSION['ldapshare']['data']['post_id_newest'] = $post->post_id;
 					}
 					if($order == 'DESC') {
-						if($u == 0 && ($_SESSION['wall369']['post_id_newest'] < $post->post_id || $_SESSION['wall369']['post_id_newest'] == 0)) {
-							$_SESSION['wall369']['post_id_newest'] = $post->post_id;
+						if($u == 0 && ($_SESSION['ldapshare']['data']['post_id_newest'] < $post->post_id || $_SESSION['ldapshare']['data']['post_id_newest'] == 0)) {
+							$_SESSION['ldapshare']['data']['post_id_newest'] = $post->post_id;
 						}
-						$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
+						$_SESSION['ldapshare']['data']['post_id_oldest'] = $post->post_id;
 					}
 					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
 					$u++;
@@ -678,7 +675,7 @@ class wall369 {
 		}
 	}
 	function get_comment_by_id($comment_id) {
-		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id';
+		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id';
 		$prepare = $this->pdo_execute($query, array(':comment_id'=> $comment_id));
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
@@ -688,7 +685,7 @@ class wall369 {
 		}
 	}
 	function get_photo_by_id($photo_id) {
-		$query = 'SELECT photo.*, DATE_ADD(photo.photo_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS photo_datecreated FROM '.TABLE_PHOTO.' photo WHERE photo.photo_id = :photo_id GROUP BY photo.photo_id';
+		$query = 'SELECT photo.*, DATE_ADD(photo.photo_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS photo_datecreated FROM '.TABLE_PHOTO.' photo WHERE photo.photo_id = :photo_id GROUP BY photo.photo_id';
 		$prepare = $this->pdo_execute($query, array(':photo_id'=> $photo_id));
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
@@ -740,7 +737,7 @@ class wall369 {
 		$parameters = array();
 		$flt[] = '1';
 		$flt[] = 'post.post_id < :post_id_oldest';
-		$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
+		$parameters[':post_id_oldest'] = $_SESSION['ldapshare']['data']['post_id_oldest'];
 		$query = 'SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt);
 		$prepare = $this->pdo_execute($query, $parameters);
 		if($prepare) {
@@ -848,19 +845,19 @@ class wall369 {
 					$limit = ' LIMIT '.$min.', '.LIMIT_COMMENTS;
 				}
 			}
-			$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id'.$limit;
+			$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id'.$limit;
 			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
 			if($prepare) {
 				$rowCount = $prepare->rowCount();
 				if($rowCount > 0) {
 					$u = 0;
 					while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
-						if($u == 0 && ($_SESSION['wall369']['comment_id_oldest'] > $comment->comment_id || $_SESSION['wall369']['comment_id_oldest'] == 0)) {
-							$_SESSION['wall369']['comment_id_oldest'] = $comment->comment_id;
+						if($u == 0 && ($_SESSION['ldapshare']['data']['comment_id_oldest'] > $comment->comment_id || $_SESSION['ldapshare']['data']['comment_id_oldest'] == 0)) {
+							$_SESSION['ldapshare']['data']['comment_id_oldest'] = $comment->comment_id;
 						}
 						$render .= $this->render_comment($comment);
-						if($_SESSION['wall369']['comment_id_newest'] < $comment->comment_id || $_SESSION['wall369']['comment_id_newest'] == 0) {
-							$_SESSION['wall369']['comment_id_newest'] = $comment->comment_id;
+						if($_SESSION['ldapshare']['data']['comment_id_newest'] < $comment->comment_id || $_SESSION['ldapshare']['data']['comment_id_newest'] == 0) {
+							$_SESSION['ldapshare']['data']['comment_id_newest'] = $comment->comment_id;
 						}
 						$u++;
 					}
@@ -909,7 +906,7 @@ class wall369 {
 			} else {
 				$limit = '';
 			}
-			$query = 'SELECT l.*, user.*, DATE_ADD(l.like_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS like_datecreated, IF(l.user_id = :user_id OR post.user_id = l.user_id, 1, 0) AS ordering FROM '.TABLE_LIKE.' l LEFT JOIN '.TABLE_USER.' user ON user.user_id = l.user_id LEFT JOIN '.TABLE_POST.' post ON post.post_id = l.post_id WHERE l.post_id = :post_id GROUP BY l.like_id ORDER BY ordering ASC, l.like_id ASC'.$limit;
+			$query = 'SELECT l.*, user.*, DATE_ADD(l.like_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS like_datecreated, IF(l.user_id = :user_id OR post.user_id = l.user_id, 1, 0) AS ordering FROM '.TABLE_LIKE.' l LEFT JOIN '.TABLE_USER.' user ON user.user_id = l.user_id LEFT JOIN '.TABLE_POST.' post ON post.post_id = l.post_id WHERE l.post_id = :post_id GROUP BY l.like_id ORDER BY ordering ASC, l.like_id ASC'.$limit;
 			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id, ':user_id'=>$this->user->user_id));
 			if($prepare) {
 				$rowCount = $prepare->rowCount();
@@ -1247,8 +1244,8 @@ class wall369 {
 		foreach($default as $k => $v) {
 			$data->{$k} = $v;
 		}
-		if(isset($_SESSION['wall369'][$link]) == 1) {
-			return unserialize($_SESSION['wall369'][$link]);
+		if(isset($_SESSION['ldapshare'][$link]) == 1) {
+			return unserialize($_SESSION['ldapshare'][$link]);
 		} else {
 			$keys = array();
 			$headers = get_headers($link, 1);
@@ -1328,7 +1325,7 @@ class wall369 {
 				$data->link_title = utf8_encode($data->link_title);
 				$data->link_description = utf8_encode($data->link_description);
 			}
-			$_SESSION['wall369'][$link] = serialize($data);
+			$_SESSION['ldapshare'][$link] = serialize($data);
 			return $data;
 		}
 	}

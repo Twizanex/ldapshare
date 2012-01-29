@@ -18,13 +18,13 @@ if(file_exists('configuration.php')) {
 } else {
 	include_once('configuration.dist.php');
 }
-if(file_exists('wall369.php')) {
-	include_once('wall369.php');
+if(file_exists('ldapshare.php')) {
+	include_once('ldapshare.php');
 } else {
-	include_once('wall369.dist.php');
+	include_once('ldapshare.dist.php');
 }
-$wall369 = new wall369();
-$wall369->render();
-unset($wall369);
+$ldapshare = new ldapshare();
+$ldapshare->render();
+unset($ldapshare);
 exit(0);
 ?>

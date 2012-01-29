@@ -41,12 +41,12 @@ function loading_show() {
 function popin_hide() {
 	$('#popin').fadeOut('slow', function() {
 		$('#popin_display').html('');
-		$('#wall369').animate({'opacity': 1}, 400);
+		$('#ldapshare').animate({'opacity': 1}, 400);
 	});
 }
 function popin_show(href) {
 	loading_show();
-	$('#wall369').animate({'opacity': 0}, 400, function() {
+	$('#ldapshare').animate({'opacity': 0}, 400, function() {
 		data = {};
 		xml = ajax(href, data);
 		content = $(xml).find('content').text();
