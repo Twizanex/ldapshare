@@ -560,35 +560,7 @@ class wall369 {
 		return $render;
 	}
 	function action_refreshnew() {
-		$render = '';
-		$flt = array();
-		$parameters = array();
-		$flt[] = '1';
-		if(isset($_SESSION['wall369']['post_id_newest']) == 1 && $_SESSION['wall369']['post_id_newest'] != 0) {
-			$flt[] = 'post.post_id > :post_id_newest';
-			$parameters[':post_id_newest'] = $_SESSION['wall369']['post_id_newest'];
-		}
-		$parameters[':user_id'] = $this->user->user_id;
-		$query = $this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id ASC';
-		$prepare = $this->pdo_execute($query, $parameters);
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				$render .= '<posts>';
-				$u = 0;
-				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-					if($u == 0 && ($_SESSION['wall369']['post_id_oldest'] > $post->post_id || $_SESSION['wall369']['post_id_oldest'] == 0)) {
-						$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
-					}
-					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
-					$_SESSION['wall369']['post_id_newest'] = $post->post_id;
-					$u++;
-				}
-				$render .= '</posts>';
-			}
-		} else {
-			$this->pdo_error($prepare);
-		}
+		$render = $this->get_postlist('ASC');
 		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['wall369']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id > :comment_id_newest AND comment.post_id >= :post_id_oldest GROUP BY comment.comment_id';
 		$prepare = $this->pdo_execute($query, array(':comment_id_newest'=>$_SESSION['wall369']['comment_id_newest'], ':post_id_oldest'=>$_SESSION['wall369']['post_id_oldest']));
 		if($prepare) {
@@ -708,17 +680,28 @@ class wall369 {
 		$render .= '<div class="postform_preview" id="postform_photo_preview"></div>';
 		return $render;
 	}
-	function render_postlist() {
+	function get_postlist($order) {
 		$render = '';
 		$flt = array();
 		$parameters = array();
 		$flt[] = '1';
-		if(isset($_SESSION['wall369']['post_id_oldest']) == 1 && $_SESSION['wall369']['post_id_oldest'] != 0) {
-			$flt[] = 'post.post_id < :post_id_oldest';
-			$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
+		if($order == 'ASC') {
+			if(isset($_SESSION['wall369']['post_id_newest']) == 1 && $_SESSION['wall369']['post_id_newest'] != 0) {
+				$flt[] = 'post.post_id > :post_id_newest';
+				$parameters[':post_id_newest'] = $_SESSION['wall369']['post_id_newest'];
+			}
+		}
+		if($order == 'DESC') {
+			if(isset($_SESSION['wall369']['post_id_oldest']) == 1 && $_SESSION['wall369']['post_id_oldest'] != 0) {
+				$flt[] = 'post.post_id < :post_id_oldest';
+				$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
+			}
 		}
 		$parameters[':user_id'] = $this->user->user_id;
-		$query = $this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id DESC LIMIT 0,'.LIMIT_POSTS;
+		$query = $this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id '.$order;
+		if($order == 'DESC') {
+			$query .= ' LIMIT 0,'.LIMIT_POSTS;
+		}
 		$prepare = $this->pdo_execute($query, $parameters);
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
@@ -726,31 +709,43 @@ class wall369 {
 				$render .= '<posts>';
 				$u = 0;
 				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-					if($u == 0 && ($_SESSION['wall369']['post_id_newest'] < $post->post_id || $_SESSION['wall369']['post_id_newest'] == 0)) {
+					if($order == 'ASC') {
+						if($u == 0 && ($_SESSION['wall369']['post_id_oldest'] > $post->post_id || $_SESSION['wall369']['post_id_oldest'] == 0)) {
+							$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
+						}
 						$_SESSION['wall369']['post_id_newest'] = $post->post_id;
 					}
+					if($order == 'DESC') {
+						if($u == 0 && ($_SESSION['wall369']['post_id_newest'] < $post->post_id || $_SESSION['wall369']['post_id_newest'] == 0)) {
+							$_SESSION['wall369']['post_id_newest'] = $post->post_id;
+						}
+						$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
+					}
 					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
-					$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
 					$u++;
 				}
 				$render .= '</posts>';
-				$flt = array();
-				$parameters = array();
-				$flt[] = '1';
-				$flt[] = 'post.post_id < :post_id_oldest';
-				$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
-				$query = 'SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt);
-				$prepare = $this->pdo_execute($query, $parameters);
-				if($prepare) {
-					$rowCount = $prepare->rowCount();
-					if($rowCount > 0) {
-						$fetch = $prepare->fetch(PDO::FETCH_OBJ);
-						if($fetch->count_post > 0) {
-							$render .= '<more><![CDATA[<p><a class="postlist_action" href="?a=postlist">More posts</a></p>]]></more>';
-						}
-					}
-				} else {
-					$this->pdo_error($prepare);
+			}
+		} else {
+			$this->pdo_error($prepare);
+		}
+		return $render;
+	}
+	function render_postlist() {
+		$render = $this->get_postlist('DESC');
+		$flt = array();
+		$parameters = array();
+		$flt[] = '1';
+		$flt[] = 'post.post_id < :post_id_oldest';
+		$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
+		$query = 'SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt);
+		$prepare = $this->pdo_execute($query, $parameters);
+		if($prepare) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$fetch = $prepare->fetch(PDO::FETCH_OBJ);
+				if($fetch->count_post > 0) {
+					$render .= '<more><![CDATA[<p><a class="postlist_action" href="?a=postlist">More posts</a></p>]]></more>';
 				}
 			}
 		} else {
