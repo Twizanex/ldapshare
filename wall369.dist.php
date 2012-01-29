@@ -30,7 +30,11 @@ class wall369 {
 		$this->set_get('photo_id', '', 'numeric');
 		$this->queries = array();
 		if($this->get['a'] == 'index') {
-			$_SESSION['wall369'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
+			if(isset($_SESSION['wall369']['user_id']) == 1 && DEMO == 1) {
+				$_SESSION['wall369'] = array('user_id'=>$_SESSION['wall369']['user_id'], 'timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
+			} else {
+				$_SESSION['wall369'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
+			}
 		}
 		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['wall369']['timezone']);
 		$this->date_time = gmdate('H:i:s', date('U') + 3600 * $_SESSION['wall369']['timezone']);
