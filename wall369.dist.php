@@ -475,7 +475,6 @@ class wall369 {
 		$render = '';
 		if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
 			$link = $this->analyze_link($_POST['link_inputtext']);
-			$link->link_id = 0;
 			$render .= '<content><![CDATA[';
 			$render .= '<div class="linklist">';
 			$render .= $this->render_link($link);
@@ -583,6 +582,57 @@ class wall369 {
 		}
 		return $render;
 	}
+	function get_postlist($order) {
+		$render = '';
+		$flt = array();
+		$parameters = array();
+		$flt[] = '1';
+		if($order == 'ASC') {
+			if(isset($_SESSION['wall369']['post_id_newest']) == 1 && $_SESSION['wall369']['post_id_newest'] != 0) {
+				$flt[] = 'post.post_id > :post_id_newest';
+				$parameters[':post_id_newest'] = $_SESSION['wall369']['post_id_newest'];
+			}
+		}
+		if($order == 'DESC') {
+			if(isset($_SESSION['wall369']['post_id_oldest']) == 1 && $_SESSION['wall369']['post_id_oldest'] != 0) {
+				$flt[] = 'post.post_id < :post_id_oldest';
+				$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
+			}
+		}
+		$parameters[':user_id'] = $this->user->user_id;
+		$query = $this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id '.$order;
+		if($order == 'DESC') {
+			$query .= ' LIMIT 0,'.LIMIT_POSTS;
+		}
+		$prepare = $this->pdo_execute($query, $parameters);
+		if($prepare) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$render .= '<posts>';
+				$u = 0;
+				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
+					if($order == 'ASC') {
+						if($u == 0 && ($_SESSION['wall369']['post_id_oldest'] > $post->post_id || $_SESSION['wall369']['post_id_oldest'] == 0)) {
+							$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
+						}
+						$_SESSION['wall369']['post_id_newest'] = $post->post_id;
+					}
+					if($order == 'DESC') {
+						if($u == 0 && ($_SESSION['wall369']['post_id_newest'] < $post->post_id || $_SESSION['wall369']['post_id_newest'] == 0)) {
+							$_SESSION['wall369']['post_id_newest'] = $post->post_id;
+						}
+						$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
+					}
+					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
+					$u++;
+				}
+				$render .= '</posts>';
+			}
+		} else {
+			$this->pdo_error($prepare);
+		}
+		return $render;
+	}
 	function get_user_by_id($user_id) {
 		$query = 'SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_id = :user_id GROUP BY user.user_id';
 		$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id));
@@ -678,57 +728,6 @@ class wall369 {
 		$render .= '<div class="postform_preview" id="postform_link_preview"></div>';
 		$render .= '<div class="postform_preview" id="postform_address_preview"></div>';
 		$render .= '<div class="postform_preview" id="postform_photo_preview"></div>';
-		return $render;
-	}
-	function get_postlist($order) {
-		$render = '';
-		$flt = array();
-		$parameters = array();
-		$flt[] = '1';
-		if($order == 'ASC') {
-			if(isset($_SESSION['wall369']['post_id_newest']) == 1 && $_SESSION['wall369']['post_id_newest'] != 0) {
-				$flt[] = 'post.post_id > :post_id_newest';
-				$parameters[':post_id_newest'] = $_SESSION['wall369']['post_id_newest'];
-			}
-		}
-		if($order == 'DESC') {
-			if(isset($_SESSION['wall369']['post_id_oldest']) == 1 && $_SESSION['wall369']['post_id_oldest'] != 0) {
-				$flt[] = 'post.post_id < :post_id_oldest';
-				$parameters[':post_id_oldest'] = $_SESSION['wall369']['post_id_oldest'];
-			}
-		}
-		$parameters[':user_id'] = $this->user->user_id;
-		$query = $this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id '.$order;
-		if($order == 'DESC') {
-			$query .= ' LIMIT 0,'.LIMIT_POSTS;
-		}
-		$prepare = $this->pdo_execute($query, $parameters);
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				$render .= '<posts>';
-				$u = 0;
-				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-					if($order == 'ASC') {
-						if($u == 0 && ($_SESSION['wall369']['post_id_oldest'] > $post->post_id || $_SESSION['wall369']['post_id_oldest'] == 0)) {
-							$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
-						}
-						$_SESSION['wall369']['post_id_newest'] = $post->post_id;
-					}
-					if($order == 'DESC') {
-						if($u == 0 && ($_SESSION['wall369']['post_id_newest'] < $post->post_id || $_SESSION['wall369']['post_id_newest'] == 0)) {
-							$_SESSION['wall369']['post_id_newest'] = $post->post_id;
-						}
-						$_SESSION['wall369']['post_id_oldest'] = $post->post_id;
-					}
-					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_post($post).']]></post>';
-					$u++;
-				}
-				$render .= '</posts>';
-			}
-		} else {
-			$this->pdo_error($prepare);
-		}
 		return $render;
 	}
 	function render_postlist() {
@@ -1240,7 +1239,7 @@ class wall369 {
 	}
 	function analyze_link($link) {
 		$data = new stdClass();
-		$default = array('link_url'=>$link, 'link_title'=>'', 'link_image'=>'', 'link_video'=>'', 'link_videotype'=>'', 'link_videowidth'=>'', 'link_videoheight'=>'', 'link_icon'=>'', 'link_description'=>'');
+		$default = array('link_id'=>0, 'link_url'=>$link, 'link_title'=>'', 'link_image'=>'', 'link_video'=>'', 'link_videotype'=>'', 'link_videowidth'=>'', 'link_videoheight'=>'', 'link_icon'=>'', 'link_description'=>'');
 		foreach($default as $k => $v) {
 			$data->{$k} = $v;
 		}
