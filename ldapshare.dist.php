@@ -1,6 +1,6 @@
 <?php
 class ldapshare {
-	function __construct() {
+	public function __construct() {
 		$this->microtime_start = microtime(1);
 		session_set_cookie_params(0, '/', '', $this->is_https(), 1);
 		session_start();
@@ -52,26 +52,19 @@ class ldapshare {
 			$this->user = $this->get_user_by_id($_SESSION['ldapshare']['user_id']);
 		}
 		$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like
-		FROM '.TABLE_POST.' post
-		LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id
-		LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id
-		LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id
-		LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id
-		LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id
-		LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id
-		LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = :user_id';
+		FROM '.TABLE_POST.' post LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = :user_id';
 	}
-	function is_https() {
+	private function is_https() {
 		if(isset($_SERVER['HTTPS']) == 1 && strtolower($_SERVER['HTTPS']) == 'on') {
 			return 1;
 		} else {
 			return 0;
 		}
 	}
-	function error_handler($e_type, $e_message, $e_file, $e_line) {
+	private function error_handler($e_type, $e_message, $e_file, $e_line) {
 		$this->render_error($e_type, $e_message, $e_file, $e_line);
 	}
-	function shutdown_function() {
+	private function shutdown_function() {
 		if(function_exists('error_get_last')) {
 			$e = error_get_last();
 			if($e['type'] == 1) {
@@ -79,7 +72,7 @@ class ldapshare {
 			}
 		}
 	}
-	function render_error($e_type, $e_message, $e_file, $e_line) {
+	private function render_error($e_type, $e_message, $e_file, $e_line) {
 		header($_SERVER['SERVER_PROTOCOL'].' 500 Internal Server Error');
 		header('Content-Type: text/xml; charset=UTF-8');
 		$render = '<?xml version="1.0" encoding="UTF-8"?>'."\r\n";
@@ -99,11 +92,11 @@ class ldapshare {
 		echo $render;
 		exit(0);
 	}
-	function render_debug() {
+	private function render_debug() {
 		$microtime_end = microtime(1);
 		$microtime_total = $microtime_end - $this->microtime_start;
 		$render = '<timezone>'.$_SESSION['ldapshare']['data']['timezone'].'</timezone>'."\r\n";
-		$render = '<post_id_oldest>'.$_SESSION['ldapshare']['data']['post_id_oldest'].'</post_id_oldest>'."\r\n";
+		$render .= '<post_id_oldest>'.$_SESSION['ldapshare']['data']['post_id_oldest'].'</post_id_oldest>'."\r\n";
 		$render .= '<post_id_newest>'.$_SESSION['ldapshare']['data']['post_id_newest'].'</post_id_newest>'."\r\n";
 		$render .= '<comment_id_oldest>'.$_SESSION['ldapshare']['data']['comment_id_oldest'].'</comment_id_oldest>'."\r\n";
 		$render .= '<comment_id_newest>'.$_SESSION['ldapshare']['data']['comment_id_newest'].'</comment_id_newest>'."\r\n";
@@ -119,7 +112,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function render() {
+	public function render() {
 		if($this->get['a'] == 'index') {
 			header($_SERVER['SERVER_PROTOCOL'].' 200 OK');
 			header('Content-Type: text/html; charset=UTF-8');
@@ -157,7 +150,7 @@ class ldapshare {
 		}
 		exit(0);
 	}
-	function set_get($key, $default, $type) {
+	private function set_get($key, $default, $type) {
 		$this->get[$key] = $default;
 		if(isset($_GET[$key]) == 1 && $_GET[$key] != '') {
 			$set_get = 0;
@@ -176,7 +169,7 @@ class ldapshare {
 			}
 		}
 	}
-	function pdo_execute($query, $parameters) {
+	private function pdo_execute($query, $parameters) {
 		if(DEBUG == 1) {
 			$this->queries[] = $query;
 		}
@@ -188,13 +181,13 @@ class ldapshare {
 			$this->pdo_error($prepare);
 		}
 	}
-	function pdo_error($prepare) {
+	private function pdo_error($prepare) {
 		if($prepare->errorCode() != 0) {
 			$errorinfo = $prepare->errorinfo();
 			trigger_error($errorinfo[2]);
 		}
 	}
-	function action_islogged() {
+	private function action_islogged() {
 		$render = '';
 		if(DEMO == 1) {
 			$render .= '<status>ok</status>';
@@ -205,20 +198,20 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function action_timezone() {
+	private function action_timezone() {
 		$this->set_get('t', 0, 'numeric');
 		$_SESSION['ldapshare']['data']['timezone'] = $this->get['t'];
 		$render = '<timezone>'.$this->get['t'].'</timezone>';
 		$render .= '<upload_max_filesize>'.intval(ini_get('upload_max_filesize')).'</upload_max_filesize>';
 		return $render;
 	}
-	function action_loginform() {
+	private function action_loginform() {
 		$render = '<content><![CDATA[';
 		$render .= $this->render_loginform();
 		$render .= ']]></content>';
 		return $render;
 	}
-	function action_login() {
+	private function action_login() {
 		$status = 'ko';
 		$ldap_connect = ldap_connect(LDAP_SERVER, LDAP_PORT);
 		if($ldap_connect && filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
@@ -264,65 +257,67 @@ class ldapshare {
 		$render = '<status>'.$status.'</status>';
 		return $render;
 	}
-	function action_logout() {
+	private function action_logout() {
 		$query = 'UPDATE '.TABLE_USER.' SET user_token = NULL WHERE user_id = :user_id';
 		$prepare = $this->pdo_execute($query, array(':user_id'=>$_SESSION['ldapshare']['user_id']));
 		setcookie('user_token', NULL, NULL, '/');
 		unset($_SESSION['ldapshare']['user_id']);
 		$_SESSION['ldapshare']['data'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
 	}
-	function action_postform() {
+	private function action_postform() {
 		$render = '<content><![CDATA[';
 		$render .= $this->render_postform();
 		$render .= ']]></content>';
 		return $render;
 	}
-	function action_postlist() {
+	private function action_postlist() {
 		$render = $this->render_postlist();
 		return $render;
 	}
-	function action_post() {
+	private function action_post() {
 		$render = '';
-		$query = 'INSERT INTO '.TABLE_POST.' (user_id, post_content, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, NULLIF(:post_httpuseragent, \'\'), NULLIF(:post_remoteaddr, \'\'), :post_datecreated)';
-		$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_content'=>strip_tags($_POST['status_textarea']), ':post_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':post_remoteaddr'=>filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP), ':post_datecreated'=>date('Y-m-d H:i:s')));
-		if($prepare) {
-			$post_id = $this->pdo->lastinsertid();
-			$render .= '<status>post_insert</status>';
-			$photo_types = array('image/gif', 'image/jpeg', 'image/png');
-			if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0 && in_array($_FILES['photo_inputfile']['type'], $photo_types)) {
-				$photo_inputfile = $this->photo_add();
-				$data = array('photo_inputfile'=>$photo_inputfile);
-				$this->insert_photo($post_id, $data);
-			}
-			if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
-				$data = $this->analyze_link($_POST['link_inputtext']);
-				$this->insert_link($post_id, $data);
-			}
-			if(isset($_POST['address_inputtext']) == 1 && $_POST['address_inputtext'] != '') {
-				$data = array('address_title'=>$_POST['address_inputtext']);
-				$this->insert_address($post_id, $data);
-			}
-			preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['status_textarea'], $matches);
-			$matches = $matches[0];
-			if(count($matches) != 0) {
-				$matches = array_unique($matches);
-				foreach($matches as $match) {
-					$analyze = 1;
-					if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
-						if($match == $_POST['link_inputtext']) {
-							$analyze = 0;
+		if(isset($_POST['status_textarea']) == 1) {
+			$query = 'INSERT INTO '.TABLE_POST.' (user_id, post_content, post_httpuseragent, post_remoteaddr, post_datecreated) VALUES (:user_id, :post_content, NULLIF(:post_httpuseragent, \'\'), NULLIF(:post_remoteaddr, \'\'), :post_datecreated)';
+			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_content'=>filter_var($_POST['status_textarea'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES), ':post_httpuseragent'=>filter_var($_SERVER['HTTP_USER_AGENT'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES), ':post_remoteaddr'=>filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP), ':post_datecreated'=>date('Y-m-d H:i:s')));
+			if($prepare) {
+				$post_id = $this->pdo->lastinsertid();
+				$render .= '<status>post_insert</status>';
+				$photo_types = array('image/gif', 'image/jpeg', 'image/png');
+				if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0 && in_array($_FILES['photo_inputfile']['type'], $photo_types)) {
+					$photo_inputfile = $this->photo_add();
+					$data = array('photo_inputfile'=>$photo_inputfile);
+					$this->insert_photo($post_id, $data);
+				}
+				if(isset($_POST['link_inputtext']) == 1 && filter_var($_POST['link_inputtext'], FILTER_VALIDATE_URL)) {
+					$data = $this->analyze_link($_POST['link_inputtext']);
+					$this->insert_link($post_id, $data);
+				}
+				if(isset($_POST['address_inputtext']) == 1 && $_POST['address_inputtext'] != '') {
+					$data = array('address_title'=>$_POST['address_inputtext']);
+					$this->insert_address($post_id, $data);
+				}
+				preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['status_textarea'], $matches);
+				$matches = $matches[0];
+				if(count($matches) != 0) {
+					$matches = array_unique($matches);
+					foreach($matches as $match) {
+						$analyze = 1;
+						if(isset($_POST['link_inputtext']) == 1 && filter_var($_POST['link_inputtext'], FILTER_VALIDATE_URL)) {
+							if($match == $_POST['link_inputtext']) {
+								$analyze = 0;
+							}
 						}
-					}
-					if($analyze == 1) {
-						$data = $this->analyze_link($match);
-						$this->insert_link($post_id, $data);
+						if($analyze == 1) {
+							$data = $this->analyze_link($match);
+							$this->insert_link($post_id, $data);
+						}
 					}
 				}
 			}
 		}
 		return $render;
 	}
-	function action_postdelete() {
+	private function action_postdelete() {
 		$render = '<content><![CDATA[';
 		$render .= '<div class="popin_content">';
 		$render .= '<h2>'.$this->str[$this->language]['post_delete'].'</h2>';
@@ -331,7 +326,7 @@ class ldapshare {
 		$render .= ']]></content>';
 		return $render;
 	}
-	function action_postdeleteconfirm() {
+	private function action_postdeleteconfirm() {
 		$post = $this->get_post_by_id($this->get['post_id']);
 		$render = '<post_id>'.$this->get['post_id'].'</post_id>';
 		if($post) {
@@ -367,7 +362,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function action_commentlist() {
+	private function action_commentlist() {
 		$post = $this->get_post_by_id($this->get['post_id']);
 		$render = '<post_id>'.$this->get['post_id'].'</post_id>';
 		$render .= '<content><![CDATA[';
@@ -375,26 +370,28 @@ class ldapshare {
 		$render .= ']]></content>';
 		return $render;
 	}
-	function action_comment() {
+	private function action_comment() {
 		$render = '';
-		$post = $this->get_post_by_id($this->get['post_id']);
-		if($post) {
-			$query = 'INSERT INTO '.TABLE_COMMENT.' (user_id, post_id, comment_content, comment_httpuseragent, comment_remoteaddr, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, NULLIF(:comment_httpuseragent, \'\'), NULLIF(:comment_remoteaddr, \'\'), :comment_datecreated)';
-			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>strip_tags($_POST['comment_textarea']), ':comment_httpuseragent'=>$_SERVER['HTTP_USER_AGENT'], ':comment_remoteaddr'=>filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP), ':comment_datecreated'=>date('Y-m-d H:i:s')));
-			if($prepare) {
-				$comment_id = $this->pdo->lastinsertid();
-				$render .= '<status>comment_insert</status>';
+		if(isset($_POST['comment_textarea']) == 1) {
+			$post = $this->get_post_by_id($this->get['post_id']);
+			if($post) {
+				$query = 'INSERT INTO '.TABLE_COMMENT.' (user_id, post_id, comment_content, comment_httpuseragent, comment_remoteaddr, comment_datecreated) VALUES (:user_id, :post_id, :comment_content, NULLIF(:comment_httpuseragent, \'\'), NULLIF(:comment_remoteaddr, \'\'), :comment_datecreated)';
+				$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>$this->get['post_id'], ':comment_content'=>filter_var($_POST['comment_textarea'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES), ':comment_httpuseragent'=>filter_var($_SERVER['HTTP_USER_AGENT'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES), ':comment_remoteaddr'=>filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP), ':comment_datecreated'=>date('Y-m-d H:i:s')));
+				if($prepare) {
+					$comment_id = $this->pdo->lastinsertid();
+					$render .= '<status>comment_insert</status>';
+				}
+			} else {
+				$render .= '<status>post_deleted</status>';
+				$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
+				$render .= '<content><![CDATA[';
+				$render .= '<p>'.$this->str[$this->language]['post_deleted'].'</p>';
+				$render .= ']]></content>';
 			}
-		} else {
-			$render .= '<status>post_deleted</status>';
-			$render .= '<post_id>'.$this->get['post_id'].'</post_id>';
-			$render .= '<content><![CDATA[';
-			$render .= '<p>'.$this->str[$this->language]['post_deleted'].'</p>';
-			$render .= ']]></content>';
 		}
 		return $render;
 	}
-	function action_commentdelete() {
+	private function action_commentdelete() {
 		$render = '<content><![CDATA[';
 		$render .= '<div class="popin_content">';
 		$render .= '<h2>'.$this->str[$this->language]['comment_delete'].'</h2>';
@@ -403,7 +400,7 @@ class ldapshare {
 		$render .= ']]></content>';
 		return $render;
 	}
-	function action_commentdeleteconfirm() {
+	private function action_commentdeleteconfirm() {
 		$comment = $this->get_comment_by_id($this->get['comment_id']);
 		$render = '<comment_id>'.$this->get['comment_id'].'</comment_id>';
 		if($comment) {
@@ -422,7 +419,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function action_postlike() {
+	private function action_postlike() {
 		$post = $this->get_post_by_id($this->get['post_id']);
 		$render = '<post_id>'.$this->get['post_id'].'</post_id>';
 		if($post) {
@@ -443,7 +440,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function action_postunlike() {
+	private function action_postunlike() {
 		$post = $this->get_post_by_id($this->get['post_id']);
 		$render = '<post_id>'.$this->get['post_id'].'</post_id>';
 		if($post) {
@@ -464,7 +461,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function action_likelist() {
+	private function action_likelist() {
 		$render = '<post_id>'.$this->get['post_id'].'</post_id>';
 		$render .= '<content><![CDATA[';
 		$post = $this->get_post_by_id($this->get['post_id']);
@@ -472,9 +469,9 @@ class ldapshare {
 		$render .= ']]></content>';
 		return $render;
 	}
-	function action_linkpreview() {
+	private function action_linkpreview() {
 		$render = '';
-		if(isset($_POST['link_inputtext']) == 1 && $_POST['link_inputtext'] != '' && $_POST['link_inputtext'] != 'http://') {
+		if(isset($_POST['link_inputtext']) == 1 && filter_var($_POST['link_inputtext'], FILTER_VALIDATE_URL)) {
 			$link = $this->analyze_link($_POST['link_inputtext']);
 			$render .= '<content><![CDATA[';
 			$render .= '<div class="linklist">';
@@ -484,12 +481,12 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function action_addresspreview() {
+	private function action_addresspreview() {
 		$render = '';
 		if(isset($_POST['address_inputtext']) == 1 && $_POST['address_inputtext'] != '') {
 			$address = new stdClass();
 			$address->address_id = 0;
-			$address->address_title = strip_tags($_POST['address_inputtext']);
+			$address->address_title = filter_var($_POST['address_inputtext'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 			$render .= '<content><![CDATA[';
 			$render .= '<div class="addresslist">';
 			$render .= $this->render_address($address);
@@ -498,7 +495,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function action_photozoom() {
+	private function action_photozoom() {
 		$render = '';
 		$photo = $this->get_photo_by_id($this->get['photo_id']);
 		if($photo) {
@@ -508,7 +505,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function action_refreshdatecreated() {
+	private function action_refreshdatecreated() {
 		$render = '';
 		$date_day_utc = date('Y-m-d');
 		$flt = array();
@@ -559,7 +556,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function action_refreshnew() {
+	private function action_refreshnew() {
 		$render = $this->get_postlist('ASC');
 		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id > :comment_id_newest AND comment.post_id >= :post_id_oldest GROUP BY comment.comment_id';
 		$prepare = $this->pdo_execute($query, array(':comment_id_newest'=>$_SESSION['ldapshare']['data']['comment_id_newest'], ':post_id_oldest'=>$_SESSION['ldapshare']['data']['post_id_oldest']));
@@ -583,7 +580,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function get_postlist($order) {
+	private function get_postlist($order) {
 		$render = '';
 		$flt = array();
 		$parameters = array();
@@ -634,7 +631,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function get_user_by_id($user_id) {
+	private function get_user_by_id($user_id) {
 		$query = 'SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_id = :user_id GROUP BY user.user_id';
 		$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id));
 		if($prepare) {
@@ -644,7 +641,7 @@ class ldapshare {
 			}
 		}
 	}
-	function get_user_by_email($user_email) {
+	private function get_user_by_email($user_email) {
 		$query = 'SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_email = :user_email GROUP BY user.user_id';
 		$prepare = $this->pdo_execute($query, array(':user_email'=>filter_var($user_email, FILTER_VALIDATE_EMAIL)));
 		if($prepare) {
@@ -654,7 +651,7 @@ class ldapshare {
 			}
 		}
 	}
-	function get_user_by_token($user_token) {
+	private function get_user_by_token($user_token) {
 		$query = 'SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_token = :user_token GROUP BY user.user_id';
 		$prepare = $this->pdo_execute($query, array(':user_token'=>$user_token));
 		if($prepare) {
@@ -664,7 +661,7 @@ class ldapshare {
 			}
 		}
 	}
-	function get_post_by_id($post_id) {
+	private function get_post_by_id($post_id) {
 		$query = $this->post_query.' WHERE post.post_id = :post_id GROUP BY post.post_id';
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':user_id'=>$this->user->user_id));
 		if($prepare) {
@@ -674,7 +671,7 @@ class ldapshare {
 			}
 		}
 	}
-	function get_comment_by_id($comment_id) {
+	private function get_comment_by_id($comment_id) {
 		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id';
 		$prepare = $this->pdo_execute($query, array(':comment_id'=> $comment_id));
 		if($prepare) {
@@ -684,7 +681,7 @@ class ldapshare {
 			}
 		}
 	}
-	function get_photo_by_id($photo_id) {
+	private function get_photo_by_id($photo_id) {
 		$query = 'SELECT photo.*, DATE_ADD(photo.photo_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS photo_datecreated FROM '.TABLE_PHOTO.' photo WHERE photo.photo_id = :photo_id GROUP BY photo.photo_id';
 		$prepare = $this->pdo_execute($query, array(':photo_id'=> $photo_id));
 		if($prepare) {
@@ -694,19 +691,19 @@ class ldapshare {
 			}
 		}
 	}
-	function insert_photo($post_id, $data) {
+	private function insert_photo($post_id, $data) {
 		$query = 'INSERT INTO '.TABLE_PHOTO.' (post_id, photo_file, photo_datecreated) VALUES (:post_id, :photo_file, :photo_datecreated)';
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':photo_file'=>$data['photo_inputfile'], ':photo_datecreated'=>date('Y-m-d H:i:s')));
 	}
-	function insert_link($post_id, $data) {
+	private function insert_link($post_id, $data) {
 		$query = 'INSERT INTO '.TABLE_LINK.' (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_description, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_description, \'\'), :link_datecreated)';
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':link_url'=>$data->link_url, ':link_title'=>$data->link_title, ':link_image'=>$data->link_image, ':link_video'=>$data->link_video, ':link_videotype'=>$data->link_videotype, ':link_videowidth'=>$data->link_videowidth, ':link_videoheight'=>$data->link_videoheight, ':link_icon'=>$data->link_icon, ':link_description'=>$data->link_description, ':link_datecreated'=>date('Y-m-d H:i:s')));
 	}
-	function insert_address($post_id, $data) {
+	private function insert_address($post_id, $data) {
 		$query = 'INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)';
-		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':address_title'=>$data['address_title'], ':address_datecreated'=>date('Y-m-d H:i:s')));
+		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':address_title'=>filter_var($data['address_title'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES), ':address_datecreated'=>date('Y-m-d H:i:s')));
 	}
-	function render_loginform() {
+	private function render_loginform() {
 		$render = '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">';
 		$render .= '<p class="form_email"><label for="email">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email" name="email" type="text" value=""></p>';
 		$render .= '<p class="form_password"><label for="password">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password" name="password" type="password" value=""></p>';
@@ -714,7 +711,7 @@ class ldapshare {
 		$render .= '</form>';
 		return $render;
 	}
-	function render_postform() {
+	private function render_postform() {
 		$render = '';
 		if(DEMO == 0) {
 			$render .= '<p id="postform_detail"><a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a></p>';
@@ -731,7 +728,7 @@ class ldapshare {
 		$render .= '<div class="postform_preview" id="postform_photo_preview"></div>';
 		return $render;
 	}
-	function render_postlist() {
+	private function render_postlist() {
 		$render = $this->get_postlist('DESC');
 		$flt = array();
 		$parameters = array();
@@ -753,7 +750,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function render_post($post) {
+	private function render_post($post) {
 		$render = '<div class="post" id="post_'.$post->post_id.'">';
 		$render .= '<div class="post_display">';
 		$render .= '<div class="post_thumb">';
@@ -826,7 +823,7 @@ class ldapshare {
 		$render .= '</div>';
 		return $render;
 	}
-	function render_commentlist($post, $all) {
+	private function render_commentlist($post, $all) {
 		$render = '';
 		if($post->count_comment > 0) {
 			$limit = '';
@@ -866,7 +863,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function render_comment($comment) {
+	private function render_comment($comment) {
 		$render = '<div class="comment" id="comment_'.$comment->comment_id.'">';
 		$render .= '<div class="comment_display">';
 		$render .= '<div class="comment_thumb">';
@@ -892,7 +889,7 @@ class ldapshare {
 		$render .= '</div>';
 		return $render;
 	}
-	function render_like($post, $all) {
+	private function render_like($post, $all) {
 		$render = '';
 		if($post->post_countlike != 0) {
 			if($post->post_countlike == 4) {
@@ -955,7 +952,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function render_photolist($post) {
+	private function render_photolist($post) {
 		$render = '';
 		if($post->post_countphoto > 0) {
 			$query = 'SELECT photo.* FROM '.TABLE_PHOTO.' photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id';
@@ -975,7 +972,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function render_photo($photo) {
+	private function render_photo($photo) {
 		$render = '<div class="photo" id="photo_'.$photo->photo_id.'">';
 		$render .= '<div class="photo_display">';
 		$render .= '<a href="?a=photozoom&amp;photo_id='.$photo->photo_id.'"><img alt="" src="storage/'.$photo->photo_file.'"></a>';
@@ -983,7 +980,7 @@ class ldapshare {
 		$render .= '</div>';
 		return $render;
 	}
-	function render_linklist($post) {
+	private function render_linklist($post) {
 		$render = '';
 		if($post->post_countlink > 0) {
 			$query = 'SELECT link.* FROM '.TABLE_LINK.' link WHERE link.post_id = :post_id GROUP BY link.link_id';
@@ -1001,7 +998,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function render_link($link) {
+	private function render_link($link) {
 		$url = parse_url($link->link_url);
 		$render = '<div class="link" id="link_'.$link->link_id.'">';
 		$render .= '<div class="link_display">';
@@ -1032,7 +1029,7 @@ class ldapshare {
 		$render .= '</div>';
 		return $render;
 	}
-	function render_addresslist($post) {
+	private function render_addresslist($post) {
 		$render = '';
 		if($post->post_countaddress > 0) {
 			$query = 'SELECT address.* FROM '.TABLE_ADDRESS.' address WHERE address.post_id = :post_id GROUP BY address.address_id';
@@ -1050,7 +1047,7 @@ class ldapshare {
 		}
 		return $render;
 	}
-	function render_address($address) {
+	private function render_address($address) {
 		$render = '<div class="address" id="address_'.$address->address_id.'">';
 		$render .= '<div class="address_display">';
 		$render .= '<p>'.$address->address_title.'</p>';
@@ -1059,7 +1056,7 @@ class ldapshare {
 		$render .= '</div>';
 		return $render;
 	}
-	function render_content($text) {
+	private function render_content($text) {
 		preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $text, $matches);
 		$matches = $matches[0];
 		if(count($matches) != 0) {
@@ -1078,10 +1075,10 @@ class ldapshare {
 		}
 		return nl2br($text);
 	}
-	function render_datecreated($date) {
+	private function render_datecreated($date) {
 		return '<span title="'.$this->date_transform($date).'">'.$this->date_mention($date).'</span>';
 	}
-	function date_mention($date) {
+	private function date_mention($date) {
 		$mention = '';
 		if($date != '') {
 			list($datecreated, $timecreated) = explode(' ', $date);
@@ -1116,7 +1113,7 @@ class ldapshare {
 		}
 		return $mention;
 	}
-	function date_transform($date) {
+	private function date_transform($date) {
 		if($date != '') {
 			$format =  $this->str[$this->language]['date_format'];
 			if(function_exists('date_create') && function_exists('date_format')) {
@@ -1138,39 +1135,37 @@ class ldapshare {
 		}
 		return $date;
 	}
-	function photo_add() {
+	private function photo_add() {
 		$newfile = '';
-		if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0) {
-			$folder = 'storage';
-			if(is_dir($folder)) {
-				$year = date('Y');
-				if(!is_dir($folder.'/'.$year)) {
-					mkdir($folder.'/'.$year);
-					copy($folder.'/index.php', $folder.'/'.$year.'/index.php');
+		$folder = 'storage';
+		if(is_dir($folder)) {
+			$year = date('Y');
+			if(!is_dir($folder.'/'.$year)) {
+				mkdir($folder.'/'.$year);
+				copy($folder.'/index.php', $folder.'/'.$year.'/index.php');
+			}
+			$newfile = $year.'/'.$this->string_generate(14, 1, 1, 0).'-'.$this->string_clean($_FILES['photo_inputfile']['name']);
+			move_uploaded_file($_FILES['photo_inputfile']['tmp_name'], $folder.'/'.$newfile);
+			if($_FILES['photo_inputfile']['type'] == 'image/jpeg') {
+				$filename = $folder.'/'.$newfile;
+				$width = 600;
+				$height = 600;
+				list($width_orig, $height_orig) = getimagesize($filename);
+				$ratio_orig = $width_orig / $height_orig;
+				if($width/$height > $ratio_orig) {
+					$width = $height * $ratio_orig;
+				} else {
+					$height = $width / $ratio_orig;
 				}
-				$newfile = $year.'/'.$this->string_generate(14, 1, 1, 0).'-'.$this->string_clean($_FILES['photo_inputfile']['name']);
-				move_uploaded_file($_FILES['photo_inputfile']['tmp_name'], $folder.'/'.$newfile);
-				if($_FILES['photo_inputfile']['type'] == 'image/jpeg') {
-					$filename = $folder.'/'.$newfile;
-					$width = 600;
-					$height = 600;
-					list($width_orig, $height_orig) = getimagesize($filename);
-					$ratio_orig = $width_orig / $height_orig;
-					if($width/$height > $ratio_orig) {
-						$width = $height * $ratio_orig;
-					} else {
-						$height = $width / $ratio_orig;
-					}
-					$image = imagecreatetruecolor($width, $height);
-					$image_orig = imagecreatefromjpeg($filename);
-					imagecopyresampled($image, $image_orig, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
-					imagejpeg($image, $filename, 75);
-				}
+				$image = imagecreatetruecolor($width, $height);
+				$image_orig = imagecreatefromjpeg($filename);
+				imagecopyresampled($image, $image_orig, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
+				imagejpeg($image, $filename, 75);
 			}
 		}
 		return $newfile;
 	}
-	function string_length($str) {
+	private function string_length($str) {
 		$str = html_entity_decode($str, ENT_QUOTES, 'UTF-8');
 		if(function_exists('mb_strlen')) {
 			$strlen = mb_strlen($str, 'UTF-8');
@@ -1179,7 +1174,7 @@ class ldapshare {
 		}
 		return $strlen;
 	}
-	function string_lower($str) {
+	private function string_lower($str) {
 		$str = html_entity_decode($str, ENT_QUOTES, 'UTF-8');
 		if(function_exists('mb_strtolower')) {
 			$strtolower = mb_strtolower($str, 'UTF-8');
@@ -1188,7 +1183,7 @@ class ldapshare {
 		}
 		return $strtolower;
 	}
-	function string_clean($str) {
+	private function string_clean($str) {
 		$str = $this->string_lower($str);
 		$array_convertdata = array('&#039;'=>'-', '&quot;'=>'', '&amp;'=>'-', '&lt;'=>'', '&gt;'=>'', '\''=>'-', '@'=>'-', '('=>'-', ')'=>'-', '#'=>'-', '&'=>'-', ' '=>'-', '_'=>'-', '\\'=>'', '/'=>'', '"'=>'', '?'=>'-', ':'=>'-', '*'=>'-', '|'=>'-', '<'=>'-', '>'=>'-', '°'=>'-',' ,'=>'-');
 		$str = str_replace(array_keys($array_convertdata), array_values($array_convertdata), $str);
@@ -1214,7 +1209,7 @@ class ldapshare {
 		}
 		return $newstr;
 	}
-	function string_generate($size = 8, $with_numbers = 1, $with_tiny_letters = 1, $with_capital_letters = 0) { 
+	private function string_generate($size = 8, $with_numbers = 1, $with_tiny_letters = 1, $with_capital_letters = 0) { 
 		$string = '';
 		$sizeof_lchar = 0;
 		$letter = '';
@@ -1238,7 +1233,7 @@ class ldapshare {
 		}
 		return $string;
 	}
-	function analyze_link($link) {
+	private function analyze_link($link) {
 		$data = new stdClass();
 		$default = array('link_id'=>0, 'link_url'=>$link, 'link_title'=>'', 'link_image'=>'', 'link_video'=>'', 'link_videotype'=>'', 'link_videowidth'=>'', 'link_videoheight'=>'', 'link_icon'=>'', 'link_description'=>'');
 		foreach($default as $k => $v) {
@@ -1263,7 +1258,7 @@ class ldapshare {
 					$keys['content-type-server'] = $headers['Content-Type'];
 				}
 			}
-			$opts = array('http'=>array('header'=>'User-Agent: '.$_SERVER['HTTP_USER_AGENT']."\r\n"));
+			$opts = array('http'=>array('header'=>'User-Agent: '.filter_var($_SERVER['HTTP_USER_AGENT'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES)."\r\n"));
 			$context = stream_context_create($opts);
 			$content = file_get_contents($data->link_url, false, $context);
 			$content = str_replace(array("\t", "\r\n", "\n"), array('', '', ''), $content);
@@ -1300,6 +1295,7 @@ class ldapshare {
 				}
 			}
 			foreach($keys as $key => $value) {
+				$value = filter_var($value, FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 				if($key == 'image_src') {
 					$data->link_image = $value;
 				} else if($key == 'shortcut icon') {
