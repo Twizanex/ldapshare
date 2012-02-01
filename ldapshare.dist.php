@@ -223,8 +223,8 @@ class ldapshare {
 					$ldap_get_entries = ldap_get_entries($ldap_connect, $ldap_search);
 					if($ldap_get_entries['count'] > 0) {
 						if(@ldap_bind($ldap_connect, $ldap_get_entries[0]['dn'], $_POST['password'])) {
-							$user_lastname = $ldap_get_entries[0][LDAP_LASTNAME][0];
-							$user_firstname = $ldap_get_entries[0][LDAP_FIRSTNAME][0];
+							$user_lastname = filter_var($ldap_get_entries[0][LDAP_LASTNAME][0], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+							$user_firstname = filter_var($ldap_get_entries[0][LDAP_FIRSTNAME][0], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 							$status = 'ok';
 							if(isset($ldap_get_entries[0]['jpegphoto'][0]) == 1) {
 								$user_file = base64_encode($ldap_get_entries[0]['jpegphoto'][0]);
