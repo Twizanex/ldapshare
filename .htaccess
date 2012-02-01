@@ -1,5 +1,5 @@
 Options -Indexes
-DirectoryIndex index.php
+DirectoryIndex index.php index.dist.php
 FileETag None
 <IfModule mod_php5.c>
 	php_value post_max_size 8M

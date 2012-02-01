@@ -61,7 +61,7 @@ function popin_show(href) {
 }
 function refresh_datecreated() {
 	data = {};
-	xml = ajax('index.php?a=refreshdatecreated', data);
+	xml = ajax('?a=refreshdatecreated', data);
 	$(xml).find('post').each(function(){
 		var post_id = $(this).attr('post_id');
 		var post_datecreated = $(this).text();
@@ -81,7 +81,7 @@ function refresh_datecreated() {
 }
 function refreshnew() {
 	data = {};
-	xml = ajax('index.php?a=refreshnew', data);
+	xml = ajax('?a=refreshnew', data);
 	count_post = $(xml).find('post').length;
 	if(count_post > 0) {
 		$('.post').removeClass('post_fresh');
@@ -108,7 +108,7 @@ function refreshnew() {
 }
 function postlist() {
 	data = {};
-	xml = ajax('index.php?a=postlist', data);
+	xml = ajax('?a=postlist', data);
 	$(xml).find('post').each(function(){
 		post_id = $(this).attr('post_id');
 		content = $(this).text();
@@ -123,7 +123,7 @@ function islogged_ok() {
 	$('#loginform').fadeOut(function() {
 		$('#loginform').html('');
 		data = {};
-		xml = ajax('index.php?a=postform', data);
+		xml = ajax('?a=postform', data);
 		content = $(xml).find('content').text();
 		$('#postform').html(content);
 		$('#status_textarea').focus();
@@ -138,7 +138,7 @@ function islogged_ko() {
 		$('#postform').fadeOut(function() {
 			$('#postform').html('');
 			data = {};
-			xml = ajax('index.php?a=loginform', data);
+			xml = ajax('?a=loginform', data);
 			content = $(xml).find('content').text();
 			$('#loginform').html(content);
 			$('#email').focus();
@@ -173,7 +173,7 @@ $(document).ready(function() {
 	d = new Date();
 	t = -d.getTimezoneOffset() / 60;
 	data = {};
-	xml = ajax('index.php?a=timezone&t=' + t, data);
+	xml = ajax('?a=timezone&t=' + t, data);
 	var upload_max_filesize = $(xml).find('upload_max_filesize').text() * 1048576;
 	$('.logout_action').live('click', function(e) {
 		e.preventDefault();
@@ -184,7 +184,7 @@ $(document).ready(function() {
 		d = new Date();
 		t = -d.getTimezoneOffset() / 60;
 		data = {};
-		xml = ajax('index.php?a=timezone&t=' + t, data);
+		xml = ajax('?a=timezone&t=' + t, data);
 	});
 	$('.postlist_action').live('click', function(e) {
 		e.preventDefault();
@@ -452,7 +452,7 @@ $(document).ready(function() {
 		popin_show(href);
     });
 	data = {};
-	xml = ajax('index.php?a=islogged', data);
+	xml = ajax('?a=islogged', data);
 	status = $(xml).find('status').text();
 	if(status == 'ok') {
 		islogged_ok();
