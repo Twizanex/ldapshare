@@ -259,7 +259,7 @@ class ldapshare {
 	}
 	private function action_logout() {
 		$query = 'UPDATE '.TABLE_USER.' SET user_token = NULL WHERE user_id = :user_id';
-		$prepare = $this->pdo_execute($query, array(':user_id'=>$_SESSION['ldapshare']['user_id']));
+		$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id));
 		setcookie('user_token', NULL, NULL, '/');
 		unset($_SESSION['ldapshare']['user_id']);
 		$_SESSION['ldapshare']['data'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
