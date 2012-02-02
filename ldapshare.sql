@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `ldapshare_user` (
 `user_email` varchar(255) NOT NULL,
 `user_lastname` varchar(255) NOT NULL,
 `user_firstname` varchar(255) NOT NULL,
-`user_file` text,
+`user_file` varchar(100) DEFAULT NULL,
 `user_token` char(40) DEFAULT NULL,
 `user_datecreated` datetime NOT NULL,
 PRIMARY KEY (`user_id`),

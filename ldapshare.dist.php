@@ -226,19 +226,14 @@ class ldapshare {
 							$user_lastname = filter_var($ldap_get_entries[0][LDAP_LASTNAME][0], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 							$user_firstname = filter_var($ldap_get_entries[0][LDAP_FIRSTNAME][0], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 							$status = 'ok';
-							if(isset($ldap_get_entries[0]['jpegphoto'][0]) == 1) {
-								$user_file = base64_encode($ldap_get_entries[0]['jpegphoto'][0]);
-							} else {
-								$user_file = '';
-							}
 							$user = $this->get_user_by_email($_POST['email']);
 							if($user) {
-								$query = 'UPDATE '.TABLE_USER.' SET user_lastname = :user_lastname, user_firstname = :user_firstname, user_file = NULLIF(:user_file, \'\') WHERE user_email = :user_email';
-								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname, ':user_file'=>$user_file));
+								$query = 'UPDATE '.TABLE_USER.' SET user_lastname = :user_lastname, user_firstname = :user_firstname WHERE user_email = :user_email';
+								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname));
 								$user_id = $user->user_id;
 							} else {
-								$query = 'INSERT INTO '.TABLE_USER.' (user_email, user_lastname, user_firstname, user_file, user_datecreated) VALUES (:user_email, :user_lastname, :user_firstname, NULLIF(:user_file, \'\'), :user_datecreated)';
-								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname, ':user_file'=>$user_file, ':user_datecreated'=>date('Y-m-d H:i:s')));
+								$query = 'INSERT INTO '.TABLE_USER.' (user_email, user_lastname, user_firstname, user_datecreated) VALUES (:user_email, :user_lastname, :user_firstname, :user_datecreated)';
+								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname, ':user_datecreated'=>date('Y-m-d H:i:s')));
 								if($prepare) {
 									$user_id = $this->pdo->lastinsertid();
 								}
@@ -264,6 +259,37 @@ class ldapshare {
 		unset($_SESSION['ldapshare']['user_id']);
 		$_SESSION['ldapshare']['data'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
 	}
+	private function action_avatar() {
+		$render = '<content><![CDATA[';
+		$render .= '<div class="popin_content">';
+		$render .= '<h2>'.$this->str[$this->language]['avatar'].'</h2>';
+		$render .= '<form action="?a=avatarsubmit" enctype="multipart/form-data" method="post">';
+		$render .= '<p><input class="inputfile" id="avatar_inputfile" name="avatar_inputfile" type="file"></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['send'].'"></p>';
+		$render .= '</form>';
+		$render .= '<div class="avatarform_preview" id="avatarform_photo_preview">';
+		if($this->user->user_file != '') {
+			$render .= '<p><img alt="" id="avatar_inputfile_preview" src="storage/'.$this->user->user_file.'"></p>';
+		}
+		$render .= '</div>';
+		$render .= '</div>';
+		$render .= ']]></content>';
+		return $render;
+	}
+	private function action_avatarsubmit() {
+		$avatar_types = array('image/gif', 'image/jpeg', 'image/png');
+		if(isset($_FILES['avatar_inputfile']) == 1 && $_FILES['avatar_inputfile']['error'] == 0 && in_array($_FILES['avatar_inputfile']['type'], $avatar_types)) {
+			$avatar_inputfile = $this->image_upload('avatar_inputfile', 100, 100);
+			if($avatar_inputfile != $this->user->user_file && $this->user->user_file != '') {
+				unlink('storage/'.$this->user->user_file);
+			}
+			$query = 'UPDATE '.TABLE_USER.' SET user_file = NULLIF(:user_file, \'\') WHERE user_id = :user_id';
+			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':user_file'=>$avatar_inputfile));
+		}
+		$this->user = $this->get_user_by_id($this->user->user_id);
+		$render = '<filename><![CDATA['.$this->user->user_file.']]></filename>';
+		return $render;
+	}
 	private function action_postform() {
 		$render = '<content><![CDATA[';
 		$render .= $this->render_postform();
@@ -284,7 +310,7 @@ class ldapshare {
 				$render .= '<status>post_insert</status>';
 				$photo_types = array('image/gif', 'image/jpeg', 'image/png');
 				if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0 && in_array($_FILES['photo_inputfile']['type'], $photo_types)) {
-					$photo_inputfile = $this->photo_add();
+					$photo_inputfile = $this->image_upload('photo_inputfile', 600, 600);
 					$data = array('photo_inputfile'=>$photo_inputfile);
 					$this->insert_photo($post_id, $data);
 				}
@@ -712,10 +738,12 @@ class ldapshare {
 		return $render;
 	}
 	private function render_postform() {
-		$render = '';
+		$render = '<p id="postform_detail">';
+		$render .= '<a class="avatar_action" href="?a=avatar">'.$this->str[$this->language]['avatar'].'</a>';
 		if(DEMO == 0) {
-			$render .= '<p id="postform_detail"><a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a></p>';
+			$render .= '· <a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a>';
 		}
+		$render .= '</p>';
 		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">';
 		$render .= '<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>';
 		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"><a href="?a=linkpreview"><img src="medias/icon_preview.png" alt="" width="16" height="16"></a></p>';
@@ -754,12 +782,16 @@ class ldapshare {
 		$render = '<div class="post" id="post_'.$post->post_id.'">';
 		$render .= '<div class="post_display">';
 		$render .= '<div class="post_thumb">';
+		$classes = array();
+		if($post->user_id == $this->user->user_id) {
+			$classes[] = 'you';
+		}
 		if($post->user_file != '') {
-			$render .= '<img alt="" src="data:image/jpeg;base64,'.$post->user_file.'">';
+			$render .= '<img class="'.implode(' ', $classes).'" alt="" src="storage/'.$post->user_file.'">';
 		} else if(GRAVATAR == 1) {
-			$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($post->user_email)).'?rating='.GRAVATAR_RATING.'&size=50&default='.GRAVATAR_DEFAULT.'">';
+			$render .= '<img class="'.implode(' ', $classes).'" alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($post->user_email)).'?rating='.GRAVATAR_RATING.'&size=50&default='.GRAVATAR_DEFAULT.'">';
 		} else {
-			$render .= '<img alt="" src="medias/avatar.png">';
+			$render .= '<img class="'.implode(' ', $classes).'" alt="" src="medias/avatar.png">';
 		}
 		$render .= '</div>';
 		$render .= '<div class="post_text">';
@@ -803,11 +835,11 @@ class ldapshare {
 		$render .= '<div class="comment_display commentform_display">';
 		$render .= '<div class="comment_thumb">';
 		if($this->user->user_file != '') {
-			$render .= '<img alt="" src="data:image/jpeg;base64,'.$this->user->user_file.'">';
+			$render .= '<img class="you" alt="" src="storage/'.$this->user->user_file.'">';
 		} else if(GRAVATAR == 1) {
-			$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($this->user->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
+			$render .= '<img class="you" alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($this->user->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
 		} else {
-			$render .= '<img alt="" src="medias/avatar.png">';
+			$render .= '<img class="you" alt="" src="medias/avatar.png">';
 		}
 		$render .= '</div>';
 		$render .= '<div class="comment_text">';
@@ -867,12 +899,16 @@ class ldapshare {
 		$render = '<div class="comment" id="comment_'.$comment->comment_id.'">';
 		$render .= '<div class="comment_display">';
 		$render .= '<div class="comment_thumb">';
+		$classes = array();
+		if($comment->user_id == $this->user->user_id) {
+			$classes[] = 'you';
+		}
 		if($comment->user_file != '') {
-			$render .= '<img alt="" src="data:image/jpeg;base64,'.$comment->user_file.'">';
+			$render .= '<img class="'.implode(' ', $classes).'" alt="" src="storage/'.$comment->user_file.'">';
 		} else if(GRAVATAR == 1) {
-			$render .= '<img alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($comment->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
+			$render .= '<img class="'.implode(' ', $classes).'" alt="" src="http://www.gravatar.com/avatar/'.md5(strtolower($comment->user_email)).'?rating='.GRAVATAR_RATING.'&size=30&default='.GRAVATAR_DEFAULT.'">';
 		} else {
-			$render .= '<img alt="" src="medias/avatar.png">';
+			$render .= '<img class="'.implode(' ', $classes).'" alt="" src="medias/avatar.png">';
 		}
 		$render .= '</div>';
 		$render .= '<div class="comment_text">';
@@ -1135,7 +1171,7 @@ class ldapshare {
 		}
 		return $date;
 	}
-	private function photo_add() {
+	private function image_upload($key, $width, $height) {
 		$newfile = '';
 		$folder = 'storage';
 		if(is_dir($folder)) {
@@ -1144,12 +1180,10 @@ class ldapshare {
 				mkdir($folder.'/'.$year);
 				copy($folder.'/index.php', $folder.'/'.$year.'/index.php');
 			}
-			$newfile = $year.'/'.$this->string_generate(14, 1, 1, 0).'-'.$this->string_clean($_FILES['photo_inputfile']['name']);
-			move_uploaded_file($_FILES['photo_inputfile']['tmp_name'], $folder.'/'.$newfile);
-			if($_FILES['photo_inputfile']['type'] == 'image/jpeg') {
+			$newfile = $year.'/'.$this->string_generate(14, 1, 1, 0).'-'.$this->string_clean($_FILES[$key]['name']);
+			move_uploaded_file($_FILES[$key]['tmp_name'], $folder.'/'.$newfile);
+			if($_FILES[$key]['type'] == 'image/jpeg') {
 				$filename = $folder.'/'.$newfile;
-				$width = 600;
-				$height = 600;
 				list($width_orig, $height_orig) = getimagesize($filename);
 				$ratio_orig = $width_orig / $height_orig;
 				if($width/$height > $ratio_orig) {
@@ -1161,6 +1195,7 @@ class ldapshare {
 				$image_orig = imagecreatefromjpeg($filename);
 				imagecopyresampled($image, $image_orig, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
 				imagejpeg($image, $filename, 75);
+
 			}
 		}
 		return $newfile;

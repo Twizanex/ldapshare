@@ -1,4 +1,6 @@
 <?php
+$this->str['en']['avatar'] = 'Avatar';
+$this->str['en']['send'] = 'Send';
 $this->str['en']['login'] = 'Login';
 $this->str['en']['logout'] = 'Logout';
 $this->str['en']['email'] = 'Email';

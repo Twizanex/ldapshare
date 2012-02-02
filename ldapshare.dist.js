@@ -186,6 +186,11 @@ $(document).ready(function() {
 		data = {};
 		xml = ajax('?a=timezone&t=' + t, data);
 	});
+	$('.avatar_action').live('click', function(e) {
+		e.preventDefault();
+		href = $(this).attr('href');
+		popin_show(href);
+	});
 	$('.postlist_action').live('click', function(e) {
 		e.preventDefault();
 		$(this).parent().hide();
@@ -376,6 +381,55 @@ $(document).ready(function() {
 			}
 		}
 	});
+	$('#popin form').live('submit', function(e) {
+		e.preventDefault();
+		action = $(this).attr('action');
+		status_textarea = $('#status_textarea').val();
+		if(window.FormData) {
+			formdata = new FormData();
+			enable_submit = 0;
+			var photo = document.getElementById('avatar_inputfile');
+			if(photo.files.length != 0 && window.FileReader) {
+				var file = photo.files[0];
+				if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= upload_max_filesize) {
+					formdata.append('avatar_inputfile', file);
+					enable_submit = 1;
+				}
+			}
+			if(formdata && enable_submit == 1) {
+				$.ajax({
+					contentType: false,
+					data: formdata,
+					dataType: 'xml',
+					processData: false,
+					success: function(xml) {
+						filename = $(xml).find('filename').text();
+						$('img.you').attr('src', 'storage/' + filename);
+						popin_hide();
+					},
+					type: 'POST',
+					url: action
+				});
+			}
+		}
+	});
+    $('#avatar_inputfile').live('change', function() {
+		loading_show();
+        var photo = document.getElementById('avatar_inputfile');
+        if(photo.files.length != 0 && window.FileReader) {
+            var file = photo.files[0];
+            if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= upload_max_filesize) {
+                $('#avatarform_photo_preview').html('');
+                reader = new FileReader();
+                reader.onload = function(event) {
+					$('#avatarform_photo_preview').html('<p><img alt="" id="avatar_inputfile_preview" src="' + event.target.result + '"></p>');
+                    $('#avatarform_photo_preview').fadeIn();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+		loading_hide();
+    });
     $('#photo_inputfile').live('change', function() {
 		loading_show();
         var photo = document.getElementById('photo_inputfile');
