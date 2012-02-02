@@ -264,8 +264,7 @@ class ldapshare {
 		$render .= '<div class="popin_content">';
 		$render .= '<h2>'.$this->str[$this->language]['avatar'].'</h2>';
 		$render .= '<form action="?a=avatarsubmit" enctype="multipart/form-data" method="post">';
-		$render .= '<p><input class="inputfile" id="avatar_inputfile" name="avatar_inputfile" type="file"></p>';
-		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['send'].'"></p>';
+		$render .= '<p><input class="inputfile" id="avatar_inputfile" name="avatar_inputfile" type="file"> <input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['send'].'"> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
 		$render .= '</form>';
 		$render .= '<div class="avatarform_preview" id="avatarform_photo_preview">';
 		if($this->user->user_file != '') {
