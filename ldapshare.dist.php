@@ -1083,7 +1083,7 @@ class ldapshare {
 				$interval = date_diff(date_create($datecreated), date_create($this->date_day));
 				$diff = $interval->format('%a');
 			} else {
-				$diff = (strtotime($datecreated) - strtotime($this->date_day)) / 3600 / 24;
+				$diff = (strtotime($this->date_day) - strtotime($datecreated)) / 3600 / 24;
 			}
 			if($diff == 0) {
 				list($prev_h, $prev_m, $prev_s) = explode(':', $timecreated);
