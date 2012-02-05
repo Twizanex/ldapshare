@@ -6,24 +6,30 @@ class ldapshare {
 		session_start();
 		set_error_handler(array($this, 'error_handler'));
 		register_shutdown_function(array($this, 'shutdown_function'));
-		$this->language = 'en';
+		$languages = array();
 		if(isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) == 1) {
 			$lng_array = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
 			if(count($lng_array) > 0) {
 				foreach($lng_array as $k => $v) {
 					$lng = explode(';', $v);
 					$lng = explode('-', $lng[0]);
-					$lng = $lng[0];
-					if(preg_match('/^[a-z]{2}$/', $lng)) {
-						if(file_exists('languages/'.$lng.'.dist.php')) {
-							$this->language = $lng;
-							break;
-						}
+					if(preg_match('/^[a-z]{2}$/', $lng[0])) {
+						$languages[] = $lng[0];
 					}
 				}
 			}
 		}
-		include_once('languages/'.$this->language.'.dist.php');
+		$languages[] = 'en';
+		foreach($languages as $lng) {
+			if(file_exists('languages/'.$lng.'.php')) {
+				$lang_file = $lng;
+				break;
+			} else if(file_exists('languages/'.$lng.'.dist.php')) {
+				$lang_file = $lng.'.dist';
+				break;
+			}
+		}
+		include_once('languages/'.$lang_file.'.php');
 		if(isset($_GET['a']) == 0 || $_GET['a'] == 'index') {
 			$_SESSION['ldapshare']['data'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
 		}
@@ -224,9 +230,9 @@ class ldapshare {
 	private function action_avatar() {
 		$render = '<content><![CDATA[';
 		$render .= '<div class="popin_content">';
-		$render .= '<h2>'.$this->str[$this->language]['avatar'].'</h2>';
+		$render .= '<h2>'.$this->str['avatar'].'</h2>';
 		$render .= '<form action="?a=avatarsubmit" enctype="multipart/form-data" method="post">';
-		$render .= '<p><input class="inputfile" id="avatar_inputfile" name="avatar_inputfile" type="file"> <input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['send'].'"> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
+		$render .= '<p><input class="inputfile" id="avatar_inputfile" name="avatar_inputfile" type="file"> <input class="inputsubmit" type="submit" value="'.$this->str['send'].'"> · <a class="popin_hide" href="#">'.$this->str['cancel'].'</a></p>';
 		$render .= '</form>';
 		$render .= '<div class="avatarform_preview" id="avatarform_photo_preview">';
 		if($this->user->user_file != '') {
@@ -307,8 +313,8 @@ class ldapshare {
 	private function action_postdelete() {
 		$render = '<content><![CDATA[';
 		$render .= '<div class="popin_content">';
-		$render .= '<h2>'.$this->str[$this->language]['post_delete'].'</h2>';
-		$render .= '<p><a class="post_delete_confirm_action" href="?a=postdeleteconfirm&amp;post_id='.intval($_GET['post_id']).'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
+		$render .= '<h2>'.$this->str['post_delete'].'</h2>';
+		$render .= '<p><a class="post_delete_confirm_action" href="?a=postdeleteconfirm&amp;post_id='.intval($_GET['post_id']).'">'.$this->str['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str['cancel'].'</a></p>';
 		$render .= '</div>';
 		$render .= ']]></content>';
 		return $render;
@@ -372,7 +378,7 @@ class ldapshare {
 				$render .= '<status>post_deleted</status>';
 				$render .= '<post_id>'.intval($_GET['post_id']).'</post_id>';
 				$render .= '<content><![CDATA[';
-				$render .= '<p>'.$this->str[$this->language]['post_deleted'].'</p>';
+				$render .= '<p>'.$this->str['post_deleted'].'</p>';
 				$render .= ']]></content>';
 			}
 		}
@@ -381,8 +387,8 @@ class ldapshare {
 	private function action_commentdelete() {
 		$render = '<content><![CDATA[';
 		$render .= '<div class="popin_content">';
-		$render .= '<h2>'.$this->str[$this->language]['comment_delete'].'</h2>';
-		$render .= '<p><a class="comment_delete_confirm_action" href="?a=commentdeleteconfirm&amp;comment_id='.intval($_GET['comment_id']).'">'.$this->str[$this->language]['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str[$this->language]['cancel'].'</a></p>';
+		$render .= '<h2>'.$this->str['comment_delete'].'</h2>';
+		$render .= '<p><a class="comment_delete_confirm_action" href="?a=commentdeleteconfirm&amp;comment_id='.intval($_GET['comment_id']).'">'.$this->str['confirm'].'</a> · <a class="popin_hide" href="#">'.$this->str['cancel'].'</a></p>';
 		$render .= '</div>';
 		$render .= ']]></content>';
 		return $render;
@@ -422,7 +428,7 @@ class ldapshare {
 		} else {
 			$render .= '<status>post_deleted</status>';
 			$render .= '<content><![CDATA[';
-			$render .= '<p>'.$this->str[$this->language]['post_deleted'].'</p>';
+			$render .= '<p>'.$this->str['post_deleted'].'</p>';
 			$render .= ']]></content>';
 		}
 		return $render;
@@ -443,7 +449,7 @@ class ldapshare {
 		} else {
 			$render .= '<status>post_deleted</status>';
 			$render .= '<content><![CDATA[';
-			$render .= '<p>'.$this->str[$this->language]['post_deleted'].'</p>';
+			$render .= '<p>'.$this->str['post_deleted'].'</p>';
 			$render .= ']]></content>';
 		}
 		return $render;
@@ -692,17 +698,17 @@ class ldapshare {
 	}
 	private function render_loginform() {
 		$render = '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">';
-		$render .= '<p class="form_email"><label for="email">'.$this->str[$this->language]['email'].'</label><input class="inputtext" id="email" name="email" type="text" value=""></p>';
-		$render .= '<p class="form_password"><label for="password">'.$this->str[$this->language]['password'].'</label><input class="inputpassword" id="password" name="password" type="password" value=""></p>';
-		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['login'].'"></p>';
+		$render .= '<p class="form_email"><label for="email">'.$this->str['email'].'</label><input class="inputtext" id="email" name="email" type="text" value=""></p>';
+		$render .= '<p class="form_password"><label for="password">'.$this->str['password'].'</label><input class="inputpassword" id="password" name="password" type="password" value=""></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str['login'].'"></p>';
 		$render .= '</form>';
 		return $render;
 	}
 	private function render_postform() {
 		$render = '<p id="postform_detail">';
-		$render .= '<a class="avatar_action" href="?a=avatar">'.$this->str[$this->language]['avatar'].'</a>';
+		$render .= '<a class="avatar_action" href="?a=avatar">'.$this->str['avatar'].'</a>';
 		if(DEMO == 0) {
-			$render .= '· <a class="logout_action" href="?a=logout">'.$this->str[$this->language]['logout'].'</a>';
+			$render .= '· <a class="logout_action" href="?a=logout">'.$this->str['logout'].'</a>';
 		}
 		$render .= '</p>';
 		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">';
@@ -710,7 +716,7 @@ class ldapshare {
 		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"><a href="?a=linkpreview"><img src="medias/icon_preview.png" alt="" width="16" height="16"></a></p>';
 		$render .= '<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""><a href="?a=addresspreview"><img src="medias/icon_preview.png" alt="" width="16" height="16"></a></p>';
 		$render .= '<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>';
-		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['share'].'"></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str['share'].'"></p>';
 		$render .= '</form>';
 		$render .= '<div class="postform_preview" id="postform_link_preview"></div>';
 		$render .= '<div class="postform_preview" id="postform_address_preview"></div>';
@@ -758,7 +764,7 @@ class ldapshare {
 		$render .= '<div class="post_text">';
 		if($post->user_id == $this->user->user_id) {
 			$render .= '<a class="delete_action post_delete_action" href="?a=postdelete&amp;post_id='.$post->post_id.'"></a>';
-			$username = $this->str[$this->language]['you'];
+			$username = $this->str['you'];
 		} else {
 			$username = $post->user_firstname.' '.$post->user_lastname;
 		}
@@ -774,14 +780,14 @@ class ldapshare {
 		} else {
 			$render .= '<span class="like">';
 		}
-		$render .= '<a class="post_like_action" href="?a=postlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['like'].'</a> ·</span> ';
+		$render .= '<a class="post_like_action" href="?a=postlike&amp;post_id='.$post->post_id.'">'.$this->str['like'].'</a> ·</span> ';
 		if($post->you_like == 1) {
 			$render .= '<span class="unlike">';
 		} else {
 			$render .= '<span class="unlike unlike_inactive">';
 		}
-		$render .= '<a class="post_unlike_action" href="?a=postunlike&amp;post_id='.$post->post_id.'">'.$this->str[$this->language]['unlike'].'</a> ·</span> ';
-		$render .= '<a class="comment_action" href="#commentform_'.$post->post_id.'">'.$this->str[$this->language]['comment'].'</a>';
+		$render .= '<a class="post_unlike_action" href="?a=postunlike&amp;post_id='.$post->post_id.'">'.$this->str['unlike'].'</a> ·</span> ';
+		$render .= '<a class="comment_action" href="#commentform_'.$post->post_id.'">'.$this->str['comment'].'</a>';
 		$render .= '</p>';
 		$render .= '<div class="commentlist" id="commentlist_'.$post->post_id.'">';
 		$render .= '<div id="post_like_render_'.$post->post_id.'">';
@@ -806,7 +812,7 @@ class ldapshare {
 		$render .= '<div class="comment_text">';
 		$render .= '<form action="?a=comment&amp;post_id='.$post->post_id.'" method="post">';
 		$render .= '<p><textarea class="textarea" name="comment"></textarea></p>';
-		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str[$this->language]['comment'].'"></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str['comment'].'"></p>';
 		$render .= '</form>';
 		$render .= '</div>';
 		$render .= '</div>';
@@ -828,7 +834,7 @@ class ldapshare {
 				if($post->count_comment > LIMIT_COMMENTS) {
 					$render .= '<div class="comment comment_all" id="comment_all_'.$post->post_id.'">';
 					$render .= '<div class="comment_display comment_all_display">';
-					$render .= '<p><a class="commentall_action" href="?a=commentlist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['view_all_comments'], $post->count_comment).'</a></p>';
+					$render .= '<p><a class="commentall_action" href="?a=commentlist&amp;post_id='.$post->post_id.'">'.sprintf($this->str['view_all_comments'], $post->count_comment).'</a></p>';
 					$render .= '</div>';
 					$render .= '</div>';
 					$min = $post->count_comment - LIMIT_COMMENTS;
@@ -875,7 +881,7 @@ class ldapshare {
 		$render .= '<div class="comment_text">';
 		if($comment->user_id == $this->user->user_id) {
 			$render .= '<a class="delete_action comment_delete_action" href="?a=commentdelete&amp;comment_id='.$comment->comment_id.'"></a>';
-			$username = $this->str[$this->language]['you'];
+			$username = $this->str['you'];
 		} else {
 			$username = $comment->user_firstname.' '.$comment->user_lastname;
 		}
@@ -911,7 +917,7 @@ class ldapshare {
 					$u = 1;
 					while($like = $prepare->fetch(PDO::FETCH_OBJ)) {
 						if($this->user->user_id == $like->user_id) {
-							$username = $this->str[$this->language]['you'];
+							$username = $this->str['you'];
 						} else {
 							$username = $like->user_firstname.' '.$like->user_lastname;
 						}
@@ -919,9 +925,9 @@ class ldapshare {
 						if($post->post_countlike != 1) {
 							if($u == $rowCount && $rowCount < $post->post_countlike) {
 								$diff = $post->post_countlike - $rowCount;
-								$render .=  ' '.$this->str[$this->language]['and'].' <a class="likelist_action" href="?a=likelist&amp;post_id='.$post->post_id.'">'.sprintf($this->str[$this->language]['others'], $diff).'</a> ';
+								$render .=  ' '.$this->str['and'].' <a class="likelist_action" href="?a=likelist&amp;post_id='.$post->post_id.'">'.sprintf($this->str['others'], $diff).'</a> ';
 							} else if($u == $rowCount - 1 && $rowCount == $post->post_countlike) {
-								$render .=  ' '.$this->str[$this->language]['and'].' ';
+								$render .=  ' '.$this->str['and'].' ';
 							} else if($u < $rowCount) {
 								$render .= ', ';
 							}
@@ -938,8 +944,8 @@ class ldapshare {
 					} else if($post->you_like == 0 && $post->post_countlike == 1) {
 						$k = 'like_people_singular';
 					}
-					if(isset($this->str[$this->language][$k]) == 1) {
-						$render .= ' '.$this->str[$this->language][$k].'.';
+					if(isset($this->str[$k]) == 1) {
+						$render .= ' '.$this->str[$k].'.';
 					}
 					$render .= '</p>';
 					$render .= '</div>';
@@ -1090,29 +1096,29 @@ class ldapshare {
 				list($next_h, $next_m, $prev_s) = explode(':', $this->date_time);
 				$diff = ($next_h * 60 + $next_m) - ($prev_h * 60 + $prev_m);
 				if($diff <= 1) {
-					$mention = $this->str[$this->language]['now'];
+					$mention = $this->str['now'];
 				} else if($diff >= 120) {
-					$mention = sprintf($this->str[$this->language]['hours_diff'], ceil($diff / 60));
+					$mention = sprintf($this->str['hours_diff'], ceil($diff / 60));
 				} else {
-					$mention = sprintf($this->str[$this->language]['minutes_diff'], $diff);
+					$mention = sprintf($this->str['minutes_diff'], $diff);
 				}
 			} else if($diff == 1) {
-				$mention = $this->str[$this->language]['yesterday'].' '.$this->str[$this->language]['at'].' '.substr($timecreated, 0, 5);
+				$mention = $this->str['yesterday'].' '.$this->str['at'].' '.substr($timecreated, 0, 5);
 			} else if($diff >= 730) {
-				$mention = sprintf($this->str[$this->language]['years_diff'], ceil($diff / 365));
+				$mention = sprintf($this->str['years_diff'], ceil($diff / 365));
 			} else if($diff >= 60) {
-				$mention = sprintf($this->str[$this->language]['months_diff'], ceil($diff / 30));
+				$mention = sprintf($this->str['months_diff'], ceil($diff / 30));
 			} else if($diff >= 14) {
-				$mention = sprintf($this->str[$this->language]['weeks_diff'], ceil($diff / 7));
+				$mention = sprintf($this->str['weeks_diff'], ceil($diff / 7));
 			} else {
-				$mention = sprintf($this->str[$this->language]['days_diff'], $diff);
+				$mention = sprintf($this->str['days_diff'], $diff);
 			}
 		}
 		return $mention;
 	}
 	private function date_transform($date) {
 		if($date != '') {
-			$format =  $this->str[$this->language]['date_format'];
+			$format =  $this->str['date_format'];
 			if(function_exists('date_create') && function_exists('date_format')) {
 				$date = date_create($date);
 				$date = date_format($date, $format);
@@ -1121,8 +1127,8 @@ class ldapshare {
 			}
 			$formats = array('l', 'D', 'jS', 'F', 'M');
 			foreach($formats as $k) {
-				if(strstr($format, $k) && isset($this->str[$this->language]['date_'.$k]) == 1) {
-					$ref = $this->str[$this->language]['date_'.$k];
+				if(strstr($format, $k) && isset($this->str['date_'.$k]) == 1) {
+					$ref = $this->str['date_'.$k];
 					if($k == 'jS') {
 						$ref = array_reverse($ref, 1);
 					}
