@@ -45,14 +45,15 @@ class ldapshare {
 			$_SESSION['ldapshare']['user_id'] = rand(1, 100);
 		}
 		if(isset($_SESSION['ldapshare']['user_id']) == 0 && isset($_COOKIE['user_token']) == 1) {
-			$user = $this->get_user_by_token($_COOKIE['user_token']);
+			$user = $this->get_user_by_type($_COOKIE['user_token'], 'user_token');
 			if($user) {
 				$_SESSION['ldapshare']['user_id'] = $user->user_id;
 			}
 		} else if(isset($_SESSION['ldapshare']['user_id']) == 1) {
-			$this->user = $this->get_user_by_id($_SESSION['ldapshare']['user_id']);
+			$this->user = $this->get_user_by_type($_SESSION['ldapshare']['user_id'], 'user_id');
 		}
-		$this->post_query = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like FROM '.TABLE_POST.' post LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = :user_id';
+		$this->select_post = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like FROM '.TABLE_POST.' post LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = :user_id';
+		$this->select_comment = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id';
 	}
 	private function is_https() {
 		if(isset($_SERVER['HTTPS']) == 1 && strtolower($_SERVER['HTTPS']) == 'on') {
@@ -117,9 +118,9 @@ class ldapshare {
 			header('Content-Type: text/xml; charset=UTF-8');
 			$render = '<?xml version="1.0" encoding="UTF-8"?>'."\r\n";
 			$render .= '<ldapshare>'."\r\n";
-			if(method_exists($this, 'action_'.$_GET['a']) && preg_match('/^[a-z_-]+$/i', $_GET['a'])) {
-				$actions_guest = array('islogged', 'loginform', 'login', 'timezone');
-				if(isset($_SESSION['ldapshare']['user_id']) == 0 && !in_array($_GET['a'], $actions_guest)) {
+			if(method_exists($this, 'action_'.$_GET['a']) && preg_match('/^[a-z]+$/i', $_GET['a'])) {
+				$refl = new ReflectionMethod($this, 'action_'.$_GET['a']);
+				if(isset($_SESSION['ldapshare']['user_id']) == 0 && $refl->isPrivate()) {
 					header($_SERVER['SERVER_PROTOCOL'].' 403 Forbidden');
 				} else {
 					header($_SERVER['SERVER_PROTOCOL'].' 200 OK');
@@ -157,29 +158,33 @@ class ldapshare {
 			trigger_error($errorinfo[2]);
 		}
 	}
-	private function action_islogged() {
+	protected function action_islogged() {
 		$render = '';
 		if(DEMO == 1) {
 			$render .= '<status>ok</status>';
-		} else if(isset($_SESSION['ldapshare']['user_id']) == 1 && isset($_COOKIE['user_token']) == 1 && $this->get_user_by_token($_COOKIE['user_token'])) {
+		} else if(isset($_SESSION['ldapshare']['user_id']) == 1 && isset($_COOKIE['user_token']) == 1 && $this->get_user_by_type($_COOKIE['user_token'], 'user_token')) {
 			$render .= '<status>ok</status>';
 		} else {
 			$render .= '<status>ko</status>';
 		}
 		return $render;
 	}
-	private function action_timezone() {
-		$_SESSION['ldapshare']['data']['timezone'] = intval($_GET['t']);
+	protected function action_client() {
+		$_SESSION['ldapshare']['data']['timezone'] = intval($_POST['timezone']);
 		$render = '<upload_max_filesize>'.intval(ini_get('upload_max_filesize')).'</upload_max_filesize>';
 		return $render;
 	}
-	private function action_loginform() {
+	protected function action_loginform() {
 		$render = '<content><![CDATA[';
-		$render .= $this->render_loginform();
+		$render .= '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">';
+		$render .= '<p class="form_email"><label for="email">'.$this->str['email'].'</label><input class="inputtext" id="email" name="email" type="text" value=""></p>';
+		$render .= '<p class="form_password"><label for="password">'.$this->str['password'].'</label><input class="inputpassword" id="password" name="password" type="password" value=""></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str['login'].'"></p>';
+		$render .= '</form>';
 		$render .= ']]></content>';
 		return $render;
 	}
-	private function action_login() {
+	protected function action_login() {
 		$status = 'ko';
 		$ldap_connect = ldap_connect(LDAP_SERVER, LDAP_PORT);
 		if($ldap_connect && filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
@@ -194,7 +199,7 @@ class ldapshare {
 							$user_lastname = filter_var($ldap_get_entries[0][LDAP_LASTNAME][0], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 							$user_firstname = filter_var($ldap_get_entries[0][LDAP_FIRSTNAME][0], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 							$status = 'ok';
-							$user = $this->get_user_by_email($_POST['email']);
+							$user = $this->get_user_by_type($_POST['email'], 'user_email');
 							if($user) {
 								$query = 'UPDATE '.TABLE_USER.' SET user_lastname = :user_lastname, user_firstname = :user_firstname WHERE user_email = :user_email';
 								$prepare = $this->pdo_execute($query, array(':user_email'=>$_POST['email'], ':user_lastname'=>$user_lastname, ':user_firstname'=>$user_firstname));
@@ -253,13 +258,28 @@ class ldapshare {
 			$query = 'UPDATE '.TABLE_USER.' SET user_file = NULLIF(:user_file, \'\') WHERE user_id = :user_id';
 			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':user_file'=>$avatar_inputfile));
 		}
-		$this->user = $this->get_user_by_id($this->user->user_id);
+		$this->user = $this->get_user_by_type($this->user->user_id, 'user_id');
 		$render = '<filename><![CDATA['.$this->user->user_file.']]></filename>';
 		return $render;
 	}
 	private function action_postform() {
 		$render = '<content><![CDATA[';
-		$render .= $this->render_postform();
+		$render .= '<p id="postform_detail">';
+		$render .= '<a class="avatar_action" href="?a=avatar">'.$this->str['avatar'].'</a>';
+		if(DEMO == 0) {
+			$render .= '· <a class="logout_action" href="?a=logout">'.$this->str['logout'].'</a>';
+		}
+		$render .= '</p>';
+		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">';
+		$render .= '<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>';
+		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"><a href="?a=linkpreview"><img src="medias/icon_preview.png" alt="" width="16" height="16"></a></p>';
+		$render .= '<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""><a href="?a=addresspreview"><img src="medias/icon_preview.png" alt="" width="16" height="16"></a></p>';
+		$render .= '<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>';
+		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str['share'].'"></p>';
+		$render .= '</form>';
+		$render .= '<div class="postform_preview" id="postform_link_preview"></div>';
+		$render .= '<div class="postform_preview" id="postform_address_preview"></div>';
+		$render .= '<div class="postform_preview" id="postform_photo_preview"></div>';
 		$render .= ']]></content>';
 		return $render;
 	}
@@ -291,7 +311,7 @@ class ldapshare {
 				}
 				preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['status_textarea'], $matches);
 				$matches = $matches[0];
-				if(count($matches) != 0) {
+				if(count($matches) > 0) {
 					$matches = array_unique($matches);
 					foreach($matches as $match) {
 						$analyze = 1;
@@ -358,9 +378,7 @@ class ldapshare {
 	private function action_commentlist() {
 		$post = $this->get_post_by_id($_GET['post_id']);
 		$render = '<post_id>'.intval($_GET['post_id']).'</post_id>';
-		$render .= '<content><![CDATA[';
-		$render .= $this->render_commentlist($post, 1);
-		$render .= ']]></content>';
+		$render .= '<content><![CDATA['.$this->render_commentlist($post, 1).']]></content>';
 		return $render;
 	}
 	private function action_comment() {
@@ -377,9 +395,7 @@ class ldapshare {
 			} else {
 				$render .= '<status>post_deleted</status>';
 				$render .= '<post_id>'.intval($_GET['post_id']).'</post_id>';
-				$render .= '<content><![CDATA[';
-				$render .= '<p>'.$this->str['post_deleted'].'</p>';
-				$render .= ']]></content>';
+				$render .= '<content><![CDATA[<p>'.$this->str['post_deleted'].'</p>]]></content>';
 			}
 		}
 		return $render;
@@ -419,17 +435,13 @@ class ldapshare {
 			$query = 'INSERT INTO '.TABLE_LIKE.' (user_id, post_id, like_datecreated) VALUES (:user_id, :post_id, :like_datecreated)';
 			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>intval($_GET['post_id']), ':like_datecreated'=>date('Y-m-d H:i:s')));
 			if($prepare) {
-				$render .= '<status>like_insert</status>';
-				$render .= '<content><![CDATA[';
 				$post = $this->get_post_by_id($_GET['post_id']);
-				$render .= $this->render_like($post, 0);
-				$render .= ']]></content>';
+				$render .= '<status>like_insert</status>';
+				$render .= '<content><![CDATA['.$this->render_like($post, 0).']]></content>';
 			}
 		} else {
 			$render .= '<status>post_deleted</status>';
-			$render .= '<content><![CDATA[';
-			$render .= '<p>'.$this->str['post_deleted'].'</p>';
-			$render .= ']]></content>';
+			$render .= '<content><![CDATA[<p>'.$this->str['post_deleted'].'</p>]]></content>';
 		}
 		return $render;
 	}
@@ -440,26 +452,20 @@ class ldapshare {
 			$query = 'DELETE FROM '.TABLE_LIKE.' WHERE user_id = :user_id AND post_id = :post_id';
 			$prepare = $this->pdo_execute($query, array(':user_id'=>$this->user->user_id, ':post_id'=>intval($_GET['post_id'])));
 			if($prepare) {
-				$render .= '<status>like_delete</status>';
-				$render .= '<content><![CDATA[';
 				$post = $this->get_post_by_id($_GET['post_id']);
-				$render .= $this->render_like($post, 0);
-				$render .= ']]></content>';
+				$render .= '<status>like_delete</status>';
+				$render .= '<content><![CDATA['.$this->render_like($post, 0).']]></content>';
 			}
 		} else {
 			$render .= '<status>post_deleted</status>';
-			$render .= '<content><![CDATA[';
-			$render .= '<p>'.$this->str['post_deleted'].'</p>';
-			$render .= ']]></content>';
+			$render .= '<content><![CDATA[<p>'.$this->str['post_deleted'].'</p>]]></content>';
 		}
 		return $render;
 	}
 	private function action_likelist() {
-		$render = '<post_id>'.intval($_GET['post_id']).'</post_id>';
-		$render .= '<content><![CDATA[';
 		$post = $this->get_post_by_id($_GET['post_id']);
-		$render .= $this->render_like($post, 1);
-		$render .= ']]></content>';
+		$render = '<post_id>'.intval($_GET['post_id']).'</post_id>';
+		$render .= '<content><![CDATA['.$this->render_like($post, 1).']]></content>';
 		return $render;
 	}
 	private function action_linkpreview() {
@@ -492,9 +498,7 @@ class ldapshare {
 		$render = '';
 		$photo = $this->get_photo_by_id($_GET['photo_id']);
 		if($photo) {
-			$render .= '<content><![CDATA[';
-			$render .= '<a class="popin_hide" href="#"><img src="storage/'.$photo->photo_file.'"></a>';
-			$render .= ']]></content>';
+			$render .= '<content><![CDATA[<a class="popin_hide" href="#"><img src="storage/'.$photo->photo_file.'"></a>]]></content>';
 		}
 		return $render;
 	}
@@ -504,7 +508,7 @@ class ldapshare {
 		$flt = array();
 		$parameters = array();
 		$flt[] = '1';
-		if(isset($_SESSION['ldapshare']['data']['post_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['post_id_oldest'] != 0) {
+		if(isset($_SESSION['ldapshare']['data']['post_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['post_id_oldest'] > 0) {
 			$flt[] = 'post.post_id >= :post_id_oldest';
 			$parameters[':post_id_oldest'] = $_SESSION['ldapshare']['data']['post_id_oldest'];
 		}
@@ -517,7 +521,7 @@ class ldapshare {
 			if($rowCount > 0) {
 				$render .= '<posts>';
 				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-					$render .= '<post post_id="'.$post->post_id.'"><![CDATA['.$this->render_datecreated($post->post_datecreated).']]></post>';
+					$render .= '<post post_id="'.$post->post_id.'"><![CDATA[<span title="'.$this->date_transform($post->post_datecreated).'">'.$this->date_mention($post->post_datecreated).'</span>]]></post>';
 				}
 				$render .= '</posts>';
 			}
@@ -527,7 +531,7 @@ class ldapshare {
 		$flt = array();
 		$parameters = array();
 		$flt[] = '1';
-		if(isset($_SESSION['ldapshare']['data']['comment_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['comment_id_oldest'] != 0) {
+		if(isset($_SESSION['ldapshare']['data']['comment_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['comment_id_oldest'] > 0) {
 			$flt[] = 'comment.comment_id >= :comment_id_oldest';
 			$parameters[':comment_id_oldest'] = $_SESSION['ldapshare']['data']['comment_id_oldest'];
 		}
@@ -540,7 +544,7 @@ class ldapshare {
 			if($rowCount > 0) {
 				$render .= '<comments>';
 				while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
-					$render .= '<comment comment_id="'.$comment->comment_id.'"><![CDATA['.$this->render_datecreated($comment->comment_datecreated).']]></comment>';
+					$render .= '<comment comment_id="'.$comment->comment_id.'"><![CDATA[<span title="'.$this->date_transform($comment->comment_datecreated).'">'.$this->date_mention($comment->comment_datecreated).'</span>]]></comment>';
 				}
 				$render .= '</comments>';
 			}
@@ -551,7 +555,7 @@ class ldapshare {
 	}
 	private function action_refreshnew() {
 		$render = $this->get_postlist('ASC');
-		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id > :comment_id_newest AND comment.post_id >= :post_id_oldest GROUP BY comment.comment_id';
+		$query = $this->select_comment.' WHERE comment.comment_id > :comment_id_newest AND comment.post_id >= :post_id_oldest GROUP BY comment.comment_id';
 		$prepare = $this->pdo_execute($query, array(':comment_id_newest'=>$_SESSION['ldapshare']['data']['comment_id_newest'], ':post_id_oldest'=>$_SESSION['ldapshare']['data']['post_id_oldest']));
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
@@ -579,19 +583,19 @@ class ldapshare {
 		$parameters = array();
 		$flt[] = '1';
 		if($order == 'ASC') {
-			if(isset($_SESSION['ldapshare']['data']['post_id_newest']) == 1 && $_SESSION['ldapshare']['data']['post_id_newest'] != 0) {
+			if(isset($_SESSION['ldapshare']['data']['post_id_newest']) == 1 && $_SESSION['ldapshare']['data']['post_id_newest'] > 0) {
 				$flt[] = 'post.post_id > :post_id_newest';
 				$parameters[':post_id_newest'] = $_SESSION['ldapshare']['data']['post_id_newest'];
 			}
 		}
 		if($order == 'DESC') {
-			if(isset($_SESSION['ldapshare']['data']['post_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['post_id_oldest'] != 0) {
+			if(isset($_SESSION['ldapshare']['data']['post_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['post_id_oldest'] > 0) {
 				$flt[] = 'post.post_id < :post_id_oldest';
 				$parameters[':post_id_oldest'] = $_SESSION['ldapshare']['data']['post_id_oldest'];
 			}
 		}
 		$parameters[':user_id'] = $this->user->user_id;
-		$query = $this->post_query.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id '.$order;
+		$query = $this->select_post.' WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id '.$order;
 		if($order == 'DESC') {
 			$query .= ' LIMIT 0,'.LIMIT_POSTS;
 		}
@@ -624,29 +628,9 @@ class ldapshare {
 		}
 		return $render;
 	}
-	private function get_user_by_id($user_id) {
-		$query = 'SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_id = :user_id GROUP BY user.user_id';
-		$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id));
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				return $prepare->fetch(PDO::FETCH_OBJ);
-			}
-		}
-	}
-	private function get_user_by_email($user_email) {
-		$query = 'SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_email = :user_email GROUP BY user.user_id';
-		$prepare = $this->pdo_execute($query, array(':user_email'=>filter_var($user_email, FILTER_VALIDATE_EMAIL)));
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				return $prepare->fetch(PDO::FETCH_OBJ);
-			}
-		}
-	}
-	private function get_user_by_token($user_token) {
-		$query = 'SELECT user.* FROM '.TABLE_USER.' user WHERE user.user_token = :user_token GROUP BY user.user_id';
-		$prepare = $this->pdo_execute($query, array(':user_token'=>$user_token));
+	private function get_user_by_type($value, $type) {
+		$query = 'SELECT user.* FROM '.TABLE_USER.' user WHERE user.'.$type.' = :'.$type.' GROUP BY user.user_id';
+		$prepare = $this->pdo_execute($query, array(':'.$type=>$value));
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
 			if($rowCount > 0) {
@@ -655,7 +639,7 @@ class ldapshare {
 		}
 	}
 	private function get_post_by_id($post_id) {
-		$query = $this->post_query.' WHERE post.post_id = :post_id GROUP BY post.post_id';
+		$query = $this->select_post.' WHERE post.post_id = :post_id GROUP BY post.post_id';
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':user_id'=>$this->user->user_id));
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
@@ -665,7 +649,7 @@ class ldapshare {
 		}
 	}
 	private function get_comment_by_id($comment_id) {
-		$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id';
+		$query = $this->select_comment.' WHERE comment.comment_id = :comment_id GROUP BY comment.comment_id';
 		$prepare = $this->pdo_execute($query, array(':comment_id'=> $comment_id));
 		if($prepare) {
 			$rowCount = $prepare->rowCount();
@@ -695,33 +679,6 @@ class ldapshare {
 	private function insert_address($post_id, $data) {
 		$query = 'INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)';
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':address_title'=>filter_var($data['address_title'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES), ':address_datecreated'=>date('Y-m-d H:i:s')));
-	}
-	private function render_loginform() {
-		$render = '<form action="?a=login" enctype="application/x-www-form-urlencoded" method="post">';
-		$render .= '<p class="form_email"><label for="email">'.$this->str['email'].'</label><input class="inputtext" id="email" name="email" type="text" value=""></p>';
-		$render .= '<p class="form_password"><label for="password">'.$this->str['password'].'</label><input class="inputpassword" id="password" name="password" type="password" value=""></p>';
-		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str['login'].'"></p>';
-		$render .= '</form>';
-		return $render;
-	}
-	private function render_postform() {
-		$render = '<p id="postform_detail">';
-		$render .= '<a class="avatar_action" href="?a=avatar">'.$this->str['avatar'].'</a>';
-		if(DEMO == 0) {
-			$render .= '· <a class="logout_action" href="?a=logout">'.$this->str['logout'].'</a>';
-		}
-		$render .= '</p>';
-		$render .= '<form action="?a=post" enctype="multipart/form-data" method="post">';
-		$render .= '<p class="form_status"><textarea class="textarea" id="status_textarea" name="status_textarea"></textarea></p>';
-		$render .= '<p class="form_link"><input class="inputtext" id="link_inputtext" type="text" value="http://"><a href="?a=linkpreview"><img src="medias/icon_preview.png" alt="" width="16" height="16"></a></p>';
-		$render .= '<p class="form_address"><input class="inputtext" id="address_inputtext" type="text" value=""><a href="?a=addresspreview"><img src="medias/icon_preview.png" alt="" width="16" height="16"></a></p>';
-		$render .= '<p class="form_photo"><input class="inputfile" id="photo_inputfile" name="photo_inputfile" type="file"></p>';
-		$render .= '<p class="submit_btn"><input class="inputsubmit" type="submit" value="'.$this->str['share'].'"></p>';
-		$render .= '</form>';
-		$render .= '<div class="postform_preview" id="postform_link_preview"></div>';
-		$render .= '<div class="postform_preview" id="postform_address_preview"></div>';
-		$render .= '<div class="postform_preview" id="postform_photo_preview"></div>';
-		return $render;
 	}
 	private function render_postlist() {
 		$render = $this->get_postlist('DESC');
@@ -768,7 +725,7 @@ class ldapshare {
 		} else {
 			$username = $post->user_firstname.' '.$post->user_lastname;
 		}
-		$render .= '<p><span class="username">'.$username.'</span>  · <span class="datecreated" id="post_datecreated_'.$post->post_id.'">'.$this->render_datecreated($post->post_datecreated).'</span></p>';
+		$render .= '<p><span class="username">'.$username.'</span>  · <span class="datecreated" id="post_datecreated_'.$post->post_id.'"><span title="'.$this->date_transform($post->post_datecreated).'">'.$this->date_mention($post->post_datecreated).'</span></span></p>';
 		$render .= '<p>'.$this->render_content($post->post_content).'</p>';
 		$render .= '</div>';
 		$render .= $this->render_linklist($post);
@@ -841,7 +798,7 @@ class ldapshare {
 					$limit = ' LIMIT '.$min.', '.LIMIT_COMMENTS;
 				}
 			}
-			$query = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id WHERE comment.post_id = :post_id GROUP BY comment.comment_id'.$limit;
+			$query = $this->select_comment.' WHERE comment.post_id = :post_id GROUP BY comment.comment_id'.$limit;
 			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
 			if($prepare) {
 				$rowCount = $prepare->rowCount();
@@ -885,7 +842,7 @@ class ldapshare {
 		} else {
 			$username = $comment->user_firstname.' '.$comment->user_lastname;
 		}
-		$render .= '<p><span class="username">'.$username.'</span> · <span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'">'.$this->render_datecreated($comment->comment_datecreated).'</span></p>';
+		$render .= '<p><span class="username">'.$username.'</span> · <span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'"><span title="'.$this->date_transform($comment->comment_datecreated).'">'.$this->date_mention($comment->comment_datecreated).'</span></span></p>';
 		$render .= '<p>'.$this->render_content($comment->comment_content).'</p>';
 		$render .= '</div>';
 		$render .= '</div>';
@@ -894,7 +851,7 @@ class ldapshare {
 	}
 	private function render_like($post, $all) {
 		$render = '';
-		if($post->post_countlike != 0) {
+		if($post->post_countlike > 0) {
 			if($post->post_countlike == 4) {
 				$display_limit = 2;
 			} else {
@@ -922,7 +879,7 @@ class ldapshare {
 							$username = $like->user_firstname.' '.$like->user_lastname;
 						}
 						$render .= '<span class="username" title="'.$this->date_transform($like->like_datecreated).'">'.$username.'</span>';
-						if($post->post_countlike != 1) {
+						if($post->post_countlike > 1) {
 							if($u == $rowCount && $rowCount < $post->post_countlike) {
 								$diff = $post->post_countlike - $rowCount;
 								$render .=  ' '.$this->str['and'].' <a class="likelist_action" href="?a=likelist&amp;post_id='.$post->post_id.'">'.sprintf($this->str['others'], $diff).'</a> ';
@@ -1062,7 +1019,7 @@ class ldapshare {
 	private function render_content($text) {
 		preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $text, $matches);
 		$matches = $matches[0];
-		if(count($matches) != 0) {
+		if(count($matches) > 0) {
 			$matches = array_unique($matches);
 			foreach($matches as $match) {
 				$text = str_replace($match, '<a href="'.$match.'" target="_blank">'.$match.'</a>', $text);
@@ -1070,16 +1027,13 @@ class ldapshare {
 		}
 		preg_match_all("/[a-z0-9]+([_\\.-][a-z0-9]+)*@([a-z0-9]+([\.-][a-z0-9]+)*)+\\.[a-z]{2,}/i", $text, $matches);
 		$matches = $matches[0];
-		if(count($matches) != 0) {
+		if(count($matches) > 0) {
 			$matches = array_unique($matches);
 			foreach($matches as $match) {
 				$text = str_replace($match, '<a href="mailto:'.$match.'">'.$match.'</a>', $text);
 			}
 		}
 		return nl2br($text);
-	}
-	private function render_datecreated($date) {
-		return '<span title="'.$this->date_transform($date).'">'.$this->date_mention($date).'</span>';
 	}
 	private function date_mention($date) {
 		$mention = '';
@@ -1153,7 +1107,7 @@ class ldapshare {
 				$filename = $folder.'/'.$newfile;
 				list($width_orig, $height_orig) = getimagesize($filename);
 				$ratio_orig = $width_orig / $height_orig;
-				if($width/$height > $ratio_orig) {
+				if($width / $height > $ratio_orig) {
 					$width = $height * $ratio_orig;
 				} else {
 					$height = $width / $ratio_orig;
@@ -1162,7 +1116,6 @@ class ldapshare {
 				$image_orig = imagecreatefromjpeg($filename);
 				imagecopyresampled($image, $image_orig, 0, 0, 0, 0, $width, $height, $width_orig, $height_orig);
 				imagejpeg($image, $filename, 75);
-
 			}
 		}
 		return $newfile;
@@ -1237,7 +1190,7 @@ class ldapshare {
 	}
 	private function analyze_link($link) {
 		$data = new stdClass();
-		$default = array('link_id'=>0, 'link_url'=>$link, 'link_title'=>'', 'link_image'=>'', 'link_video'=>'', 'link_videotype'=>'', 'link_videowidth'=>'', 'link_videoheight'=>'', 'link_icon'=>'', 'link_description'=>'');
+		$default = array('link_id'=>0, 'link_url'=>$link, 'link_title'=>'', 'link_image'=>'', 'link_video'=>'', 'link_videotype'=>'', 'link_videowidth'=>'', 'link_videoheight'=>'', 'link_icon'=>'', 'link_description'=>'', 'link_charsetserver'=>'', 'link_charsetclient');
 		foreach($default as $k => $v) {
 			$data->{$k} = $v;
 		}
@@ -1268,7 +1221,6 @@ class ldapshare {
 			$pattern_one['title'] = "|<[tT][iI][tT][lL][eE](.*)>(.*)<\/[tT][iI][tT][lL][eE]>|U";
 			$pattern_one['charsetclient'] = "|<[mM][eE][tT][aA](.*)[cC][hH][aA][rR][sS][eE][tT]=[\"'](.*)[\"'](.*)>|U";
 			foreach($pattern_one as $k => $pattern) {
-				$matches = array();
 				preg_match_all($pattern, $content, $matches, PREG_SET_ORDER);
 				foreach($matches as $match) {
 					$keys[$k] = trim($match[2]);
@@ -1278,20 +1230,16 @@ class ldapshare {
 			$pattern_multi["|<[lL][iI][nN][kK](.*)[hH][rR][eE][fF]=[\"'](.*)[\"'](.*)>|U"] = array("|(.*)[rR][eE][lL]=[\"'](.*)[\"'](.*)|U", "|(.*)[rR][eE][fF]=[\"'](.*)[\"'](.*)|U");
 			$pattern_multi["|<[mM][eE][tT][aA](.*)[cC][oO][nN][tT][eE][nN][tT]=\"(.*)\"(.*)>|U"] = array("|(.*)[nN][aA][mM][eE]=[\"'](.*)[\"'](.*)|U", "|(.*)[pP][rR][oO][pP][eE][rR][tT][yY]=[\"'](.*)[\"'](.*)|U", "|(.*)[hH][tT][tT][pP]-[eE][qQ][uU][iI][vV]=[\"'](.*)[\"'](.*)|U");
 			foreach($pattern_multi as $pattern => $pattern_sub) {
-				$matches = array();
 				preg_match_all($pattern, $content, $matches, PREG_SET_ORDER);
 				foreach($matches as $match) {
-					$value = $match[2];
 					foreach($pattern_sub as $pattern) {
-						$matches_sub = array();
 						preg_match_all($pattern, $match[1], $matches_sub, PREG_SET_ORDER);
 						foreach($matches_sub as $match_sub) {
-							$keys[strtolower($match_sub[2])] = $value;
+							$keys[strtolower($match_sub[2])] = $match[2];
 						}
-						$matches_sub = array();
 						preg_match_all($pattern, $match[3], $matches_sub, PREG_SET_ORDER);
 						foreach($matches_sub as $match_sub) {
-							$keys[strtolower($match_sub[2])] = $value;
+							$keys[strtolower($match_sub[2])] = $match[2];
 						}
 					}
 				}

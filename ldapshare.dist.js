@@ -1,3 +1,11 @@
+var upload_max_filesize;
+function action_client() {
+	d = new Date();
+	data = {};
+	data['timezone'] = -d.getTimezoneOffset() / 60;
+	xml = ajax('?a=client', data);
+	upload_max_filesize = $(xml).find('upload_max_filesize').text() * 1048576;
+}
 function ajax(url, data) {
 	var xml_return;
 	loading_show();
@@ -170,21 +178,14 @@ $(document).ready(function() {
 		href = $(this).attr('href');
 		popin_show(href);
 	});
-	d = new Date();
-	t = -d.getTimezoneOffset() / 60;
-	data = {};
-	xml = ajax('?a=timezone&t=' + t, data);
-	var upload_max_filesize = $(xml).find('upload_max_filesize').text() * 1048576;
+	action_client();
 	$('.logout_action').live('click', function(e) {
 		e.preventDefault();
 		href = $(this).attr('href');
 		data = {};
 		xml = ajax(href, data);
 		islogged_ko();
-		d = new Date();
-		t = -d.getTimezoneOffset() / 60;
-		data = {};
-		xml = ajax('?a=timezone&t=' + t, data);
+		action_client();
 	});
 	$('.avatar_action').live('click', function(e) {
 		e.preventDefault();
