@@ -35,6 +35,7 @@ class ldapshare {
 		}
 		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['ldapshare']['data']['timezone']);
 		$this->date_time = gmdate('H:i:s', date('U') + 3600 * $_SESSION['ldapshare']['data']['timezone']);
+		$this->allowed_images = array('image/gif', 'image/jpeg', 'image/png');
 		try {
 			$options = array(PDO::MYSQL_ATTR_INIT_COMMAND=>'SET NAMES utf8', PDO::ATTR_PERSISTENT=>1);
 			$this->pdo = new PDO(DATABASE_TYPE.':dbname='.DATABASE_NAME.';host='.DATABASE_HOST.';port='.DATABASE_PORT, DATABASE_USER, DATABASE_PASSWORD, $options);
@@ -249,8 +250,7 @@ class ldapshare {
 		return $render;
 	}
 	private function action_avatarsubmit() {
-		$avatar_types = array('image/gif', 'image/jpeg', 'image/png');
-		if(isset($_FILES['avatar_inputfile']) == 1 && $_FILES['avatar_inputfile']['error'] == 0 && in_array($_FILES['avatar_inputfile']['type'], $avatar_types)) {
+		if(isset($_FILES['avatar_inputfile']) == 1 && $_FILES['avatar_inputfile']['error'] == 0 && in_array($_FILES['avatar_inputfile']['type'], $this->allowed_images)) {
 			$avatar_inputfile = $this->image_upload('avatar_inputfile', 100, 100);
 			if($avatar_inputfile != $this->user->user_file && $this->user->user_file != '') {
 				unlink('storage/'.$this->user->user_file);
@@ -295,8 +295,7 @@ class ldapshare {
 			if($prepare) {
 				$post_id = $this->pdo->lastinsertid();
 				$render .= '<status>post_insert</status>';
-				$photo_types = array('image/gif', 'image/jpeg', 'image/png');
-				if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0 && in_array($_FILES['photo_inputfile']['type'], $photo_types)) {
+				if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0 && in_array($_FILES['photo_inputfile']['type'], $this->allowed_images)) {
 					$photo_inputfile = $this->image_upload('photo_inputfile', 600, 600);
 					$data = array('photo_inputfile'=>$photo_inputfile);
 					$this->insert_photo($post_id, $data);
