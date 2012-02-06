@@ -213,7 +213,7 @@ class ldapshare {
 								}
 							}
 							$_SESSION['ldapshare']['user_id'] = $user_id;
-							$user_token = $this->string_generate(40, 1, 1, 1);
+							$user_token = sha1(uniqid('', 1).rand());
 							$query = 'UPDATE '.TABLE_USER.' SET user_token = :user_token WHERE user_id = :user_id';
 							$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id, ':user_token'=>$user_token));
 							setcookie('user_token', $user_token, time() + 3600 * 24 * 30, '/', '', $this->is_https(), 1);
@@ -1100,7 +1100,7 @@ class ldapshare {
 				mkdir($folder.'/'.$year);
 				copy($folder.'/index.php', $folder.'/'.$year.'/index.php');
 			}
-			$newfile = $year.'/'.$this->string_generate(14, 1, 1, 0).'-'.$this->string_clean($_FILES[$key]['name']);
+			$newfile = $year.'/'.sha1(uniqid('', 1).rand()).substr($_FILES[$key]['name'], strrpos($_FILES[$key]['name'], '.'));
 			move_uploaded_file($_FILES[$key]['tmp_name'], $folder.'/'.$newfile);
 			if($_FILES[$key]['type'] == 'image/jpeg') {
 				$filename = $folder.'/'.$newfile;
@@ -1118,74 +1118,6 @@ class ldapshare {
 			}
 		}
 		return $newfile;
-	}
-	private function string_length($str) {
-		$str = html_entity_decode($str, ENT_QUOTES, 'UTF-8');
-		if(function_exists('mb_strlen')) {
-			$strlen = mb_strlen($str, 'UTF-8');
-		} else {
-			$strlen = strlen($str);
-		}
-		return $strlen;
-	}
-	private function string_lower($str) {
-		$str = html_entity_decode($str, ENT_QUOTES, 'UTF-8');
-		if(function_exists('mb_strtolower')) {
-			$strtolower = mb_strtolower($str, 'UTF-8');
-		} else {
-			$strtolower = strtolower($str);
-		}
-		return $strtolower;
-	}
-	private function string_clean($str) {
-		$str = $this->string_lower($str);
-		$array_convertdata = array('&#039;'=>'-', '&quot;'=>'', '&amp;'=>'-', '&lt;'=>'', '&gt;'=>'', '\''=>'-', '@'=>'-', '('=>'-', ')'=>'-', '#'=>'-', '&'=>'-', ' '=>'-', '_'=>'-', '\\'=>'', '/'=>'', '"'=>'', '?'=>'-', ':'=>'-', '*'=>'-', '|'=>'-', '<'=>'-', '>'=>'-', '°'=>'-',' ,'=>'-');
-		$str = str_replace(array_keys($array_convertdata), array_values($array_convertdata), $str);
-		$alphanumeric = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-';
-		$strlen = $this->string_length($alphanumeric);
-		$accepted = array();
-		for($i=0;$i<$strlen;$i++) {
-			$accepted[] = substr($alphanumeric, $i, 1);
-		}
-		$newstr = '';
-		$strlen = $this->string_length($str);
-		for($i=0;$i<$strlen;$i++) {
-			$asc = substr($str, $i, 1);
-			if(in_array($asc, $accepted)) {
-				$newstr .= $asc;
-			}
-		}
-		while(strstr($newstr, '--')) {
-			$newstr = str_replace('--', '-', $newstr);
-		}
-		if(substr($newstr, -1) == '-') {
-			$newstr = substr($newstr, 0, -1);
-		}
-		return $newstr;
-	}
-	private function string_generate($size = 8, $with_numbers = 1, $with_tiny_letters = 1, $with_capital_letters = 0) { 
-		$string = '';
-		$sizeof_lchar = 0;
-		$letter = '';
-		if($with_numbers == 1) {
-			$sizeof_lchar += 10;
-			$letter .= '0123456789';
-		}
-		if($with_tiny_letters == 1) {
-			$sizeof_lchar += 26;
-			$letter .= 'abcdefghijklmnopqrstuvwxyz';
-		}
-		if($with_capital_letters == 1) {
-			$sizeof_lchar += 26;
-			$letter .= 'ABCDEFGHIJKLMNOPRQSTUVWXYZ';
-		}
-		if($sizeof_lchar > 0) {
-			for($i=0;$i<$size;$i++) {
-				$char_select = rand(0, $sizeof_lchar - 1);
-				$string .= $letter[$char_select];
-			}
-		}
-		return $string;
 	}
 	private function analyze_link($link) {
 		$data = new stdClass();
