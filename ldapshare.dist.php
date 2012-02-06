@@ -213,9 +213,8 @@ class ldapshare {
 								}
 							}
 							$_SESSION['ldapshare']['user_id'] = $user_id;
-							$user_token = sha1(uniqid('', 1).rand());
 							$query = 'UPDATE '.TABLE_USER.' SET user_token = :user_token WHERE user_id = :user_id';
-							$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id, ':user_token'=>$user_token));
+							$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id, ':user_token'=>sha1(uniqid('', 1).mt_rand())));
 							setcookie('user_token', $user_token, time() + 3600 * 24 * 30, '/', '', $this->is_https(), 1);
 						}
 					}
@@ -284,7 +283,25 @@ class ldapshare {
 		return $render;
 	}
 	private function action_postlist() {
-		$render = $this->render_postlist();
+		$render = $this->get_postlist('DESC');
+		$flt = array();
+		$parameters = array();
+		$flt[] = '1';
+		$flt[] = 'post.post_id < :post_id_oldest';
+		$parameters[':post_id_oldest'] = $_SESSION['ldapshare']['data']['post_id_oldest'];
+		$query = 'SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt);
+		$prepare = $this->pdo_execute($query, $parameters);
+		if($prepare) {
+			$rowCount = $prepare->rowCount();
+			if($rowCount > 0) {
+				$fetch = $prepare->fetch(PDO::FETCH_OBJ);
+				if($fetch->count_post > 0) {
+					$render .= '<more><![CDATA[<p><a class="postlist_action" href="?a=postlist">More posts</a></p>]]></more>';
+				}
+			}
+		} else {
+			$this->pdo_error($prepare);
+		}
 		return $render;
 	}
 	private function action_post() {
@@ -678,28 +695,6 @@ class ldapshare {
 	private function insert_address($post_id, $data) {
 		$query = 'INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)';
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':address_title'=>filter_var($data['address_title'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES), ':address_datecreated'=>date('Y-m-d H:i:s')));
-	}
-	private function render_postlist() {
-		$render = $this->get_postlist('DESC');
-		$flt = array();
-		$parameters = array();
-		$flt[] = '1';
-		$flt[] = 'post.post_id < :post_id_oldest';
-		$parameters[':post_id_oldest'] = $_SESSION['ldapshare']['data']['post_id_oldest'];
-		$query = 'SELECT COUNT(post.post_id) AS count_post FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt);
-		$prepare = $this->pdo_execute($query, $parameters);
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				$fetch = $prepare->fetch(PDO::FETCH_OBJ);
-				if($fetch->count_post > 0) {
-					$render .= '<more><![CDATA[<p><a class="postlist_action" href="?a=postlist">More posts</a></p>]]></more>';
-				}
-			}
-		} else {
-			$this->pdo_error($prepare);
-		}
-		return $render;
 	}
 	private function render_post($post) {
 		$render = '<div class="post" id="post_'.$post->post_id.'">';
@@ -1100,7 +1095,7 @@ class ldapshare {
 				mkdir($folder.'/'.$year);
 				copy($folder.'/index.php', $folder.'/'.$year.'/index.php');
 			}
-			$newfile = $year.'/'.sha1(uniqid('', 1).rand()).substr($_FILES[$key]['name'], strrpos($_FILES[$key]['name'], '.'));
+			$newfile = $year.'/'.sha1(uniqid('', 1).mt_rand()).substr($_FILES[$key]['name'], strrpos($_FILES[$key]['name'], '.'));
 			move_uploaded_file($_FILES[$key]['tmp_name'], $folder.'/'.$newfile);
 			if($_FILES[$key]['type'] == 'image/jpeg') {
 				$filename = $folder.'/'.$newfile;
