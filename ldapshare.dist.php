@@ -213,8 +213,9 @@ class ldapshare {
 								}
 							}
 							$_SESSION['ldapshare']['user_id'] = $user_id;
+							$user_token = sha1(uniqid('', 1).mt_rand());
 							$query = 'UPDATE '.TABLE_USER.' SET user_token = :user_token WHERE user_id = :user_id';
-							$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id, ':user_token'=>sha1(uniqid('', 1).mt_rand())));
+							$prepare = $this->pdo_execute($query, array(':user_id'=>$user_id, ':user_token'=>$user_token));
 							setcookie('user_token', $user_token, time() + 3600 * 24 * 30, '/', '', $this->is_https(), 1);
 						}
 					}
