@@ -264,7 +264,7 @@ class ldapshare {
 	private function action_postform() {
 		$render = '<content><![CDATA[';
 		$render .= '<p id="postform_detail">';
-		$render .= '<a class="avatar_action" href="?a=avatar">'.$this->str['avatar'].'</a>';
+		$render .= '<a class="popin_show" href="?a=avatar">'.$this->str['avatar'].'</a>';
 		if(DEMO == 0) {
 			$render .= '· <a class="logout_action" href="?a=logout">'.$this->str['logout'].'</a>';
 		}
@@ -481,6 +481,7 @@ class ldapshare {
 	private function action_likelist() {
 		$post = $this->get_post_by_id($_GET['post_id']);
 		$render = '<post_id>'.intval($_GET['post_id']).'</post_id>';
+		$render .= '<status>like_list</status>';
 		$render .= '<content><![CDATA['.$this->render_like($post, 1).']]></content>';
 		return $render;
 	}
@@ -714,7 +715,7 @@ class ldapshare {
 		$render .= '</div>';
 		$render .= '<div class="post_text">';
 		if($post->user_id == $this->user->user_id) {
-			$render .= '<a class="delete_action post_delete_action" href="?a=postdelete&amp;post_id='.$post->post_id.'"></a>';
+			$render .= '<a class="delete_action popin_show" href="?a=postdelete&amp;post_id='.$post->post_id.'"></a>';
 			$username = $this->str['you'];
 		} else {
 			$username = $post->user_firstname.' '.$post->user_lastname;
@@ -831,7 +832,7 @@ class ldapshare {
 		$render .= '</div>';
 		$render .= '<div class="comment_text">';
 		if($comment->user_id == $this->user->user_id) {
-			$render .= '<a class="delete_action comment_delete_action" href="?a=commentdelete&amp;comment_id='.$comment->comment_id.'"></a>';
+			$render .= '<a class="delete_action popin_show" href="?a=commentdelete&amp;comment_id='.$comment->comment_id.'"></a>';
 			$username = $this->str['you'];
 		} else {
 			$username = $comment->user_firstname.' '.$comment->user_lastname;
@@ -929,7 +930,7 @@ class ldapshare {
 	private function render_photo($photo) {
 		$render = '<div class="photo" id="photo_'.$photo->photo_id.'">';
 		$render .= '<div class="photo_display">';
-		$render .= '<a href="?a=photozoom&amp;photo_id='.$photo->photo_id.'"><img alt="" src="storage/'.$photo->photo_file.'"></a>';
+		$render .= '<a class="popin_show" href="?a=photozoom&amp;photo_id='.$photo->photo_id.'"><img alt="" src="storage/'.$photo->photo_file.'"></a>';
 		$render .= '</div>';
 		$render .= '</div>';
 		return $render;
