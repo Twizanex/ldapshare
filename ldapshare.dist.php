@@ -1095,7 +1095,7 @@ class ldapshare {
 				mkdir($folder.'/'.$year);
 				copy($folder.'/index.php', $folder.'/'.$year.'/index.php');
 			}
-			$newfile = $year.'/'.sha1(uniqid('', 1).mt_rand()).substr($_FILES[$key]['name'], strrpos($_FILES[$key]['name'], '.'));
+			$newfile = $year.'/'.sha1(uniqid('', 1).md5($_FILES[$key]['name'])).substr($_FILES[$key]['name'], strrpos($_FILES[$key]['name'], '.'));
 			move_uploaded_file($_FILES[$key]['tmp_name'], $folder.'/'.$newfile);
 			if($_FILES[$key]['type'] == 'image/jpeg') {
 				$filename = $folder.'/'.$newfile;
