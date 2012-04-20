@@ -1118,7 +1118,7 @@ class ldapshare {
 	}
 	private function analyze_link($link) {
 		$data = new stdClass();
-		$default = array('link_id'=>0, 'link_url'=>$link, 'link_title'=>'', 'link_image'=>'', 'link_video'=>'', 'link_videotype'=>'', 'link_videowidth'=>'', 'link_videoheight'=>'', 'link_icon'=>'', 'link_description'=>'', 'link_charsetserver'=>'', 'link_charsetclient');
+		$default = array('link_id'=>0, 'link_url'=>$link, 'link_title'=>'', 'link_image'=>'', 'link_video'=>'', 'link_videotype'=>'', 'link_videowidth'=>'', 'link_videoheight'=>'', 'link_icon'=>'', 'link_description'=>'', 'link_charsetserver'=>'', 'link_charsetclient'=>'');
 		foreach($default as $k => $v) {
 			$data->{$k} = $v;
 		}
