@@ -53,7 +53,7 @@ class ldapshare {
 		} else if(isset($_SESSION['ldapshare']['user_id']) == 1) {
 			$this->user = $this->get_user_by_type($_SESSION['ldapshare']['user_id'], 'user_id');
 		}
-		$this->select_post = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(photo.photo_id)) AS post_countphoto, COUNT(DISTINCT(address.address_id)) AS post_countaddress, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like FROM '.TABLE_POST.' post LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id LEFT JOIN '.TABLE_PHOTO.' photo ON photo.post_id = post.post_id LEFT JOIN '.TABLE_ADDRESS.' address ON address.post_id = post.post_id LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = :user_id';
+		$this->select_post = 'SELECT post.*, user.*, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS post_datecreated, COUNT(DISTINCT(comment.comment_id)) AS count_comment, COUNT(DISTINCT(link.link_id)) AS post_countlink, COUNT(DISTINCT(l.like_id)) AS post_countlike, IF(l_you.like_id IS NOT NULL, 1, 0) AS you_like FROM '.TABLE_POST.' post LEFT JOIN '.TABLE_USER.' user ON user.user_id = post.user_id LEFT JOIN '.TABLE_COMMENT.' comment ON comment.post_id = post.post_id LEFT JOIN '.TABLE_LINK.' link ON link.post_id = post.post_id LEFT JOIN '.TABLE_LIKE.' l ON l.post_id = post.post_id LEFT JOIN '.TABLE_LIKE.' l_you ON l_you.post_id = post.post_id AND l_you.user_id = :user_id';
 		$this->select_comment = 'SELECT comment.*, user.*, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment LEFT JOIN '.TABLE_USER.' user ON user.user_id = comment.user_id';
 	}
 	private function is_https() {
@@ -316,16 +316,16 @@ class ldapshare {
 				$render .= '<status>post_insert</status>';
 				if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0 && in_array($_FILES['photo_inputfile']['type'], $this->allowed_images)) {
 					$photo_inputfile = $this->image_upload('photo_inputfile', 600, 600);
-					$data = array('photo_inputfile'=>$photo_inputfile);
-					$this->insert_photo($post_id, $data);
+					$query = 'UPDATE '.TABLE_POST.' SET post_photo = :post_photo WHERE post_id = :post_id';
+					$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':post_photo'=>$photo_inputfile));
 				}
 				if(isset($_POST['link_inputtext']) == 1 && filter_var($_POST['link_inputtext'], FILTER_VALIDATE_URL)) {
 					$data = $this->analyze_link($_POST['link_inputtext']);
 					$this->insert_link($post_id, $data);
 				}
 				if(isset($_POST['address_inputtext']) == 1 && $_POST['address_inputtext'] != '') {
-					$data = array('address_title'=>$_POST['address_inputtext']);
-					$this->insert_address($post_id, $data);
+					$query = 'UPDATE '.TABLE_POST.' SET post_address = :post_address WHERE post_id = :post_id';
+					$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':post_address'=>filter_var($_POST['address_inputtext'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES)));
 				}
 				preg_match_all('(((ftp|http|https){1}://)[-a-zA-Z0-9@:%_\+.~#!\(\)?&//=]+)', $_POST['status_textarea'], $matches);
 				$matches = $matches[0];
@@ -365,19 +365,10 @@ class ldapshare {
 				$query = 'DELETE FROM '.TABLE_POST.' WHERE user_id = :user_id AND post_id = :post_id';
 				$prepare = $this->pdo_execute($query, array(':post_id'=>intval($_GET['post_id']), ':user_id'=>$this->user->user_id));
 				if($prepare) {
-					if($post->post_countphoto > 0) {
-						$query = 'SELECT photo.* FROM '.TABLE_PHOTO.' photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id';
-						$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
-						if($prepare) {
-							$rowCount = $prepare->rowCount();
-							if($rowCount > 0) {
-								while($photo = $prepare->fetch(PDO::FETCH_OBJ)) {
-									unlink('storage/'.$photo->photo_file);
-								}
-							}
-						}
+					if($post->post_photo) {
+						unlink('storage/'.$post->post_photo);
 					}
-					$tables = array(TABLE_ADDRESS, TABLE_COMMENT, TABLE_LIKE, TABLE_LINK, TABLE_PHOTO);
+					$tables = array(TABLE_COMMENT, TABLE_LIKE, TABLE_LINK);
 					foreach($tables as $table) {
 						$query = 'DELETE FROM '.$table.' WHERE post_id = :post_id';
 						$prepare = $this->pdo_execute($query, array(':post_id'=>intval($_GET['post_id'])));
@@ -502,22 +493,12 @@ class ldapshare {
 	private function action_addresspreview() {
 		$render = '';
 		if(isset($_POST['address_inputtext']) == 1 && $_POST['address_inputtext'] != '') {
-			$address = new stdClass();
-			$address->address_id = 0;
-			$address->address_title = filter_var($_POST['address_inputtext'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
+			$post = new stdClass();
+			$post->post_id = 0;
+			$post->post_address = filter_var($_POST['address_inputtext'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES);
 			$render .= '<content><![CDATA[';
-			$render .= '<div class="addresslist">';
-			$render .= $this->render_address($address);
-			$render .= '</div>';
+			$render .= $this->render_address($post);
 			$render .= ']]></content>';
-		}
-		return $render;
-	}
-	private function action_photozoom() {
-		$render = '';
-		$photo = $this->get_photo_by_id($_GET['photo_id']);
-		if($photo) {
-			$render .= '<content><![CDATA[<a class="popin_hide" href="#"><img src="storage/'.$photo->photo_file.'"></a>]]></content>';
 		}
 		return $render;
 	}
@@ -636,17 +617,9 @@ class ldapshare {
 			}
 		}
 	}
-	private function insert_photo($post_id, $data) {
-		$query = 'INSERT INTO '.TABLE_PHOTO.' (post_id, photo_file, photo_datecreated) VALUES (:post_id, :photo_file, :photo_datecreated)';
-		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':photo_file'=>$data['photo_inputfile'], ':photo_datecreated'=>date('Y-m-d H:i:s')));
-	}
 	private function insert_link($post_id, $data) {
 		$query = 'INSERT INTO '.TABLE_LINK.' (post_id, link_url, link_title, link_image, link_video, link_videotype, link_videowidth, link_videoheight, link_icon, link_description, link_datecreated) VALUES (:post_id, :link_url, :link_title, NULLIF(:link_image, \'\'), NULLIF(:link_video, \'\'), NULLIF(:link_videotype, \'\'), NULLIF(:link_videowidth, \'\'), NULLIF(:link_videoheight, \'\'), NULLIF(:link_icon, \'\'), NULLIF(:link_description, \'\'), :link_datecreated)';
 		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':link_url'=>$data->link_url, ':link_title'=>$data->link_title, ':link_image'=>$data->link_image, ':link_video'=>$data->link_video, ':link_videotype'=>$data->link_videotype, ':link_videowidth'=>$data->link_videowidth, ':link_videoheight'=>$data->link_videoheight, ':link_icon'=>$data->link_icon, ':link_description'=>$data->link_description, ':link_datecreated'=>date('Y-m-d H:i:s')));
-	}
-	private function insert_address($post_id, $data) {
-		$query = 'INSERT INTO '.TABLE_ADDRESS.' (post_id, address_title, address_datecreated) VALUES (:post_id, :address_title, :address_datecreated)';
-		$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':address_title'=>filter_var($data['address_title'], FILTER_SANITIZE_STRING, FILTER_FLAG_NO_ENCODE_QUOTES), ':address_datecreated'=>date('Y-m-d H:i:s')));
 	}
 	private function render_post($post) {
 		$render = '<div class="post" id="post_'.$post->post_id.'">';
@@ -675,8 +648,8 @@ class ldapshare {
 		$render .= '<p>'.$this->render_content($post->post_content).'</p>';
 		$render .= '</div>';
 		$render .= $this->render_linklist($post);
-		$render .= $this->render_addresslist($post);
-		$render .= $this->render_photolist($post);
+		$render .= $this->render_address($post);
+		$render .= $this->render_photo($post);
 		$render .= '<p class="post_detail">';
 		if($post->you_like == 1) {
 			$render .= '<span class="like like_inactive">';
@@ -858,32 +831,15 @@ class ldapshare {
 		}
 		return $render;
 	}
-	private function render_photolist($post) {
+	private function render_photo($post) {
 		$render = '';
-		if($post->post_countphoto > 0) {
-			$query = 'SELECT photo.* FROM '.TABLE_PHOTO.' photo WHERE photo.post_id = :post_id GROUP BY photo.photo_id';
-			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
-			if($prepare) {
-				$rowCount = $prepare->rowCount();
-				if($rowCount > 0) {
-					$render .= '<div class="photolist">';
-					$render .= '<div class="photolist_display">';
-					while($photo = $prepare->fetch(PDO::FETCH_OBJ)) {
-						$render .= $this->render_photo($photo);
-					}
-					$render .= '</div>';
-					$render .= '</div>';
-				}
-			}
+		if($post->post_photo) {
+			$render .= '<div class="photo" id="photo_'.$post->post_id.'">';
+			$render .= '<div class="photo_display">';
+			$render .= '<img alt="" src="storage/'.$post->post_photo.'">';
+			$render .= '</div>';
+			$render .= '</div>';
 		}
-		return $render;
-	}
-	private function render_photo($photo) {
-		$render = '<div class="photo" id="photo_'.$photo->photo_id.'">';
-		$render .= '<div class="photo_display">';
-		$render .= '<a class="popin_show" href="?a=photozoom&amp;photo_id='.$photo->photo_id.'"><img alt="" src="storage/'.$photo->photo_file.'"></a>';
-		$render .= '</div>';
-		$render .= '</div>';
 		return $render;
 	}
 	private function render_linklist($post) {
@@ -935,31 +891,16 @@ class ldapshare {
 		$render .= '</div>';
 		return $render;
 	}
-	private function render_addresslist($post) {
+	private function render_address($post) {
 		$render = '';
-		if($post->post_countaddress > 0) {
-			$query = 'SELECT address.* FROM '.TABLE_ADDRESS.' address WHERE address.post_id = :post_id GROUP BY address.address_id';
-			$prepare = $this->pdo_execute($query, array(':post_id'=>$post->post_id));
-			if($prepare) {
-				$rowCount = $prepare->rowCount();
-				if($rowCount > 0) {
-					$render .= '<div class="addresslist">';
-					while($address = $prepare->fetch(PDO::FETCH_OBJ)) {
-						$render .= $this->render_address($address);
-					}
-					$render .= '</div>';
-				}
-			}
+		if($post->post_address) {
+			$render .= '<div class="address" id="address_'.$post->post_id.'">';
+			$render .= '<div class="address_display">';
+			$render .= '<p>'.$post->post_address.'</p>';
+			$render .= '<p><a href="http://maps.google.com/maps?q='.urlencode($post->post_address).'&oe=UTF-8&ie=UTF-8" target="_blank"><img src="http://maps.googleapis.com/maps/api/staticmap?center='.urlencode($post->post_address).'&markers=color:red|'.urlencode($post->post_address).'&zoom=15&size=540x200&sensor=false" alt=""></a></p>';
+			$render .=' </div>';
+			$render .= '</div>';
 		}
-		return $render;
-	}
-	private function render_address($address) {
-		$render = '<div class="address" id="address_'.$address->address_id.'">';
-		$render .= '<div class="address_display">';
-		$render .= '<p>'.$address->address_title.'</p>';
-		$render .= '<p><a href="http://maps.google.com/maps?q='.urlencode($address->address_title).'&oe=UTF-8&ie=UTF-8" target="_blank"><img src="http://maps.googleapis.com/maps/api/staticmap?center='.urlencode($address->address_title).'&markers=color:red|'.urlencode($address->address_title).'&zoom=15&size=540x200&sensor=false" alt=""></a></p>';
-		$render .=' </div>';
-		$render .= '</div>';
 		return $render;
 	}
 	private function render_content($text) {
@@ -1115,4 +1056,3 @@ class ldapshare {
 		}
 	}
 }
-?>

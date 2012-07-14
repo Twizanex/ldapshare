@@ -43,18 +43,17 @@ form{margin:0px;padding:0px;}
 .postlist{border-top:1px solid #dedede;margin-bottom:110px;margin-top:10px;}
 .postlist .post{border-bottom:1px solid #dedede;clear:both;margin-top:10px;overflow:auto;}
 .postlist .post_fresh{border-bottom:1px solid #5B74A8;}
-.photolist{margin-top:10px;overflow:auto;}
-.photo{float:left;}
-.photo img{max-height:150px;max-width:150px;}
+.photo{clear:both;float:left;margin-left:40px;margin-top:10px;overflow:auto;}
+.photo img{max-height:540px;max-width:540px;}
 #popin_display img{max-height:600px;max-width:600px;}
 #avatarform_photo_preview img{max-height:100px;max-width:100px;}
 .address_display img{width:540px;}
-.photolist, .addresslist, .linklist{clear:both;margin-left:40px;margin-top:10px;}
-.photolist_display, .address_display, .link_display{border-top:1px solid #dedede;margin-left:20px;overflow:auto;padding-top:10px}
-.photolist, .address, .link{overflow:auto;}
-.photolist, .address, .link{background-position:left 10px;background-repeat:no-repeat;}
-.photolist{background-image:url(medias/icon_photo.png);margin-bottom:10px;}
-.address{background-image:url(medias/icon_address.png);}
+.linklist{clear:both;margin-left:40px;margin-top:10px;}
+.photo_display, .address_display, .link_display{border-top:1px solid #dedede;margin-left:20px;overflow:auto;padding-top:10px}
+.photo, .address, .link{overflow:auto;}
+.photo, .address, .link{background-position:left 10px;background-repeat:no-repeat;}
+.photo{background-image:url(medias/icon_photo.png);margin-bottom:10px;}
+.address{background-image:url(medias/icon_address.png);clear:both;margin-left:40px;margin-top:10px;}
 .link{background-image:url(medias/icon_link.png);}
 .post_detail{border-top:1px solid #dedede;clear:both;margin-left:60px;margin-top:5px;padding:5px 0px 0px 0px;}
 .commentlist{clear:both;margin:10px 0px 10px 60px;}
@@ -92,12 +91,12 @@ form{margin:0px;padding:0px;}
 #postform .textarea{width:268px;}
 #loginform .inputtext, #loginform .inputpassword, #postform .inputtext{width:268px;}
 #postform_photo_preview img{max-height:100px;max-width:100px;}
-.photo img{max-height:100px;max-width:100px;}
+.photo img{max-height:260px;max-width:260px;}
 #popin_display img{max-height:300px;max-width:300px;}
 .address_display img{width:260px;}
 #postform_address_preview img{width:260px;}
 .post_detail{margin-left:40px;}
-.photolist, .addresslist, .linklist{margin-left:20px;}
+.address, .photo, .linklist{margin-left:20px;}
 .commentlist{clear:both;margin:10px 0px 10px 40px;}
-.photolist_display, .address_display, .link_display{margin-left:20px;}
+.photo_display, .address_display, .link_display{margin-left:20px;}
 }

@@ -1,12 +1,3 @@
-CREATE TABLE IF NOT EXISTS `ldapshare_address` (
-`address_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-`post_id` int(10) unsigned NOT NULL,
-`address_title` varchar(255) NOT NULL,
-`address_datecreated` datetime NOT NULL,
-PRIMARY KEY (`address_id`),
-KEY `post_id` (`post_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
-
 CREATE TABLE IF NOT EXISTS `ldapshare_comment` (
 `comment_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 `post_id` int(10) unsigned NOT NULL,
@@ -47,19 +38,12 @@ PRIMARY KEY (`link_id`),
 KEY `post_id` (`post_id`)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
 
-CREATE TABLE IF NOT EXISTS `ldapshare_photo` (
-`photo_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-`post_id` int(10) unsigned NOT NULL,
-`photo_file` varchar(100) NOT NULL,
-`photo_datecreated` datetime NOT NULL,
-PRIMARY KEY (`photo_id`),
-KEY `post_id` (`post_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1000;
-
 CREATE TABLE IF NOT EXISTS `ldapshare_post` (
 `post_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 `user_id` int(10) unsigned NOT NULL,
 `post_content` text NOT NULL,
+`post_photo` varchar(255) DEFAULT NULL,
+`post_address` varchar(255) DEFAULT NULL,
 `post_httpuseragent` varchar(255) DEFAULT NULL,
 `post_remoteaddr` varchar(255) DEFAULT NULL,
 `post_datecreated` datetime NOT NULL,
