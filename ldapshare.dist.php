@@ -31,7 +31,7 @@ class ldapshare {
 		}
 		include_once('languages/'.$lang_file.'.php');
 		if(isset($_GET['a']) == 0 || $_GET['a'] == 'index') {
-			$_SESSION['ldapshare']['data'] = array('timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
+			$_SESSION['ldapshare']['data'] = array('language'=>$lang_file, 'timezone'=>0, 'post_id_oldest'=>0, 'post_id_newest'=>0, 'comment_id_oldest'=>0, 'comment_id_newest'=>0);
 		}
 		$this->date_day = gmdate('Y-m-d', date('U') + 3600 * $_SESSION['ldapshare']['data']['timezone']);
 		$this->date_time = gmdate('H:i:s', date('U') + 3600 * $_SESSION['ldapshare']['data']['timezone']);
@@ -173,6 +173,7 @@ class ldapshare {
 	protected function action_client() {
 		$_SESSION['ldapshare']['data']['timezone'] = intval($_POST['timezone']);
 		$render = '<upload_max_filesize>'.intval(ini_get('upload_max_filesize')).'</upload_max_filesize>';
+		$render .= '<language>'.substr($_SESSION['ldapshare']['data']['language'], 0, 2).'</language>';
 		return $render;
 	}
 	protected function action_loginform() {
@@ -520,57 +521,6 @@ class ldapshare {
 		}
 		return $render;
 	}
-	private function action_refreshdatecreated() {
-		$render = '';
-		$date_day_utc = date('Y-m-d');
-		$flt = array();
-		$parameters = array();
-		$flt[] = '1';
-		if(isset($_SESSION['ldapshare']['data']['post_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['post_id_oldest'] > 0) {
-			$flt[] = 'post.post_id >= :post_id_oldest';
-			$parameters[':post_id_oldest'] = $_SESSION['ldapshare']['data']['post_id_oldest'];
-		}
-		$flt[] = 'post.post_datecreated LIKE :today_limit';
-		$parameters[':today_limit'] = $date_day_utc.'%';
-		$query = 'SELECT post.post_id, DATE_ADD(post.post_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS post_datecreated FROM '.TABLE_POST.' post WHERE '.implode(' AND ', $flt).' GROUP BY post.post_id ORDER BY post.post_id';
-		$prepare = $this->pdo_execute($query, $parameters);
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				$render .= '<posts>';
-				while($post = $prepare->fetch(PDO::FETCH_OBJ)) {
-					$render .= '<post post_id="'.$post->post_id.'"><![CDATA[<span title="'.$this->date_transform($post->post_datecreated).'">'.$this->date_mention($post->post_datecreated).'</span>]]></post>';
-				}
-				$render .= '</posts>';
-			}
-		} else {
-			$this->pdo_error($prepare);
-		}
-		$flt = array();
-		$parameters = array();
-		$flt[] = '1';
-		if(isset($_SESSION['ldapshare']['data']['comment_id_oldest']) == 1 && $_SESSION['ldapshare']['data']['comment_id_oldest'] > 0) {
-			$flt[] = 'comment.comment_id >= :comment_id_oldest';
-			$parameters[':comment_id_oldest'] = $_SESSION['ldapshare']['data']['comment_id_oldest'];
-		}
-		$flt[] = 'comment.comment_datecreated LIKE :today_limit';
-		$parameters[':today_limit'] = $date_day_utc.'%';
-		$query = 'SELECT comment.comment_id, DATE_ADD(comment.comment_datecreated, INTERVAL '.$_SESSION['ldapshare']['data']['timezone'].' HOUR) AS comment_datecreated FROM '.TABLE_COMMENT.' comment WHERE '.implode(' AND ', $flt).' GROUP BY comment.comment_id ORDER BY comment.comment_id';
-		$prepare = $this->pdo_execute($query, $parameters);
-		if($prepare) {
-			$rowCount = $prepare->rowCount();
-			if($rowCount > 0) {
-				$render .= '<comments>';
-				while($comment = $prepare->fetch(PDO::FETCH_OBJ)) {
-					$render .= '<comment comment_id="'.$comment->comment_id.'"><![CDATA[<span title="'.$this->date_transform($comment->comment_datecreated).'">'.$this->date_mention($comment->comment_datecreated).'</span>]]></comment>';
-				}
-				$render .= '</comments>';
-			}
-		} else {
-			$this->pdo_error($prepare);
-		}
-		return $render;
-	}
 	private function action_refreshnew() {
 		$render = $this->get_postlist('ASC');
 		$query = $this->select_comment.' WHERE comment.comment_id > :comment_id_newest AND comment.post_id >= :post_id_oldest GROUP BY comment.comment_id';
@@ -721,7 +671,7 @@ class ldapshare {
 		} else {
 			$username = $post->user_firstname.' '.$post->user_lastname;
 		}
-		$render .= '<p><span class="username">'.$username.'</span>  · <span class="datecreated" id="post_datecreated_'.$post->post_id.'"><span title="'.$this->date_transform($post->post_datecreated).'">'.$this->date_mention($post->post_datecreated).'</span></span></p>';
+		$render .= '<p><span class="username">'.$username.'</span>  · <span class="datecreated" id="post_datecreated_'.$post->post_id.'" title="'.$post->post_datecreated.'">'.$this->date_transform($post->post_datecreated).'</span></p>';
 		$render .= '<p>'.$this->render_content($post->post_content).'</p>';
 		$render .= '</div>';
 		$render .= $this->render_linklist($post);
@@ -838,7 +788,7 @@ class ldapshare {
 		} else {
 			$username = $comment->user_firstname.' '.$comment->user_lastname;
 		}
-		$render .= '<p><span class="username">'.$username.'</span> · <span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'"><span title="'.$this->date_transform($comment->comment_datecreated).'">'.$this->date_mention($comment->comment_datecreated).'</span></span></p>';
+		$render .= '<p><span class="username">'.$username.'</span> · <span class="datecreated" id="comment_datecreated_'.$comment->comment_id.'" title="'.$comment->comment_datecreated.'">'.$this->date_transform($comment->comment_datecreated).'</span></p>';
 		$render .= '<p>'.$this->render_content($comment->comment_content).'</p>';
 		$render .= '</div>';
 		$render .= '</div>';
@@ -1030,41 +980,6 @@ class ldapshare {
 			}
 		}
 		return nl2br($text);
-	}
-	private function date_mention($date) {
-		$mention = '';
-		if($date != '') {
-			list($datecreated, $timecreated) = explode(' ', $date);
-			if(function_exists('date_create') && function_exists('date_diff')) {
-				$interval = date_diff(date_create($datecreated), date_create($this->date_day));
-				$diff = $interval->format('%a');
-			} else {
-				$diff = (strtotime($this->date_day) - strtotime($datecreated)) / 3600 / 24;
-			}
-			if($diff == 0) {
-				list($prev_h, $prev_m, $prev_s) = explode(':', $timecreated);
-				list($next_h, $next_m, $prev_s) = explode(':', $this->date_time);
-				$diff = ($next_h * 60 + $next_m) - ($prev_h * 60 + $prev_m);
-				if($diff <= 1) {
-					$mention = $this->str['now'];
-				} else if($diff >= 120) {
-					$mention = sprintf($this->str['hours_diff'], ceil($diff / 60));
-				} else {
-					$mention = sprintf($this->str['minutes_diff'], $diff);
-				}
-			} else if($diff == 1) {
-				$mention = $this->str['yesterday'].' '.$this->str['at'].' '.substr($timecreated, 0, 5);
-			} else if($diff >= 730) {
-				$mention = sprintf($this->str['years_diff'], ceil($diff / 365));
-			} else if($diff >= 60) {
-				$mention = sprintf($this->str['months_diff'], ceil($diff / 30));
-			} else if($diff >= 14) {
-				$mention = sprintf($this->str['weeks_diff'], ceil($diff / 7));
-			} else {
-				$mention = sprintf($this->str['days_diff'], $diff);
-			}
-		}
-		return $mention;
 	}
 	private function date_transform($date) {
 		if($date != '') {

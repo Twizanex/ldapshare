@@ -23,6 +23,7 @@
 	</div>
 </div>
 <script type="text/javascript" src="thirdparty/jquery.min.js" charset="UTF-8"></script>
+<script type="text/javascript" src="thirdparty/jquery.timeago.js" charset="UTF-8"></script>
 <script type="text/javascript" src="ldapshare.dist.js" charset="UTF-8"></script>
 </body>
 </html>

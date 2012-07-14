@@ -1,10 +1,19 @@
 var upload_max_filesize;
+var language;
 function action_client() {
 	d = new Date();
 	data = {};
 	data['timezone'] = -d.getTimezoneOffset() / 60;
 	xml = ajax('?a=client', data);
 	upload_max_filesize = $(xml).find('upload_max_filesize').text() * 1048576;
+	language = $(xml).find('language').text();
+	$.ajax({
+		async: false,
+		cache: true,
+		dataType: 'script',
+		type: 'GET',
+		url: 'languages/jquery.timeago.'+ language + '.js'
+	});
 }
 function ajax(url, data) {
 	var xml_return;
@@ -67,26 +76,6 @@ function popin_show(href) {
 		}
 	});
 }
-function refresh_datecreated() {
-	data = {};
-	xml = ajax('?a=refreshdatecreated', data);
-	$(xml).find('post').each(function(){
-		var post_id = $(this).attr('post_id');
-		var post_datecreated = $(this).text();
-		$('#post_datecreated_' + post_id).fadeOut(function() {
-			$('#post_datecreated_' + post_id).html(post_datecreated);
-			$('#post_datecreated_' + post_id).fadeIn();
-		});
-	});
-	$(xml).find('comment').each(function(){
-		var comment_id = $(this).attr('comment_id');
-		var comment_datecreated = $(this).text();
-		$('#comment_datecreated_' + comment_id).fadeOut(function() {
-			$('#comment_datecreated_' + comment_id).html(comment_datecreated);
-			$('#comment_datecreated_' + comment_id).fadeIn();
-		});
-	});
-}
 function refreshnew() {
 	data = {};
 	xml = ajax('?a=refreshnew', data);
@@ -97,6 +86,7 @@ function refreshnew() {
 			post_id = $(this).attr('post_id');
 			content = $(this).text();
 			$('.postlist').prepend(content);
+			$('#post_' + post_id).find('.datecreated').timeago();
 			if(i == 0) {
 				$('#post_' + post_id).addClass('post_fresh');
 			}
@@ -110,6 +100,7 @@ function refreshnew() {
 			comment_id = $(this).attr('comment_id');
 			content = $(this).text();
 			$('#commentlist_' + post_id).find('.commentlist_display').append(content);
+			$('#comment_' + comment_id).find('.datecreated').timeago();
 			$('#comment_' + comment_id).addClass('comment_fresh');
 		});
 	}
@@ -122,6 +113,7 @@ function postlist() {
 		content = $(this).text();
 		$('.postlist').append(content);
 	});
+	$('.postlist .datecreated').timeago();
 	more = $(xml).find('more').text();
 	if(more != '') {
 		$('.postlist').append(more);
@@ -463,6 +455,5 @@ $(document).ready(function() {
 	if(status == 'ko') {
 		islogged_ko();
 	}
-	setInterval('refresh_datecreated()', 60000 * 1);
 	setInterval('refreshnew()', 60000 * 1);
 });
