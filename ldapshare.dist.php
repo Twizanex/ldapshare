@@ -315,7 +315,7 @@ class ldapshare {
 				$post_id = $this->pdo->lastinsertid();
 				$render .= '<status>post_insert</status>';
 				if(isset($_FILES['photo_inputfile']) == 1 && $_FILES['photo_inputfile']['error'] == 0 && in_array($_FILES['photo_inputfile']['type'], $this->allowed_images)) {
-					$photo_inputfile = $this->image_upload('photo_inputfile', 600, 600);
+					$photo_inputfile = $this->image_upload('photo_inputfile', 540, 540);
 					$query = 'UPDATE '.TABLE_POST.' SET post_photo = :post_photo WHERE post_id = :post_id';
 					$prepare = $this->pdo_execute($query, array(':post_id'=>$post_id, ':post_photo'=>$photo_inputfile));
 				}

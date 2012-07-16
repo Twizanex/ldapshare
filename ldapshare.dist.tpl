@@ -13,6 +13,15 @@
 	</div>
 </div>
 <div id="ldapshare">
+	<!--<div style="background-color:#FF0000;height:100%;opacity:0.2;left:0px;position:absolute;top:0px;width:50px;z-index:1;"></div>-->
+	<!--<div style="background-color:#FF0000;height:100%;opacity:0.2;left:60px;position:absolute;top:0px;width:540px;z-index:1;"></div>-->
+
+	<!--<div style="background-color:#00FF00;height:100%;opacity:0.2;left:70px;position:absolute;top:0px;width:30px;z-index:1;"></div>-->
+	<!--<div style="background-color:#00FF00;height:100%;opacity:0.2;left:110px;position:absolute;top:0px;width:480px;z-index:1;"></div>-->
+
+	<!--<div style="background-color:#0000FF;height:100%;opacity:0.2;left:60px;position:absolute;top:0px;width:440px;z-index:1;"></div>-->
+	<!--<div style="background-color:#0000FF;height:100%;opacity:0.2;left:510px;position:absolute;top:0px;width:90px;z-index:1;"></div>-->
+
 	<div id="ldapshare_display">
 		<div id="loginform">
 		</div>
