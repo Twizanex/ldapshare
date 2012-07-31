@@ -193,6 +193,7 @@ $(document).ready(function() {
 		post_id = $(xml).find('post_id').text();
 		$('#comment_all_' + post_id).hide();
 		$('#post_' + post_id).find('.commentlist_display').prepend(content);
+		$('#post_' + post_id).find('.commentlist_display').find('.datecreated').timeago();
 	});
 	$('.comment_action').live('click', function(e) {
 		e.preventDefault();
