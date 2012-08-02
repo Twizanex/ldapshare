@@ -8,6 +8,8 @@
 </head>
 <body>
 <div id="loading"><img alt="" height="11" src="medias/loading.gif" width="16"></div>
+<div id="mask">
+</div>
 <div id="popin">
 	<div id="popin_display">
 	</div>

@@ -7,13 +7,7 @@ function action_client() {
 	xml = ajax('?a=client', data);
 	upload_max_filesize = $(xml).find('upload_max_filesize').text() * 1048576;
 	language = $(xml).find('language').text();
-	$.ajax({
-		async: false,
-		cache: true,
-		dataType: 'script',
-		type: 'GET',
-		url: 'languages/jquery.timeago.'+ language + '.js'
-	});
+	$.get('languages/jquery.timeago.'+ language + '.js');
 }
 function ajax(url, data) {
 	var xml_return;
@@ -23,10 +17,8 @@ function ajax(url, data) {
 		cache: true,
 		data: data,
 		dataType: 'xml',
-		statusCode: {
-			200: function(xml) {
-				xml_return = xml;
-			}
+		success: function(xml) {
+			xml_return = xml;
 		},
 		type: 'POST',
 		url: url
@@ -35,19 +27,17 @@ function ajax(url, data) {
 	return xml_return;
 }
 function set_positions() {
+	document_height = $(document).height();
 	document_top = $(document).scrollTop();
 	window_width = $(window).width();
 	window_height = $(window).height();
-	_width = $('#loading').width();
-	_height = $('#loading').height();
-	_top = document_top + (window_height / 2) - (_height / 2);
-	_margin_left = (window_width - _width) / 2;
-	$('#loading').css({'margin-left': _margin_left, 'top': _top});
-	_width = $('#popin').width();
-	_height = $('#popin').height();
-	_top = document_top + (window_height / 2) - (_height / 2);
-	_margin_left = (window_width - _width) / 2;
-	$('#popin').css({'margin-left': _margin_left, 'top': _top});
+	loading_top = document_top + (window_height / 2) - ($('#loading').height() / 2);
+	loading_margin_left = (window_width - $('#loading').width()) / 2;
+	$('#loading').css({'margin-left': loading_margin_left, 'top': loading_top});
+	popin_top = document_top + (window_height / 2) - ($('#popin').height() / 2);
+	popin_margin_left = (window_width - $('#popin').width()) / 2;
+	$('#popin').css({'margin-left': popin_margin_left, 'top': popin_top});
+	$('#mask').css({'height': document_height, 'width': window_width});
 }
 function loading_hide() {
 	$('#loading').hide();
@@ -55,26 +45,31 @@ function loading_hide() {
 function loading_show() {
 	$('#loading').show();
 }
+function mask_hide() {
+	$('#mask').fadeOut('fast');
+}
+function mask_show() {
+	$('#mask').show();
+}
 function popin_hide() {
 	$('#popin').fadeOut('slow', function() {
 		$('#popin_display').html('');
-		$('#ldapshare').animate({'opacity': 1}, 400);
+		mask_hide();
 	});
 }
 function popin_show(href) {
+	mask_show();
 	loading_show();
-	$('#ldapshare').animate({'opacity': 0}, 400, function() {
-		data = {};
-		xml = ajax(href, data);
-		content = $(xml).find('content').text();
-		$('#popin_display').html(content);
-		set_positions();
-		loading_hide();
-		if($('#popin').is(':visible')) {
-		} else {
-			$('#popin').fadeIn(1200);
-		}
-	});
+	data = {};
+	xml = ajax(href, data);
+	content = $(xml).find('content').text();
+	$('#popin_display').html(content);
+	set_positions();
+	loading_hide();
+	if($('#popin').is(':visible')) {
+	} else {
+		$('#popin').fadeIn(1200);
+	}
 }
 function refreshnew() {
 	data = {};
@@ -82,7 +77,7 @@ function refreshnew() {
 	count_post = $(xml).find('post').length;
 	if(count_post > 0) {
 		$('.post').removeClass('post_fresh');
-		$(xml).find('post').each(function(i){
+		$(xml).find('post').each(function(i) {
 			post_id = $(this).attr('post_id');
 			content = $(this).text();
 			$('.postlist').prepend(content);
@@ -95,7 +90,7 @@ function refreshnew() {
 	count_comment = $(xml).find('comment').length;
 	if(count_comment > 0) {
 		$('.comment').removeClass('comment_fresh');
-		$(xml).find('comment').each(function(){
+		$(xml).find('comment').each(function(i) {
 			post_id = $(this).attr('post_id');
 			comment_id = $(this).attr('comment_id');
 			content = $(this).text();
@@ -108,7 +103,7 @@ function refreshnew() {
 function postlist() {
 	data = {};
 	xml = ajax('?a=postlist', data);
-	$(xml).find('post').each(function(){
+	$(xml).find('post').each(function(i) {
 		post_id = $(this).attr('post_id');
 		content = $(this).text();
 		$('.postlist').append(content);
@@ -149,33 +144,31 @@ function islogged_ko() {
 $(document).ready(function() {
 	action_client();
 	set_positions();
-	$(window).bind('resize scroll', function(event) {
+	$(window).bind('resize scroll', function(e) {
 		set_positions();
 	});
-	$(document).bind('keydown', function(event) {
-		if(event == null) { // ie
-			keycode = event.keyCode;
+	$(document).bind('keydown', function(e) {
+		if(e == null) { // ie
+			keycode = e.keyCode;
 		} else { // mozilla
-			keycode = event.which;
+			keycode = e.which;
 		}
 		if(keycode == 27) {
 			popin_hide();
 		}
 	});
-	$('.popin_hide').live('click', function(event) {
-		event.preventDefault();
+	$('.popin_hide').live('click', function(e) {
+		e.preventDefault();
 		popin_hide();
 	});
-	$('.popin_show').live('click', function(event) {
-		event.preventDefault();
-		href = $(this).attr('href');
-		popin_show(href);
+	$('.popin_show').live('click', function(e) {
+		e.preventDefault();
+		popin_show($(this).attr('href'));
 	});
 	$('.logout_action').live('click', function(e) {
 		e.preventDefault();
-		href = $(this).attr('href');
 		data = {};
-		xml = ajax(href, data);
+		xml = ajax($(this).attr('href'), data);
 		islogged_ko();
 		action_client();
 	});
@@ -186,9 +179,8 @@ $(document).ready(function() {
 	});
 	$('.commentall_action').live('click', function(e) {
 		e.preventDefault();
-		href = $(this).attr('href');
 		data = {};
-		xml = ajax(href, data);
+		xml = ajax($(this).attr('href'), data);
 		content = $(xml).find('content').text();
 		post_id = $(xml).find('post_id').text();
 		$('#comment_all_' + post_id).hide();
@@ -207,9 +199,8 @@ $(document).ready(function() {
 	});
 	$('.post_delete_confirm_action, .comment_delete_confirm_action').live('click', function(e) {
 		e.preventDefault();
-		href = $(this).attr('href');
 		data = {};
-		xml = ajax(href, data);
+		xml = ajax($(this).attr('href'), data);
 		status = $(xml).find('status').text();
 		if(status == 'delete_post') {
 			post_id = $(xml).find('post_id').text();
@@ -224,9 +215,8 @@ $(document).ready(function() {
 	});
 	$('.likelist_action, .post_like_action, .post_unlike_action').live('click', function(e) {
 		e.preventDefault();
-		href = $(this).attr('href');
 		data = {};
-		xml = ajax(href, data);
+		xml = ajax($(this).attr('href'), data);
 		content = $(xml).find('content').text();
 		status = $(xml).find('status').text();
 		post_id = $(xml).find('post_id').text();
@@ -368,8 +358,8 @@ $(document).ready(function() {
 			if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= upload_max_filesize) {
 				$('#avatarform_photo_preview').html('');
 				reader = new FileReader();
-				reader.onload = function(event) {
-					$('#avatarform_photo_preview').html('<p><img alt="" id="avatar_inputfile_preview" src="' + event.target.result + '"></p>');
+				reader.onload = function(e) {
+					$('#avatarform_photo_preview').html('<p><img alt="" id="avatar_inputfile_preview" src="' + e.target.result + '"></p>');
 					$('#avatarform_photo_preview').fadeIn();
 				};
 				reader.readAsDataURL(file);
@@ -385,8 +375,8 @@ $(document).ready(function() {
 			if((file.type == 'image/gif' || file.type == 'image/jpeg' || file.type == 'image/png') && file.size <= upload_max_filesize) {
 				$('#postform_photo_preview').html('');
 				reader = new FileReader();
-				reader.onload = function(event) {
-					$('#postform_photo_preview').html('<div class="photolist"><div class="photolist_display"><div class="photo" id="photo_0"><div class="photo_display"><img alt="" id="photo_inputfile_preview" src="' + event.target.result + '"></div></div></div></div>');
+				reader.onload = function(e) {
+					$('#postform_photo_preview').html('<div class="photolist"><div class="photolist_display"><div class="photo" id="photo_0"><div class="photo_display"><img alt="" id="photo_inputfile_preview" src="' + e.target.result + '"></div></div></div></div>');
 					$('#postform_photo_preview').fadeIn();
 				};
 				reader.readAsDataURL(file);
@@ -412,10 +402,9 @@ $(document).ready(function() {
 		loading_show();
 		link_inputtext = $('#link_inputtext').val();
 		if(link_inputtext != '' && link_inputtext != 'http://') {
-			href = $(this).attr('href');
 			data = {};
 			data['link_inputtext'] = link_inputtext;
-			xml = ajax(href, data);
+			xml = ajax($(this).attr('href'), data);
 			content = $(xml).find('content').text();
 			$('#postform_link_preview').html(content);
 		}
@@ -432,10 +421,9 @@ $(document).ready(function() {
 		loading_show();
 		address_inputtext = $('#address_inputtext').val();
 		if(address_inputtext != '') {
-			href = $(this).attr('href');
 			data = {};
 			data['address_inputtext'] = address_inputtext;
-			xml = ajax(href, data);
+			xml = ajax($(this).attr('href'), data);
 			content = $(xml).find('content').text();
 			$('#postform_address_preview').html(content);
 		}
@@ -443,17 +431,15 @@ $(document).ready(function() {
 	});
 	$('.playvideo_link a').live('click', function(e) {
 		e.preventDefault();
-		href = $(this).attr('href');
 		$(this).parent().hide();
-		$(href).show();
+		$($(this).attr('href')).show();
 	});
 	data = {};
 	xml = ajax('?a=islogged', data);
 	status = $(xml).find('status').text();
 	if(status == 'ok') {
 		islogged_ok();
-	}
-	if(status == 'ko') {
+	} else {
 		islogged_ko();
 	}
 	setInterval('refreshnew()', 60000 * 1);
