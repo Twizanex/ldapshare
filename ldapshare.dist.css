@@ -8,6 +8,7 @@ em{color:#000000;font-style:italic;}
 strong{font-weight:bold;}
 form{margin:0px;padding:0px;}
 #ldapshare{margin:auto;position:relative;width:600px;}
+#mask{background-color:#FFFFFF;display:none;height:100%;left:0px;opacity:0.8;position:absolute;top:0px;width:100%;z-index:100;}
 #popin{display:none;position:absolute;width:600px;z-index:200;}
 #popin_display{text-align:center;}
 .popin_content{background-color:#EDEFF4;border:1px solid #D2D9E7;}
