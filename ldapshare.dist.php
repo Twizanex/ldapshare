@@ -253,7 +253,7 @@ class ldapshare {
 	private function action_avatarsubmit() {
 		if(isset($_FILES['avatar_inputfile']) == 1 && $_FILES['avatar_inputfile']['error'] == 0 && in_array($_FILES['avatar_inputfile']['type'], $this->allowed_images)) {
 			$avatar_inputfile = $this->image_upload('avatar_inputfile', 100, 100);
-			if($avatar_inputfile != $this->user->user_file && $this->user->user_file != '') {
+			if($avatar_inputfile != $this->user->user_file && $this->user->user_file != '' && file_exists('storage/'.$this->user->user_file)) {
 				unlink('storage/'.$this->user->user_file);
 			}
 			$query = 'UPDATE '.TABLE_USER.' SET user_file = NULLIF(:user_file, \'\') WHERE user_id = :user_id';
