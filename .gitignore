@@ -3,5 +3,6 @@
 .BridgeLabelsAndRatings
 configuration.php
 storage/2012
+storage/2015
 test.php
 populate.php
